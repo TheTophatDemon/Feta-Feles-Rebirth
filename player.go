@@ -5,9 +5,7 @@ import (
 )
 
 const (
-	MAX_LOVE         = 100
-	MAX_PLAYER_SPEED = 80.0
-	PLAYER_FRICTION  = 512.0
+	MAX_LOVE = 100
 )
 
 type PlayerState int32
@@ -19,16 +17,16 @@ const (
 )
 
 type Player struct {
+	*Actor
 	love  int
 	state PlayerState
-	vel   *Vec2f
 }
 
 func MakePlayer(game *Game, x, y float64) *Player {
 	player := &Player{
+		Actor: NewActor(80.0, 1_000_000.0, 50_000.0),
 		love:  0,
 		state: PS_NORMAL,
-		vel:   &Vec2f{0.0, 0.0},
 	}
 
 	game.objects.PushBack(&Object{
@@ -50,28 +48,22 @@ func MakePlayer(game *Game, x, y float64) *Player {
 
 func (player *Player) Update(game *Game, obj *Object) {
 
-	d := Vec2f{0.0, 0.0}
+	var dx, dy float64
 	//Movement
 	if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyW) {
-		d.y = -1.0
+		dy = -1.0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
-		d.y = 1.0
+		dy = 1.0
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) {
-		d.x = 1.0
+		dx = 1.0
 	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
-		d.x = -1.0
+		dx = -1.0
 	}
 
-	d.Normalize()
-	if d.x != 0.0 || d.y != 0.0 {
-		player.vel = d.Clone().Scale(MAX_PLAYER_SPEED * game.deltaTime)
-	} else {
-		player.vel.Add(player.vel.Clone().Scale(-1.0 * game.deltaTime * game.deltaTime * PLAYER_FRICTION))
-	}
-
-	obj.pos.Add(player.vel)
+	player.Actor.Move(dx, dy)
+	player.Actor.Update(game, obj)
 
 	game.camPos = obj.pos
 }
