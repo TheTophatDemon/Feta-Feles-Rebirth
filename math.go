@@ -17,6 +17,10 @@ type Vec2f struct {
 	x, y float64
 }
 
+func ZeroVec() *Vec2f {
+	return &Vec2f{0.0, 0.0}
+}
+
 func (vec *Vec2f) Clone() *Vec2f {
 	return &Vec2f{x: vec.x, y: vec.y}
 }
