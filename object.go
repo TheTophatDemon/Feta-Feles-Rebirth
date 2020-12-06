@@ -16,7 +16,7 @@ type Component interface {
 
 //Object ...
 type Object struct {
-	pos        Vec2f
+	pos        *Vec2f
 	radius     float64
 	colType    ColType
 	sprites    []*Sprite

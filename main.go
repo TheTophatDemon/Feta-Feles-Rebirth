@@ -31,28 +31,7 @@ type Game struct {
 	level       *Level
 	deltaTime   float64
 	elapsedTime float64
-	camPos      Vec2f
-}
-
-func (g *Game) init() {
-	reader, err := os.Open("assets/graphics.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer reader.Close()
-
-	img, _, err := image.Decode(reader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	graphics = ebiten.NewImageFromImage(img)
-
-	g.objects = list.New()
-
-	MakePlayer(g, 32.0, 32.0)
-
-	g.level = GenerateLevel(32, 32)
-
+	camPos      *Vec2f
 }
 
 //Update ...
@@ -93,8 +72,30 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	game := &Game{}
-	game.init()
+
+	//Init game
+	game := new(Game)
+
+	//Load graphics
+	reader, err := os.Open("assets/graphics.png")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer reader.Close()
+
+	img, _, err := image.Decode(reader)
+	if err != nil {
+		log.Fatal(err)
+	}
+	graphics = ebiten.NewImageFromImage(img)
+
+	//Initialize world
+	game.objects = list.New()
+
+	MakePlayer(game, 32.0, 32.0)
+
+	game.level = GenerateLevel(32, 32)
+
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Feta Feles Remake")
 	if err := ebiten.RunGame(game); err != nil {
