@@ -24,7 +24,7 @@ type Player struct {
 
 func MakePlayer(game *Game, x, y float64) *Player {
 	player := &Player{
-		Actor: NewActor(80.0, 1_000_000.0, 50_000.0),
+		Actor: NewActor(120.0, 500_000.0, 50_000.0),
 		love:  0,
 		state: PS_NORMAL,
 	}
@@ -34,7 +34,7 @@ func MakePlayer(game *Game, x, y float64) *Player {
 		sprites: []*Sprite{
 			{
 				src:    Rect{0, 0, 16, 16},
-				ofs:    Vec2f{0.0, 0.0},
+				ofs:    ZeroVec(),
 				flipH:  false,
 				flipV:  false,
 				orient: 0,
