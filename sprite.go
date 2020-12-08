@@ -6,9 +6,12 @@ import (
 	"github.com/hajimehoshi/ebiten"
 )
 
+//Todo: Optimize by keeping track of previous state and recalculating transform matrix
+//Todo: Remove middleman and store sub-image instead of src
+
 type Sprite struct {
 	src    Rect
-	ofs    Vec2f
+	ofs    *Vec2f
 	flipH  bool
 	flipV  bool
 	orient int
