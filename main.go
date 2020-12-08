@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"fmt"
 	"image"
 	_ "image/color"
 	_ "image/png"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 const (
@@ -64,6 +66,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			spr.Draw(screen, &objM.GeoM)
 		}
 	}
+	ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
 }
 
 //Layout ...
@@ -91,10 +94,13 @@ func main() {
 
 	//Initialize world
 	game.objects = list.New()
+	game.level = GenerateLevel(64, 64)
 
-	MakePlayer(game, 32.0, 32.0)
-
-	game.level = GenerateLevel(32, 32)
+	for _, sp := range game.level.spawns {
+		if sp.spawnType == SP_PLAYER {
+			MakePlayer(game, float64(sp.ix)*TILE_SIZE+8.0, float64(sp.iy)*TILE_SIZE+8.0)
+		}
+	}
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Feta Feles Remake")

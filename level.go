@@ -1,8 +1,7 @@
 package main
 
 import (
-	"container/list"
-	"fmt"
+	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten"
@@ -13,56 +12,46 @@ const (
 )
 
 type Level struct {
-	tiles          [][]*Tile
-	rows, cols     int
-	pixelW, pixelH int
+	tiles      [][]TileType
+	sprites    [][]*Sprite
+	spawns     []*Spawn
+	rows, cols int
+}
+
+type SpawnType int
+
+const (
+	SP_PLAYER SpawnType = iota
+	SP_BARREL
+)
+
+type Spawn struct {
+	spawnType SpawnType
+	ix, iy    int
 }
 
 type TileType int
 
 const (
-	TT_EMPTY TileType = iota
-	TT_BLOCK
-	TT_SLOPE_45 //Number refers to angle in degrees of normal vector relative to positive x axis
-	TT_SLOPE_135
-	TT_SLOPE_225
-	TT_SLOPE_315
-	TT_TENTACLE_UP
-	TT_TENTACLE_DOWN
-	TT_TENTACLE_LEFT
-	TT_TENTACLE_RIGHT
-	TT_RUNE
-	TT_DECOR
-	TT_MAX
+	TT_EMPTY          TileType = 0
+	TT_BLOCK          TileType = 1 << 0
+	TT_SLOPE_45       TileType = 1 << 1 //Slope number refers to angle in degrees of normal vector relative to positive x axis
+	TT_SLOPE_135      TileType = 1 << 2
+	TT_SLOPE_225      TileType = 1 << 3
+	TT_SLOPE_315      TileType = 1 << 4
+	TT_TENTACLE_UP    TileType = 1 << 5
+	TT_TENTACLE_DOWN  TileType = 1 << 6
+	TT_TENTACLE_LEFT  TileType = 1 << 7
+	TT_TENTACLE_RIGHT TileType = 1 << 8
+	TT_RUNE           TileType = 1 << 9
+	TT_PYLON          TileType = 1 << 10
+
+	TT_SOLIDS TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON
 )
 
-//Defines, for a single tile type, which tile types are allowed to be placed next to it
-type TConstraints struct {
-	left   []TileType
-	right  []TileType
-	top    []TileType
-	bottom []TileType
-}
-
-var tileConstraints map[TileType]TConstraints
 var tileTypeRects map[TileType]Rect
-var allTileTypes []TileType
 
 func init() {
-	allTileTypes = []TileType{
-		TT_EMPTY,
-		TT_BLOCK,
-		TT_SLOPE_45,
-		TT_SLOPE_135,
-		TT_SLOPE_225,
-		TT_SLOPE_315,
-		TT_TENTACLE_UP,
-		TT_TENTACLE_DOWN,
-		TT_TENTACLE_LEFT,
-		TT_TENTACLE_RIGHT,
-		TT_RUNE,
-		TT_DECOR,
-	}
 	tileTypeRects = map[TileType]Rect{
 		TT_BLOCK:          {x: 16, y: 96, w: 16, h: 16},
 		TT_SLOPE_45:       {x: 0, y: 96, w: 16, h: 16},
@@ -74,145 +63,60 @@ func init() {
 		TT_TENTACLE_LEFT:  {x: 32, y: 96, w: 16, h: 16},
 		TT_TENTACLE_RIGHT: {x: 32, y: 96, w: 16, h: 16},
 		TT_RUNE:           {x: 0, y: 112, w: 16, h: 16},
-		TT_DECOR:          {x: 48, y: 96, w: 16, h: 16},
-	}
-	tileConstraints = map[TileType]TConstraints{
-		TT_EMPTY: {
-			left:   []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_RIGHT, TT_SLOPE_45, TT_SLOPE_315, TT_SLOPE_225, TT_SLOPE_135, TT_RUNE, TT_DECOR},
-			right:  []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_LEFT, TT_SLOPE_45, TT_SLOPE_315, TT_SLOPE_225, TT_SLOPE_135, TT_RUNE, TT_DECOR},
-			top:    []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_DOWN, TT_SLOPE_45, TT_SLOPE_315, TT_SLOPE_225, TT_SLOPE_135, TT_RUNE, TT_DECOR},
-			bottom: []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_UP, TT_SLOPE_45, TT_SLOPE_315, TT_SLOPE_225, TT_SLOPE_135, TT_RUNE, TT_DECOR},
-		},
-		TT_BLOCK: {
-			left:   []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_LEFT, TT_DECOR, TT_RUNE, TT_SLOPE_135, TT_SLOPE_225},
-			right:  []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_RIGHT, TT_DECOR, TT_RUNE, TT_SLOPE_45, TT_SLOPE_315},
-			top:    []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_UP, TT_DECOR, TT_RUNE, TT_SLOPE_45, TT_SLOPE_135},
-			bottom: []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_DOWN, TT_DECOR, TT_RUNE, TT_SLOPE_225, TT_SLOPE_315},
-		},
-		TT_SLOPE_45: {
-			left:   []TileType{TT_BLOCK, TT_SLOPE_135},
-			right:  []TileType{TT_EMPTY, TT_DECOR},
-			top:    []TileType{TT_EMPTY, TT_DECOR},
-			bottom: []TileType{TT_BLOCK, TT_SLOPE_315},
-		},
-		TT_SLOPE_135: {
-			left:   []TileType{TT_EMPTY, TT_DECOR},
-			right:  []TileType{TT_BLOCK, TT_SLOPE_45},
-			top:    []TileType{TT_EMPTY, TT_DECOR},
-			bottom: []TileType{TT_BLOCK, TT_SLOPE_225},
-		},
-		TT_SLOPE_225: {
-			left:   []TileType{TT_EMPTY, TT_DECOR},
-			right:  []TileType{TT_BLOCK, TT_SLOPE_315},
-			top:    []TileType{TT_BLOCK, TT_SLOPE_135},
-			bottom: []TileType{TT_EMPTY, TT_DECOR},
-		},
-		TT_SLOPE_315: {
-			left:   []TileType{TT_BLOCK, TT_SLOPE_225},
-			right:  []TileType{TT_EMPTY, TT_DECOR},
-			top:    []TileType{TT_BLOCK, TT_SLOPE_45},
-			bottom: []TileType{TT_EMPTY, TT_DECOR},
-		},
-		TT_TENTACLE_UP: {
-			left:   []TileType{TT_EMPTY, TT_TENTACLE_UP},
-			right:  []TileType{TT_EMPTY, TT_TENTACLE_UP},
-			top:    []TileType{TT_EMPTY},
-			bottom: []TileType{TT_BLOCK, TT_RUNE},
-		},
-		TT_TENTACLE_DOWN: {
-			left:   []TileType{TT_EMPTY, TT_TENTACLE_DOWN},
-			right:  []TileType{TT_EMPTY, TT_TENTACLE_DOWN},
-			top:    []TileType{TT_BLOCK, TT_RUNE},
-			bottom: []TileType{TT_EMPTY},
-		},
-		TT_TENTACLE_LEFT: {
-			left:   []TileType{TT_EMPTY},
-			right:  []TileType{TT_BLOCK},
-			top:    []TileType{TT_EMPTY, TT_TENTACLE_LEFT},
-			bottom: []TileType{TT_EMPTY, TT_TENTACLE_LEFT},
-		},
-		TT_TENTACLE_RIGHT: {
-			left:   []TileType{TT_BLOCK},
-			right:  []TileType{TT_EMPTY},
-			top:    []TileType{TT_EMPTY, TT_TENTACLE_RIGHT},
-			bottom: []TileType{TT_EMPTY, TT_TENTACLE_RIGHT},
-		},
-		TT_RUNE: {
-			left:   []TileType{TT_EMPTY, TT_RUNE, TT_BLOCK},
-			right:  []TileType{TT_EMPTY, TT_RUNE, TT_BLOCK},
-			top:    []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_UP},
-			bottom: []TileType{TT_EMPTY, TT_BLOCK, TT_TENTACLE_DOWN},
-		},
-		TT_DECOR: {
-			left:   []TileType{TT_EMPTY, TT_BLOCK, TT_DECOR, TT_RUNE},
-			right:  []TileType{TT_EMPTY, TT_BLOCK, TT_DECOR, TT_RUNE},
-			top:    []TileType{TT_EMPTY, TT_BLOCK, TT_DECOR, TT_RUNE},
-			bottom: []TileType{TT_EMPTY, TT_BLOCK, TT_DECOR, TT_RUNE},
-		},
+		TT_PYLON:          {x: 48, y: 96, w: 16, h: 16},
 	}
 }
 
-type Tile struct {
-	*Sprite
-	ty TileType
-}
+func SpriteFromTile(tt TileType) *Sprite {
+	if tt != TT_EMPTY {
+		orient := 0
 
-func NewTile(ty TileType) *Tile {
-	orient := 0
+		switch tt {
+		case TT_SLOPE_45, TT_TENTACLE_RIGHT:
+			orient = 1
+		case TT_SLOPE_315, TT_TENTACLE_DOWN:
+			orient = 2
+		case TT_SLOPE_225, TT_TENTACLE_LEFT:
+			orient = 3
+		}
 
-	switch ty {
-	case TT_SLOPE_45, TT_TENTACLE_RIGHT:
-		orient = 1
-	case TT_SLOPE_315, TT_TENTACLE_DOWN:
-		orient = 2
-	case TT_SLOPE_225, TT_TENTACLE_LEFT:
-		orient = 3
-	}
+		if tt == TT_RUNE {
+			tileTypeRects[tt] = Rect{x: math.Floor(rand.Float64()*4.0) * 16.0, y: 112, w: 16, h: 16}
+		}
 
-	var spr *Sprite
-	if ty != TT_EMPTY {
-		spr = &Sprite{
-			src:    tileTypeRects[ty],
+		return &Sprite{
+			src:    tileTypeRects[tt],
 			ofs:    ZeroVec(),
 			flipH:  false,
 			flipV:  false,
 			orient: orient,
 		}
-	}
-	return &Tile{
-		spr,
-		ty,
+	} else {
+		return nil
 	}
 }
 
-func PropagateTile(t [][]TileType, x, y int) {
-	cst := tileConstraints[t[y][x]]
-	h := len(t)
-	w := len(t[0])
-	if x > 0 {
-		if t[y][x-1] == -1 {
-			t[y][x-1] = cst.left[rand.Intn(len(cst.left))]
-			defer PropagateTile(t, x-1, y)
-		}
+func (level *Level) IsOccupied(x, y int) bool {
+	if x <= 0 || y <= 0 || x >= level.cols || y >= level.rows {
+		return true
 	}
-	if x < w-1 {
-		if t[y][x+1] == -1 {
-			t[y][x+1] = cst.right[rand.Intn(len(cst.right))]
-			defer PropagateTile(t, x+1, y)
+	return level.tiles[y][x]&TT_SOLIDS > 0
+}
+
+func (level *Level) FindEmptySpace(r int) (x, y int) {
+	for {
+		x, y = rand.Intn(level.cols), rand.Intn(level.rows)
+		for j := y - r; j <= y+r; j++ {
+			for i := x - r; i <= x+r; i++ {
+				if i > 0 && j > 0 && i < level.cols-1 && j < level.rows-1 && level.IsOccupied(i, j) {
+					goto reject
+				}
+			}
 		}
+		break
+	reject:
 	}
-	if y > 0 {
-		if t[y-1][x] == -1 {
-			t[y-1][x] = cst.top[rand.Intn(len(cst.top))]
-			defer PropagateTile(t, x, y-1)
-		}
-	}
-	if y < h-1 {
-		if t[y+1][x] == -1 {
-			t[y+1][x] = cst.bottom[rand.Intn(len(cst.bottom))]
-			defer PropagateTile(t, x, y+1)
-		}
-	}
+	return x, y
 }
 
 func GenerateLevel(w, h int) *Level {
@@ -220,75 +124,167 @@ func GenerateLevel(w, h int) *Level {
 	for j := 0; j < h; j++ {
 		t[j] = make([]TileType, w)
 		for i := 0; i < w; i++ {
-			t[j][i] = -1
+			t[j][i] = TT_EMPTY
 		}
 	}
 
-	x, y := rand.Intn(w), rand.Intn(h)
-	t[y][x] = TT_BLOCK
-	PropagateTile(t, x, y)
-
-	//Correct tiles
-	for k := 0; k < 10; k++ {
-		for j := 0; j < h; j++ {
-			for i := 0; i < w; i++ {
-				potentialSet := list.New()
-				for _, tt := range allTileTypes {
-					potentialSet.PushBack(tt)
+	//Generate solid structures
+	var p func(x, y int, f float32, fd float32)
+	p = func(x, y int, f, fd float32) {
+		t[y][x] = TT_BLOCK
+		//Create a blob by recursively adding tiles adjacent to the one just placed with decreasing probability
+		if f > 0.0 {
+			if x > 0 && rand.Float32() < f {
+				p(x-1, y, f-fd, fd)
+			}
+			if x < w-1 && rand.Float32() < f {
+				p(x+1, y, f-fd, fd)
+			}
+			if y > 0 && rand.Float32() < f {
+				p(x, y-1, f-fd, fd)
+			}
+			if y < h-1 && rand.Float32() < f {
+				p(x, y+1, f-fd, fd)
+			}
+		}
+	}
+	for k := 0; k < w*h/64; k++ {
+		x, y := rand.Intn(w-16)+8, rand.Intn(h-16)+8
+		p(x, y, 1.0, 0.25)
+	}
+	//Smooth edges and create gaps
+	for j := 0; j < h; j++ {
+		for i := 0; i < w; i++ {
+			nn := 0
+			ln := false
+			if i > 0 {
+				ln = t[j][i-1]&TT_SOLIDS > 0
+				if ln {
+					nn++
 				}
-				intersect := func(tc []TileType) {
-					if potentialSet.Len() != 0 {
-						for tt := potentialSet.Front(); tt != nil; tt = tt.Next() {
-							t := tt.Value.(TileType)
-							//tn := tt.Next()
-							for _, c := range tc {
-								if t == c {
-									goto valid
-								}
-							}
-							//When the type in the potential set is not valid in the tile's constraints
-							potentialSet.Remove(tt)
-							//tt = tn
-						valid:
-						}
+			}
+			rn := false
+			if i < w-1 {
+				rn = t[j][i+1]&TT_SOLIDS > 0
+				if rn {
+					nn++
+				}
+			}
+			tn := false
+			if j > 0 {
+				tn = t[j-1][i]&TT_SOLIDS > 0
+				if tn {
+					nn++
+				}
+			}
+			bn := false
+			if j < h-1 {
+				bn = t[j+1][i]&TT_SOLIDS > 0
+				if bn {
+					nn++
+				}
+			}
+			//Remove random holes
+			if nn == 4 {
+				t[j][i] = TT_BLOCK
+			}
+			//Turn poking structures into tentacles
+			if nn == 1 && t[j][i] == TT_BLOCK {
+				switch {
+				case bn:
+					if t[j+1][i] == TT_BLOCK {
+						t[j][i] = TT_TENTACLE_UP
+					}
+				case tn:
+					if t[j-1][i] == TT_BLOCK {
+						t[j][i] = TT_TENTACLE_DOWN
+					}
+				case ln:
+					if t[j][i-1] == TT_BLOCK {
+						t[j][i] = TT_TENTACLE_RIGHT
+					}
+				case rn:
+					if t[j][i+1] == TT_BLOCK {
+						t[j][i] = TT_TENTACLE_LEFT
 					}
 				}
-				if i > 0 {
-					intersect(tileConstraints[t[j][i-1]].right)
-				}
-				if i < w-1 {
-					intersect(tileConstraints[t[j][i+1]].left)
-				}
-				if j > 0 {
-					intersect(tileConstraints[t[j-1][i]].bottom)
-				}
-				if j < h-1 {
-					intersect(tileConstraints[t[j+1][i]].top)
-				}
-				if potentialSet.Len() > 0 {
-					//Create array of possible set
-					ps := make([]TileType, 0, potentialSet.Len())
-					for tte := potentialSet.Front(); tte != nil; tte = tte.Next() {
-						tt := tte.Value.(TileType)
-						ps = append(ps, tt)
-					}
-					t[j][i] = ps[rand.Intn(len(ps))]
-				} else {
-					fmt.Printf("Impossible tile at %d, %d", i, j)
-					t[j][i] = TT_EMPTY
+			}
+			if t[j][i] == TT_BLOCK {
+				//Turn into slope?
+				if ln && bn && !tn && !rn {
+					t[j][i] = TT_SLOPE_45
+				} else if rn && bn && !ln && !tn {
+					t[j][i] = TT_SLOPE_135
+				} else if rn && tn && !ln && !bn {
+					t[j][i] = TT_SLOPE_225
+				} else if ln && tn && !rn && !bn {
+					t[j][i] = TT_SLOPE_315
 				}
 			}
 		}
 	}
+	level := &Level{tiles: t, rows: h, cols: w}
 
-	tiles := make([][]*Tile, h)
-	for j := 0; j < h; j++ {
-		tiles[j] = make([]*Tile, w)
-		for i := 0; i < w; i++ {
-			tiles[j][i] = NewTile(t[j][i])
+	//Add pylons
+	for i := 0; i < w*h/48; i++ {
+		pix, piy := level.FindEmptySpace(1)
+		level.tiles[piy][pix] = TT_PYLON
+	}
+
+	//Add rune bars
+	var rune func(x, y, d, l int)
+	rune = func(x, y, d, l int) {
+		level.tiles[y][x] = TT_RUNE
+		if l > 0 {
+			if d == 2 && !level.IsOccupied(x-1, y) {
+				rune(x-1, y, d, l-1)
+			} else if d == 0 && !level.IsOccupied(x+1, y) {
+				rune(x+1, y, d, l-1)
+			} else if d == 1 && !level.IsOccupied(x, y-1) {
+				rune(x, y-1, d, l-1)
+			} else if d == 3 && !level.IsOccupied(x, y+1) {
+				rune(x, y+1, d, l-1)
+			}
+			if rand.Float32() < 0.2 {
+				var nd int
+				if d == 2 || d == 0 {
+					if rand.Float32() > 0.5 {
+						nd = 1
+					} else {
+						nd = 3
+					}
+				} else {
+					if rand.Float32() > 0.5 {
+						nd = 2
+					} else {
+						nd = 0
+					}
+				}
+				rune(x, y, nd, l)
+			}
 		}
 	}
-	return &Level{tiles: tiles, rows: h, cols: w, pixelW: w * TILE_SIZE, pixelH: h * TILE_SIZE}
+	for i := 0; i < w*h/1024; i++ {
+		rx, ry := level.FindEmptySpace(0)
+		for j := 0; j < 4; j++ {
+			rune(rx, ry, j, 4)
+		}
+	}
+
+	sprites := make([][]*Sprite, h)
+	for j := 0; j < h; j++ {
+		sprites[j] = make([]*Sprite, w)
+		for i := 0; i < w; i++ {
+			sprites[j][i] = SpriteFromTile(t[j][i])
+		}
+	}
+	spawns := make([]*Spawn, 0, 10)
+	px, py := level.FindEmptySpace(0)
+	spawns = append(spawns, &Spawn{spawnType: SP_PLAYER, ix: px, iy: py})
+
+	level.sprites = sprites
+	level.spawns = spawns
+	return level
 }
 
 func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {
@@ -297,8 +293,8 @@ func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {
 		op.GeoM.Concat(*pt)
 		op.GeoM.Translate(0.0, float64(j)*TILE_SIZE)
 		for i := 0; i < lev.cols; i++ {
-			if lev.tiles[j][i].Sprite != nil {
-				lev.tiles[j][i].Draw(screen, &op.GeoM)
+			if lev.sprites[j][i] != nil {
+				lev.sprites[j][i].Draw(screen, &op.GeoM)
 			}
 			op.GeoM.Translate(TILE_SIZE, 0.0)
 		}
