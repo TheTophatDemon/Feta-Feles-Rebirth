@@ -34,13 +34,7 @@ func MakePlayer(game *Game, x, y float64) *Player {
 	game.objects.PushBack(&Object{
 		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
-			{
-				subImg: graphics.SubImage(image.Rect(0, 0, 16, 16)).(*ebiten.Image),
-				ofs:    ZeroVec(),
-				flipH:  false,
-				flipV:  false,
-				orient: 0,
-			},
+			NewSprite(image.Rect(0, 0, 16, 16), ZeroVec(), false, false, 0),
 		},
 		components: []Component{player},
 	})

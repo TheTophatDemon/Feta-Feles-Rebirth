@@ -86,13 +86,7 @@ func SpriteFromTile(tt TileType) *Sprite {
 			tileTypeRects[tt] = image.Rect(x, 112, x+16, 128)
 		}
 
-		return &Sprite{
-			subImg: graphics.SubImage(tileTypeRects[tt]).(*ebiten.Image),
-			ofs:    ZeroVec(),
-			flipH:  false,
-			flipV:  false,
-			orient: orient,
-		}
+		return NewSprite(tileTypeRects[tt], ZeroVec(), false, false, orient)
 	} else {
 		return nil
 	}
