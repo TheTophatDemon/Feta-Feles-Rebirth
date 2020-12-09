@@ -17,6 +17,7 @@ type Level struct {
 	sprites    [][]*Sprite
 	spawns     []*Spawn
 	rows, cols int
+	positions  [][]ebiten.GeoM
 }
 
 type SpawnType int
@@ -290,24 +291,30 @@ func GenerateLevel(w, h int) *Level {
 
 	level.sprites = sprites
 	level.spawns = spawns
+
+	level.positions = make([][]ebiten.GeoM, h)
+	mat := new(ebiten.GeoM)
+	for j := 0; j < h; j++ {
+		level.positions[j] = make([]ebiten.GeoM, w)
+		mat.Translate(0.0, float64(j)*TILE_SIZE)
+		for i := 0; i < w; i++ {
+			level.positions[j][i] = *mat
+			mat.Translate(TILE_SIZE, 0.0)
+		}
+		mat.Reset()
+	}
+
 	return level
 }
 
-func (lev *Level) GenerateSprites() {
-
-}
-
 func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {
-	op := &ebiten.DrawImageOptions{}
 	for j := 0; j < lev.rows; j++ {
-		op.GeoM.Concat(*pt)
-		op.GeoM.Translate(0.0, float64(j)*TILE_SIZE)
 		for i := 0; i < lev.cols; i++ {
 			if lev.sprites[j][i] != nil {
-				lev.sprites[j][i].Draw(screen, &op.GeoM)
+				mat := lev.positions[j][i]
+				mat.Concat(*pt)
+				lev.sprites[j][i].Draw(screen, &mat)
 			}
-			op.GeoM.Translate(TILE_SIZE, 0.0)
 		}
-		op.GeoM.Reset()
 	}
 }
