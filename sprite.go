@@ -10,7 +10,7 @@ import (
 //Todo: Remove middleman and store sub-image instead of src
 
 type Sprite struct {
-	src    Rect
+	subImg *ebiten.Image
 	ofs    *Vec2f
 	flipH  bool
 	flipV  bool
@@ -19,10 +19,9 @@ type Sprite struct {
 
 func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	op := &ebiten.DrawImageOptions{}
-
 	//Perform rotation and scaling with respect to the center
-	hw := spr.src.w / 2
-	hh := spr.src.h / 2
+	hw := float64(spr.subImg.Bounds().Dx()) / 2.0
+	hh := float64(spr.subImg.Bounds().Dy()) / 2.0
 	op.GeoM.Translate(-hw, -hh)
 	scx := 1.0
 	if spr.flipH {
@@ -35,8 +34,7 @@ func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	op.GeoM.Scale(scx, scy)
 	op.GeoM.Rotate(float64(spr.orient) * math.Pi / 2.0)
 	op.GeoM.Translate(hw, hh)
-
 	op.GeoM.Translate(spr.ofs.x, spr.ofs.y)
 	op.GeoM.Concat(*pt)
-	target.DrawImage(graphics.SubImage(spr.src.ToImgRect()).(*ebiten.Image), op)
+	target.DrawImage(spr.subImg, op)
 }

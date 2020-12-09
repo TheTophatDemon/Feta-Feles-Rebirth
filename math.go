@@ -1,17 +1,8 @@
 package main
 
 import (
-	"image"
 	"math"
 )
-
-type Rect struct {
-	x, y, w, h float64
-}
-
-func (r *Rect) ToImgRect() image.Rectangle {
-	return image.Rect(int(r.x), int(r.y), int(r.x+r.w), int(r.y+r.h))
-}
 
 type Vec2f struct {
 	x, y float64

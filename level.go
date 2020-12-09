@@ -1,6 +1,7 @@
 package main
 
 import (
+	"image"
 	"math"
 	"math/rand"
 
@@ -46,24 +47,24 @@ const (
 	TT_RUNE           TileType = 1 << 9
 	TT_PYLON          TileType = 1 << 10
 
-	TT_SOLIDS TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON
+	TT_SOLIDS TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON | TT_RUNE
 )
 
-var tileTypeRects map[TileType]Rect
+var tileTypeRects map[TileType]image.Rectangle
 
 func init() {
-	tileTypeRects = map[TileType]Rect{
-		TT_BLOCK:          {x: 16, y: 96, w: 16, h: 16},
-		TT_SLOPE_45:       {x: 0, y: 96, w: 16, h: 16},
-		TT_SLOPE_135:      {x: 0, y: 96, w: 16, h: 16},
-		TT_SLOPE_225:      {x: 0, y: 96, w: 16, h: 16},
-		TT_SLOPE_315:      {x: 0, y: 96, w: 16, h: 16},
-		TT_TENTACLE_UP:    {x: 32, y: 96, w: 16, h: 16},
-		TT_TENTACLE_DOWN:  {x: 32, y: 96, w: 16, h: 16},
-		TT_TENTACLE_LEFT:  {x: 32, y: 96, w: 16, h: 16},
-		TT_TENTACLE_RIGHT: {x: 32, y: 96, w: 16, h: 16},
-		TT_RUNE:           {x: 0, y: 112, w: 16, h: 16},
-		TT_PYLON:          {x: 48, y: 96, w: 16, h: 16},
+	tileTypeRects = map[TileType]image.Rectangle{
+		TT_BLOCK:          image.Rect(16, 96, 32, 112),
+		TT_SLOPE_45:       image.Rect(0, 96, 16, 112),
+		TT_SLOPE_135:      image.Rect(0, 96, 16, 112),
+		TT_SLOPE_225:      image.Rect(0, 96, 16, 112),
+		TT_SLOPE_315:      image.Rect(0, 96, 16, 112),
+		TT_TENTACLE_UP:    image.Rect(32, 96, 48, 112),
+		TT_TENTACLE_DOWN:  image.Rect(32, 96, 48, 112),
+		TT_TENTACLE_LEFT:  image.Rect(32, 96, 48, 112),
+		TT_TENTACLE_RIGHT: image.Rect(32, 96, 48, 112),
+		TT_RUNE:           image.Rect(0, 112, 16, 128),
+		TT_PYLON:          image.Rect(48, 96, 64, 112),
 	}
 }
 
@@ -81,11 +82,12 @@ func SpriteFromTile(tt TileType) *Sprite {
 		}
 
 		if tt == TT_RUNE {
-			tileTypeRects[tt] = Rect{x: math.Floor(rand.Float64()*4.0) * 16.0, y: 112, w: 16, h: 16}
+			x := int(math.Floor(rand.Float64()*4.0)) * 16
+			tileTypeRects[tt] = image.Rect(x, 112, x+16, 128)
 		}
 
 		return &Sprite{
-			src:    tileTypeRects[tt],
+			subImg: graphics.SubImage(tileTypeRects[tt]).(*ebiten.Image),
 			ofs:    ZeroVec(),
 			flipH:  false,
 			flipV:  false,
@@ -115,6 +117,16 @@ func (level *Level) FindEmptySpace(r int) (x, y int) {
 		}
 		break
 	reject:
+	}
+	return x, y
+}
+
+func (level *Level) FindFullSpace() (x, y int) {
+	for {
+		x, y = rand.Intn(level.cols), rand.Intn(level.rows)
+		if level.IsOccupied(x, y) {
+			break
+		}
 	}
 	return x, y
 }
@@ -225,24 +237,18 @@ func GenerateLevel(w, h int) *Level {
 	}
 	level := &Level{tiles: t, rows: h, cols: w}
 
-	//Add pylons
-	for i := 0; i < w*h/48; i++ {
-		pix, piy := level.FindEmptySpace(1)
-		level.tiles[piy][pix] = TT_PYLON
-	}
-
 	//Add rune bars
 	var rune func(x, y, d, l int)
 	rune = func(x, y, d, l int) {
 		level.tiles[y][x] = TT_RUNE
 		if l > 0 {
-			if d == 2 && !level.IsOccupied(x-1, y) {
+			if d == 2 && level.IsOccupied(x-1, y) && x > 0 {
 				rune(x-1, y, d, l-1)
-			} else if d == 0 && !level.IsOccupied(x+1, y) {
+			} else if d == 0 && level.IsOccupied(x+1, y) && x < w-1 {
 				rune(x+1, y, d, l-1)
-			} else if d == 1 && !level.IsOccupied(x, y-1) {
+			} else if d == 1 && level.IsOccupied(x, y-1) && y > 0 {
 				rune(x, y-1, d, l-1)
-			} else if d == 3 && !level.IsOccupied(x, y+1) {
+			} else if d == 3 && level.IsOccupied(x, y+1) && y < h-1 {
 				rune(x, y+1, d, l-1)
 			}
 			if rand.Float32() < 0.2 {
@@ -265,10 +271,16 @@ func GenerateLevel(w, h int) *Level {
 		}
 	}
 	for i := 0; i < w*h/1024; i++ {
-		rx, ry := level.FindEmptySpace(0)
+		rx, ry := level.FindFullSpace()
 		for j := 0; j < 4; j++ {
 			rune(rx, ry, j, 4)
 		}
+	}
+
+	//Add pylons
+	for i := 0; i < w*h/48; i++ {
+		pix, piy := level.FindEmptySpace(1)
+		level.tiles[piy][pix] = TT_PYLON
 	}
 
 	sprites := make([][]*Sprite, h)
@@ -285,6 +297,10 @@ func GenerateLevel(w, h int) *Level {
 	level.sprites = sprites
 	level.spawns = spawns
 	return level
+}
+
+func (lev *Level) GenerateSprites() {
+
 }
 
 func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {

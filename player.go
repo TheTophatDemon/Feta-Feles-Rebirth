@@ -1,6 +1,8 @@
 package main
 
 import (
+	"image"
+
 	"github.com/hajimehoshi/ebiten"
 )
 
@@ -33,7 +35,7 @@ func MakePlayer(game *Game, x, y float64) *Player {
 		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
 			{
-				src:    Rect{0, 0, 16, 16},
+				subImg: graphics.SubImage(image.Rect(0, 0, 16, 16)).(*ebiten.Image),
 				ofs:    ZeroVec(),
 				flipH:  false,
 				flipV:  false,
