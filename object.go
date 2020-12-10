@@ -6,7 +6,7 @@ const (
 	CT_NONE = iota
 	CT_PLAYER
 	CT_ENEMY
-	CT_BULLET
+	CT_SHOT
 	CT_ITEM
 )
 
@@ -21,4 +21,5 @@ type Object struct {
 	colType    ColType
 	sprites    []*Sprite
 	components []Component
+	removeMe   bool
 }

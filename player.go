@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	MAX_LOVE = 100
+	MAX_LOVE      = 100
+	PL_SHOOT_FREQ = 0.33
 )
 
 type PlayerState int32
@@ -20,21 +21,28 @@ const (
 
 type Player struct {
 	*Actor
-	love  int
-	state PlayerState
+	love       int
+	state      PlayerState
+	shootTimer float64
 }
 
-func MakePlayer(game *Game, x, y float64) *Player {
+var plSpriteNormal *Sprite
+var plSpriteShoot *Sprite
+
+func AddPlayer(game *Game, x, y float64) *Player {
 	player := &Player{
 		Actor: NewActor(120.0, 500_000.0, 50_000.0),
 		love:  0,
 		state: PS_NORMAL,
 	}
 
+	plSpriteNormal = NewSprite(image.Rect(0, 0, 16, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
+	plSpriteShoot = NewSprite(image.Rect(16, 0, 32, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
+
 	game.objects.PushBack(&Object{
 		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
-			NewSprite(image.Rect(0, 0, 16, 16), &Vec2f{-8.0, -8.0}, false, false, 0),
+			plSpriteNormal,
 		},
 		components: []Component{player},
 	})
@@ -43,9 +51,31 @@ func MakePlayer(game *Game, x, y float64) *Player {
 }
 
 func (player *Player) Update(game *Game, obj *Object) {
+	//Attack
+	if player.shootTimer <= 0.0 {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) || ebiten.IsKeyPressed(ebiten.KeySpace) {
+			var dir *Vec2f
+			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+				cx, cy := ebiten.CursorPosition()
+				rPos := obj.pos.Clone().Sub(game.camPos).Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
+				dir = (&Vec2f{float64(cx), float64(cy)}).Sub(rPos)
+			} else if ebiten.IsKeyPressed(ebiten.KeySpace) {
+				dir = player.facing.Clone()
+			}
+			AddShot(game, obj.pos, dir, 240.0, false)
+			player.shootTimer = PL_SHOOT_FREQ
+		}
+	}
 
-	var dx, dy float64
+	if player.shootTimer > 0.0 {
+		obj.sprites[0] = plSpriteShoot
+		player.shootTimer -= game.deltaTime
+	} else {
+		obj.sprites[0] = plSpriteNormal
+	}
+
 	//Movement
+	var dx, dy float64
 	if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyW) {
 		dy = -1.0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {

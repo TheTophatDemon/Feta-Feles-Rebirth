@@ -38,6 +38,7 @@ type Game struct {
 
 var game *Game
 
+//To mark points visually for inspection of collision detection
 var debugSpot *Vec2f
 var debugSprite *Sprite
 
@@ -51,6 +52,9 @@ func (g *Game) Update() error {
 		obj := objE.Value.(*Object)
 		for _, c := range obj.components {
 			c.Update(g, obj)
+		}
+		if obj.removeMe {
+			g.objects.Remove(objE)
 		}
 	}
 	return nil
@@ -106,7 +110,7 @@ func main() {
 	graphics = ebiten.NewImageFromImage(img)
 
 	debugSpot = ZeroVec()
-	debugSprite = NewSprite(image.Rect(144, 0, 152, 8), &Vec2f{-4.0, -4.0}, false, false, 0)
+	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
 
 	//Initialize world
 	game.objects = list.New()
@@ -114,7 +118,7 @@ func main() {
 
 	for _, sp := range game.level.spawns {
 		if sp.spawnType == SP_PLAYER {
-			MakePlayer(game, float64(sp.ix)*TILE_SIZE+8.0, float64(sp.iy)*TILE_SIZE+8.0)
+			AddPlayer(game, float64(sp.ix)*TILE_SIZE+8.0, float64(sp.iy)*TILE_SIZE+8.0)
 		}
 	}
 

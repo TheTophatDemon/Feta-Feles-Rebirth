@@ -8,6 +8,7 @@ import (
 type Actor struct {
 	velocity     *Vec2f
 	movement     *Vec2f //Unit vector representing desired movement direction
+	facing       *Vec2f //Represents the last direction the actor faced when moving
 	maxSpeed     float64
 	acceleration float64 //Rate of acceleration in units per seconds squared
 	friction     float64 //Rate of deceleration in units per seconds squared
@@ -17,6 +18,7 @@ func NewActor(maxSpeed, acceleration, friction float64) *Actor {
 	return &Actor{
 		ZeroVec(),
 		ZeroVec(),
+		&Vec2f{0.0, 1.0},
 		maxSpeed,
 		acceleration,
 		friction,
@@ -25,7 +27,6 @@ func NewActor(maxSpeed, acceleration, friction float64) *Actor {
 
 func (actor *Actor) Update(game *Game, obj *Object) {
 	//Accelerate in direction of desired movement
-	actor.movement.Normalize()
 	actor.velocity.Add(actor.movement.Clone().Scale(game.deltaTime * game.deltaTime * actor.acceleration))
 
 	//Cap out at maximum speed
@@ -101,6 +102,10 @@ func (actor *Actor) ApplyMovement(obj *Object, vel *Vec2f) {
 }
 
 func (actor *Actor) Move(dx, dy float64) {
-	actor.movement.x = dx
-	actor.movement.y = dy
+	actor.movement = &Vec2f{dx, dy}
+	len := actor.movement.Length()
+	if len > 0.001 {
+		actor.movement.Scale(1.0 / len) //Normalization
+		actor.facing = actor.movement.Clone()
+	}
 }
