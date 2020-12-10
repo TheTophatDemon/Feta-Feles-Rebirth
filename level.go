@@ -322,3 +322,62 @@ func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {
 		}
 	}
 }
+
+//Pos is the position. I and J are the tile indices.
+func (level *Level) ProjectPosOntoTile(pos *Vec2f, i, j int) *Vec2f {
+	tileMin := &Vec2f{x: float64(i) * TILE_SIZE, y: float64(j) * TILE_SIZE}
+	tileMax := &Vec2f{x: float64(i+1) * TILE_SIZE, y: float64(j+1) * TILE_SIZE}
+
+	var proj *Vec2f
+	if level.tiles[j][i]&TT_SLOPES == 0 {
+		//Project onto a box by clamping the destination to the box boundaries
+		proj = VecMax(tileMin, VecMin(tileMax, pos))
+	} else {
+		//Project onto a diagonal plane using the dot product
+		tileCenter := tileMin.Clone().AddScalar(TILE_SIZE / 2.0)
+		cDiff := pos.Clone().Sub(tileCenter)
+		var angle float64
+		switch level.tiles[j][i] {
+		case TT_SLOPE_45:
+			angle = math.Pi / 4.0
+		case TT_SLOPE_135:
+			angle = 3.0 * math.Pi / 4.0
+		case TT_SLOPE_225:
+			angle = 5.0 * math.Pi / 4.0
+		case TT_SLOPE_315:
+			angle = 7.0 * math.Pi / 4.0
+		}
+		angle += math.Pi / 2.0
+		normal := &Vec2f{math.Cos(angle), math.Sin(angle)}
+		planeDist := VecDot(normal, cDiff)
+		proj = pos.Clone().Sub(normal.Clone().Scale(planeDist))
+		proj = VecMax(tileMin, VecMin(tileMax, proj))
+	}
+
+	return proj
+}
+
+func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64) (gridMin, gridMax *Vec2f) {
+	gridMin = VecMin(start, dest).SubScalar(radius).Scale(1.0 / TILE_SIZE).Floor()
+	gridMin = VecMax(ZeroVec(), gridMin)
+	gridMax = VecMax(start, dest).AddScalar(radius).Scale(1.0 / TILE_SIZE).Ceil()
+	gridMax = VecMin(&Vec2f{x: float64(level.cols), y: float64(level.rows)}, gridMax)
+	return
+}
+
+func (level *Level) ObjIntersects(obj *Object) bool {
+	gridMin, gridMax := level.GetGridAreaOverCapsule(obj.pos, obj.pos, obj.radius)
+
+	for j := int(gridMin.y); j < int(gridMax.y); j++ {
+		for i := int(gridMin.x); i < int(gridMax.x); i++ {
+			if game.level.tiles[j][i]&TT_SOLIDS > 0 {
+				diff := level.ProjectPosOntoTile(obj.pos, i, j).Sub(obj.pos)
+				if diff.Length() < obj.radius {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
