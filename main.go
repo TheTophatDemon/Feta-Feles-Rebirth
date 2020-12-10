@@ -38,6 +38,9 @@ type Game struct {
 
 var game *Game
 
+var debugSpot *Vec2f
+var debugSprite *Sprite
+
 //Update ...
 func (g *Game) Update() error {
 	gt := time.Since(startTime).Seconds()
@@ -68,6 +71,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			spr.Draw(screen, &objM.GeoM)
 		}
 	}
+
+	if debugSpot.x != 0.0 || debugSpot.y != 0.0 {
+		o := &ebiten.DrawImageOptions{}
+		o.GeoM.Concat(*camMat)
+		o.GeoM.Translate(debugSpot.x, debugSpot.y)
+		debugSprite.Draw(screen, &o.GeoM)
+	}
+
 	ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
 }
 
@@ -93,6 +104,9 @@ func main() {
 		log.Fatal(err)
 	}
 	graphics = ebiten.NewImageFromImage(img)
+
+	debugSpot = ZeroVec()
+	debugSprite = NewSprite(image.Rect(144, 0, 152, 8), &Vec2f{-4.0, -4.0}, false, false, 0)
 
 	//Initialize world
 	game.objects = list.New()
