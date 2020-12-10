@@ -13,7 +13,7 @@ type Sprite struct {
 }
 
 func NewSprite(src image.Rectangle, ofs *Vec2f, flipH, flipV bool, orient int) *Sprite {
-	subImg := graphics.SubImage(src).(*ebiten.Image)
+	subImg := GetGraphics().SubImage(src).(*ebiten.Image)
 	matrix := new(ebiten.GeoM)
 
 	//Perform rotation and scaling with respect to the center

@@ -1,5 +1,19 @@
 package main
 
+/*
+TODO:
+-Enemies
+	Knight
+	Blargh
+	Gopnik
+	Worm
+-Inter-object collisions
+-Love system
+-Fox
+-Feles
+-Music
+*/
+
 import (
 	"container/list"
 	"fmt"
@@ -23,8 +37,8 @@ const (
 )
 
 var (
-	graphics  *ebiten.Image
-	startTime = time.Now()
+	__graphics *ebiten.Image
+	startTime  = time.Now()
 )
 
 //Game ...
@@ -51,7 +65,9 @@ func (g *Game) Update() error {
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
 		for _, c := range obj.components {
-			c.Update(g, obj)
+			if c != nil {
+				c.Update(g, obj)
+			}
 		}
 		if obj.removeMe {
 			g.objects.Remove(objE)
@@ -91,23 +107,29 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return SCR_WIDTH, SCR_HEIGHT
 }
 
+//Returns the graphics page and loads it if it isn't there
+func GetGraphics() *ebiten.Image {
+	if __graphics == nil {
+		//Load graphics
+		reader, err := os.Open("assets/graphics.png")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer reader.Close()
+
+		img, _, err := image.Decode(reader)
+		if err != nil {
+			log.Fatal(err)
+		}
+		__graphics = ebiten.NewImageFromImage(img)
+	}
+	return __graphics
+}
+
 func main() {
 
 	//Init game
 	game = new(Game)
-
-	//Load graphics
-	reader, err := os.Open("assets/graphics.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer reader.Close()
-
-	img, _, err := image.Decode(reader)
-	if err != nil {
-		log.Fatal(err)
-	}
-	graphics = ebiten.NewImageFromImage(img)
 
 	debugSpot = ZeroVec()
 	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
