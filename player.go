@@ -29,15 +29,17 @@ type Player struct {
 var plSpriteNormal *Sprite
 var plSpriteShoot *Sprite
 
+func init() {
+	plSpriteNormal = NewSprite(image.Rect(0, 0, 16, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
+	plSpriteShoot = NewSprite(image.Rect(16, 0, 32, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
+}
+
 func AddPlayer(game *Game, x, y float64) *Player {
 	player := &Player{
 		Actor: NewActor(120.0, 500_000.0, 50_000.0),
 		love:  0,
 		state: PS_NORMAL,
 	}
-
-	plSpriteNormal = NewSprite(image.Rect(0, 0, 16, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
-	plSpriteShoot = NewSprite(image.Rect(16, 0, 32, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
 
 	game.objects.PushBack(&Object{
 		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
@@ -63,6 +65,7 @@ func (player *Player) Update(game *Game, obj *Object) {
 				dir = player.facing.Clone()
 			}
 			AddShot(game, obj.pos, dir, 240.0, false)
+			PlaySound("player_shot")
 			player.shootTimer = PL_SHOOT_FREQ
 		}
 	}
