@@ -49,6 +49,7 @@ const (
 	TT_PYLON          TileType = 1 << 10
 
 	TT_SOLIDS TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON | TT_RUNE
+	TT_SLOPES TileType = TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315
 )
 
 var tileTypeRects map[TileType]image.Rectangle
@@ -285,6 +286,7 @@ func GenerateLevel(w, h int) *Level {
 			sprites[j][i] = SpriteFromTile(t[j][i])
 		}
 	}
+
 	spawns := make([]*Spawn, 0, 10)
 	px, py := level.FindEmptySpace(0)
 	spawns = append(spawns, &Spawn{spawnType: SP_PLAYER, ix: px, iy: py})
@@ -292,6 +294,7 @@ func GenerateLevel(w, h int) *Level {
 	level.sprites = sprites
 	level.spawns = spawns
 
+	//Generate matrices to position each tile
 	level.positions = make([][]ebiten.GeoM, h)
 	mat := new(ebiten.GeoM)
 	for j := 0; j < h; j++ {
@@ -307,6 +310,7 @@ func GenerateLevel(w, h int) *Level {
 	return level
 }
 
+//Todo: Perhaps this can be optimized by having all the tiles share the same ebiten.DrawImageOptions?
 func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {
 	for j := 0; j < lev.rows; j++ {
 		for i := 0; i < lev.cols; i++ {
