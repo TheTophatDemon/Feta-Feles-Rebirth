@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 //Component that allows somewhat physically based movement
 type Actor struct {
@@ -36,8 +38,41 @@ func (actor *Actor) Update(game *Game, obj *Object) {
 	actor.velocity.Sub(
 		actor.velocity.Clone().Normalize().Scale(
 			math.Min(game.deltaTime*game.deltaTime*actor.friction, speed)))
+	actor.ApplyMovement(obj, actor.velocity.Clone().Scale(game.deltaTime))
+}
 
-	obj.pos.Add(actor.velocity.Clone().Scale(game.deltaTime))
+func (actor *Actor) ApplyMovement(obj *Object, vel *Vec2f) {
+	vel = vel.Clone()
+	newPos := obj.pos.Clone().Add(vel)
+
+	//Iterate over portion of the level grid that roughly covers the area between the object and its destination
+	gridMin := VecMin(obj.pos, newPos).
+		SubScalar(obj.radius).Scale(1.0 / TILE_SIZE).Floor()
+	gridMin = VecMax(ZeroVec(), gridMin)
+	gridMax := VecMax(obj.pos, newPos).
+		AddScalar(obj.radius).Scale(1.0 / TILE_SIZE).Ceil()
+	gridMax = VecMin(&Vec2f{x: float64(game.level.cols) - 1.0, y: float64(game.level.rows) - 1.0}, gridMax)
+
+	for j := int(gridMin.y); j < int(gridMax.y); j++ {
+		for i := int(gridMin.x); i < int(gridMax.x); i++ {
+			if game.level.tiles[j][i]&TT_SOLIDS > 0 {
+				//Project object's destination onto the tile boundary
+				dest := obj.pos.Clone().Add(vel)
+				box := VecMax(
+					&Vec2f{x: float64(i) * TILE_SIZE, y: float64(j) * TILE_SIZE},
+					VecMin(&Vec2f{x: float64(i+1) * TILE_SIZE, y: float64(j+1) * TILE_SIZE}, dest))
+				//debugSpot = box.Clone()
+				diff := dest.Clone().Sub(box)
+				push := obj.radius - diff.Length()
+				if push > 0 {
+					diff.Normalize().Scale(push)
+					vel.Add(diff)
+				}
+			}
+		}
+	}
+
+	obj.pos.Add(vel)
 }
 
 func (actor *Actor) Move(dx, dy float64) {
