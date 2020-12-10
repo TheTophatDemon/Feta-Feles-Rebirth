@@ -71,6 +71,10 @@ func (vec *Vec2f) Scale(s float64) *Vec2f {
 	return vec
 }
 
+func VecDot(v0, v1 *Vec2f) float64 {
+	return (v0.x * v1.x) + (v0.y * v1.y)
+}
+
 func VecMin(v0, v1 *Vec2f) *Vec2f {
 	return &Vec2f{
 		x: math.Min(v0.x, v1.x),
