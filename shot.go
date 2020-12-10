@@ -34,7 +34,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 	obj.pos.Add(shot.vel.Clone().Scale(game.deltaTime))
 
 	shot.life -= game.deltaTime
-	if shot.life < 0.0 {
+	if shot.life < 0.0 || game.level.ObjIntersects(obj) {
 		obj.removeMe = true
 	}
 }
