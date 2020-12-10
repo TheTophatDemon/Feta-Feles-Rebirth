@@ -36,6 +36,8 @@ type Game struct {
 	camPos      *Vec2f
 }
 
+var game *Game
+
 //Update ...
 func (g *Game) Update() error {
 	gt := time.Since(startTime).Seconds()
@@ -77,7 +79,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func main() {
 
 	//Init game
-	game := new(Game)
+	game = new(Game)
 
 	//Load graphics
 	reader, err := os.Open("assets/graphics.png")
