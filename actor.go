@@ -38,6 +38,7 @@ func (actor *Actor) Update(game *Game, obj *Object) {
 	actor.velocity.Sub(
 		actor.velocity.Clone().Normalize().Scale(
 			math.Min(game.deltaTime*game.deltaTime*actor.friction, speed)))
+
 	actor.ApplyMovement(obj, actor.velocity.Clone().Scale(game.deltaTime))
 }
 
@@ -51,18 +52,42 @@ func (actor *Actor) ApplyMovement(obj *Object, vel *Vec2f) {
 	gridMin = VecMax(ZeroVec(), gridMin)
 	gridMax := VecMax(obj.pos, newPos).
 		AddScalar(obj.radius).Scale(1.0 / TILE_SIZE).Ceil()
-	gridMax = VecMin(&Vec2f{x: float64(game.level.cols) - 1.0, y: float64(game.level.rows) - 1.0}, gridMax)
+	gridMax = VecMin(&Vec2f{x: float64(game.level.cols), y: float64(game.level.rows)}, gridMax)
 
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {
 			if game.level.tiles[j][i]&TT_SOLIDS > 0 {
-				//Project object's destination onto the tile boundary
+				tileMin := &Vec2f{x: float64(i) * TILE_SIZE, y: float64(j) * TILE_SIZE}
+				tileMax := &Vec2f{x: float64(i+1) * TILE_SIZE, y: float64(j+1) * TILE_SIZE}
 				dest := obj.pos.Clone().Add(vel)
-				box := VecMax(
-					&Vec2f{x: float64(i) * TILE_SIZE, y: float64(j) * TILE_SIZE},
-					VecMin(&Vec2f{x: float64(i+1) * TILE_SIZE, y: float64(j+1) * TILE_SIZE}, dest))
-				//debugSpot = box.Clone()
-				diff := dest.Clone().Sub(box)
+				//Project object's destination onto the tile boundary
+				var proj *Vec2f
+				if game.level.tiles[j][i]&TT_SLOPES == 0 {
+					//Project onto a box by clamping the destination to the box boundaries
+					proj = VecMax(tileMin, VecMin(tileMax, dest))
+				} else {
+					//Project onto a diagonal plane using the dot product
+					tileCenter := tileMin.Clone().AddScalar(TILE_SIZE / 2.0)
+					cDiff := dest.Clone().Sub(tileCenter)
+					var angle float64
+					switch game.level.tiles[j][i] {
+					case TT_SLOPE_45:
+						angle = math.Pi / 4.0
+					case TT_SLOPE_135:
+						angle = 3.0 * math.Pi / 4.0
+					case TT_SLOPE_225:
+						angle = 5.0 * math.Pi / 4.0
+					case TT_SLOPE_315:
+						angle = 7.0 * math.Pi / 4.0
+					}
+					angle += math.Pi / 2.0
+					normal := &Vec2f{math.Cos(angle), math.Sin(angle)}
+					planeDist := VecDot(normal, cDiff)
+					proj = dest.Clone().Sub(normal.Clone().Scale(planeDist))
+					proj = VecMax(tileMin, VecMin(tileMax, proj))
+				}
+				//debugSpot = proj.Clone()
+				diff := dest.Clone().Sub(proj)
 				push := obj.radius - diff.Length()
 				if push > 0 {
 					diff.Normalize().Scale(push)
