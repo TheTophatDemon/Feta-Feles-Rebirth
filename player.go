@@ -34,7 +34,7 @@ func MakePlayer(game *Game, x, y float64) *Player {
 	game.objects.PushBack(&Object{
 		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
-			NewSprite(image.Rect(0, 0, 16, 16), ZeroVec(), false, false, 0),
+			NewSprite(image.Rect(0, 0, 16, 16), &Vec2f{-8.0, -8.0}, false, false, 0),
 		},
 		components: []Component{player},
 	})
