@@ -2,14 +2,16 @@ package main
 
 /*
 TODO:
--Enemies
-	Knight
-	Blargh
-	Gopnik
-	Worm
--Inter-object collisions
+-Bouncy bullets
+-Enemies, getting hurt and dying
+-Knight
+-Blargh
+-Gopnik
+-Worm
+-Barrels
 -Love system
--Fox
+-Cat
+-Text rendering
 -Feles
 -Music
 */
@@ -21,6 +23,7 @@ import (
 	_ "image/color"
 	_ "image/png"
 	"log"
+	"math/rand"
 	"os"
 
 	"time"
@@ -62,16 +65,45 @@ func (g *Game) Update() error {
 	g.deltaTime = gt - g.elapsedTime
 	g.elapsedTime = gt
 
+	//Update objects
+	toRemove := make([]*list.Element, 0, 4)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
+		//Update components
 		for _, c := range obj.components {
 			if c != nil {
 				c.Update(g, obj)
 			}
 		}
+		//Objects are removed later so that they doesn't interfere with collision events
 		if obj.removeMe {
-			g.objects.Remove(objE)
+			toRemove = append(toRemove, objE)
 		}
+	}
+	//Resolve inter-object collisions
+	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
+		obj := objE.Value.(*Object)
+		if obj.colType != CT_NONE {
+			//O(n^2)...Bleh!
+			for obj2E := g.objects.Front(); obj2E != nil; obj2E = obj2E.Next() {
+				obj2 := obj2E.Value.(*Object)
+				if obj2.colType != CT_NONE && obj2 != obj {
+					if obj.Intersects(obj2) {
+						for _, c := range obj.components {
+							col, ok := c.(Collidable)
+							if ok {
+								//An equivalent event will be sent for the other object when it is evaluated in the outer loop
+								col.OnCollision(g, obj, obj2)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	//Remove objects flagged for removal
+	for _, objE := range toRemove {
+		g.objects.Remove(objE)
 	}
 	return nil
 }
@@ -127,7 +159,7 @@ func GetGraphics() *ebiten.Image {
 }
 
 func main() {
-
+	rand.Seed(time.Now().UnixNano())
 	//Init game
 	game = new(Game)
 
@@ -138,9 +170,15 @@ func main() {
 	game.objects = list.New()
 	game.level = GenerateLevel(64, 64)
 
+	center := func(x int) float64 {
+		return float64(x)*TILE_SIZE + 8.0
+	}
 	for _, sp := range game.level.spawns {
-		if sp.spawnType == SP_PLAYER {
-			AddPlayer(game, float64(sp.ix)*TILE_SIZE+8.0, float64(sp.iy)*TILE_SIZE+8.0)
+		switch sp.spawnType {
+		case SP_PLAYER:
+			AddPlayer(game, center(sp.ix), center(sp.iy))
+		case SP_ENEMY:
+			AddKnight(game, center(sp.ix), center(sp.iy))
 		}
 	}
 
