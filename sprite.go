@@ -36,6 +36,14 @@ func NewSprite(src image.Rectangle, ofs *Vec2f, flipH, flipV bool, orient int) *
 	return &Sprite{subImg, matrix}
 }
 
+func NewSprites(ofs *Vec2f, rects ...image.Rectangle) []*Sprite {
+	sprites := make([]*Sprite, len(rects))
+	for i, rect := range rects {
+		sprites[i] = NewSprite(rect, ofs, false, false, 0)
+	}
+	return sprites
+}
+
 func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM = *spr.matrix
