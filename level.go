@@ -25,6 +25,7 @@ type SpawnType int
 const (
 	SP_PLAYER SpawnType = iota
 	SP_BARREL
+	SP_ENEMY
 )
 
 type Spawn struct {
@@ -95,7 +96,7 @@ func SpriteFromTile(tt TileType) *Sprite {
 }
 
 func (level *Level) IsOccupied(x, y int) bool {
-	if x <= 0 || y <= 0 || x >= level.cols || y >= level.rows {
+	if x < 0 || y < 0 || x >= level.cols || y >= level.rows {
 		return true
 	}
 	return level.tiles[y][x]&TT_SOLIDS > 0
@@ -106,7 +107,7 @@ func (level *Level) FindEmptySpace(r int) (x, y int) {
 		x, y = rand.Intn(level.cols), rand.Intn(level.rows)
 		for j := y - r; j <= y+r; j++ {
 			for i := x - r; i <= x+r; i++ {
-				if i > 0 && j > 0 && i < level.cols-1 && j < level.rows-1 && level.IsOccupied(i, j) {
+				if i >= 0 && j >= 0 && i < level.cols && j < level.rows && level.IsOccupied(i, j) {
 					goto reject
 				}
 			}
@@ -290,6 +291,12 @@ func GenerateLevel(w, h int) *Level {
 	spawns := make([]*Spawn, 0, 10)
 	px, py := level.FindEmptySpace(0)
 	spawns = append(spawns, &Spawn{spawnType: SP_PLAYER, ix: px, iy: py})
+
+	//Enemy spawns
+	for i := 0; i < 30; i++ {
+		ex, ey := level.FindEmptySpace(1)
+		spawns = append(spawns, &Spawn{spawnType: SP_ENEMY, ix: ex, iy: ey})
+	}
 
 	level.sprites = sprites
 	level.spawns = spawns
