@@ -2,9 +2,8 @@ package main
 
 /*
 TODO:
--Text rendering
--Cat
 -Player hurting
+-Cat
 -Knight
 -Blargh
 -Gopnik
@@ -60,21 +59,7 @@ func init() {
 	}
 }
 
-//Game ...
-type Game struct {
-	objects       *list.List
-	level         *Level
-	deltaTime     float64
-	lastTime      time.Time
-	camPos        *Vec2f
-	loveBarBorder UIBox
-	loveBar       *Sprite
-	winText       *Text
-	mission       *Mission
-}
-
 var cheatText string = ""
-var game *Game
 
 //To mark points visually for inspection of collision detection
 var debugSpot *Vec2f
@@ -135,7 +120,10 @@ func (g *Game) Update() error {
 	}
 
 	//Animate UI
-	g.winText.Update(g.deltaTime)
+	if g.winTimer > 0.0 {
+		g.winText.Update(g.deltaTime)
+		g.winTimer -= g.deltaTime
+	}
 
 	return nil
 }
@@ -160,7 +148,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.loveBarBorder.Draw(screen)
 	g.loveBar.Draw(screen, nil)
-	g.winText.Draw(screen)
+	if g.winTimer > 0.0 {
+		g.winBox.Draw(screen)
+		g.winText.Draw(screen)
+	}
 
 	if debugSpot.x != 0.0 || debugSpot.y != 0.0 {
 		o := &ebiten.DrawImageOptions{}
@@ -170,6 +161,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	//ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
+}
+
+func (g *Game) OnWin() {
+	if g.winTimer <= 0.0 {
+		g.winTimer = 8.0
+		g.winText.fillPos = 0
+	}
 }
 
 //Layout ...
@@ -198,6 +196,22 @@ func GetGraphics() *ebiten.Image {
 	return __graphics
 }
 
+var game *Game
+
+type Game struct {
+	objects       *list.List
+	level         *Level
+	deltaTime     float64
+	lastTime      time.Time
+	camPos        *Vec2f
+	loveBarBorder UIBox
+	loveBar       *Sprite
+	winText       *Text
+	winBox        UIBox
+	winTimer      float64
+	mission       *Mission
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Init game
@@ -208,10 +222,10 @@ func main() {
 		camPos:        ZeroVec(),
 		loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
 		loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
-		winText:       GenerateText("THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG...NANI!?", image.Rect(SCR_WIDTH_H-80, SCR_HEIGHT_H-16, SCR_WIDTH_H+80, SCR_HEIGHT_H+16)),
+		winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
+		winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
 		mission:       &missions[0],
 	}
-	game.winText.fillPos = 0
 
 	debugSpot = ZeroVec()
 	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)

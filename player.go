@@ -127,7 +127,10 @@ func (player *Player) OnCollision(game *Game, obj, other *Object) {
 		player.love++
 		if player.love >= game.mission.loveQuota {
 			player.love = game.mission.loveQuota
-			player.state = PS_ASCENDED
+			if player.state != PS_ASCENDED {
+				player.state = PS_ASCENDED
+				game.OnWin()
+			}
 		}
 	}
 }

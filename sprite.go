@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"math"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/hajimehoshi/ebiten"
@@ -116,6 +117,7 @@ type Text struct {
 }
 
 func GenerateText(text string, dest image.Rectangle) *Text {
+	text = strings.ToUpper(text)
 	sprites := make([]*Sprite, len(text))
 	lineLen := dest.Dx() / 8
 	for i := 0; i < len(text); i++ {
