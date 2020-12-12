@@ -41,16 +41,15 @@ const (
 
 var (
 	__graphics *ebiten.Image
-	startTime  = time.Now()
 )
 
 //Game ...
 type Game struct {
-	objects     *list.List
-	level       *Level
-	deltaTime   float64
-	elapsedTime float64
-	camPos      *Vec2f
+	objects   *list.List
+	level     *Level
+	deltaTime float64
+	lastTime  time.Time
+	camPos    *Vec2f
 }
 
 var game *Game
@@ -61,9 +60,9 @@ var debugSprite *Sprite
 
 //Update ...
 func (g *Game) Update() error {
-	gt := time.Since(startTime).Seconds()
-	g.deltaTime = gt - g.elapsedTime
-	g.elapsedTime = gt
+	now := time.Now()
+	g.deltaTime = now.Sub(g.lastTime).Seconds()
+	g.lastTime = now
 
 	//Update objects
 	toRemove := make([]*list.Element, 0, 4)
@@ -116,11 +115,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.level.Draw(screen, camMat)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
-		objM := &ebiten.DrawImageOptions{}
-		objM.GeoM.Concat(*camMat)
-		objM.GeoM.Translate(obj.pos.x, obj.pos.y)
-		for _, spr := range obj.sprites {
-			spr.Draw(screen, &objM.GeoM)
+		if !obj.hidden {
+			objM := &ebiten.DrawImageOptions{}
+			objM.GeoM.Concat(*camMat)
+			objM.GeoM.Translate(obj.pos.x, obj.pos.y)
+			for _, spr := range obj.sprites {
+				spr.Draw(screen, &objM.GeoM)
+			}
 		}
 	}
 
@@ -162,6 +163,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Init game
 	game = new(Game)
+	game.lastTime = time.Now()
 
 	debugSpot = ZeroVec()
 	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
