@@ -7,7 +7,6 @@ import (
 type Mob struct {
 	*Actor
 	health    int
-	love      int
 	hurtTimer float64
 	currAnim  *Anim
 	dead      bool
@@ -62,7 +61,6 @@ func AddKnight(game *Game, x, y float64) *Knight {
 	knight := &Knight{
 		Actor:    NewActor(200.0, 1_000_000.0, 10_000.0),
 		health:   5,
-		love:     3,
 		currAnim: nil,
 	}
 	game.objects.PushBack(&Object{
@@ -92,10 +90,11 @@ func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
 		kn.dead = true
 		kn.currAnim = &Anim{
 			frames: sprKnightDie,
-			rate:   0.15,
+			speed:  0.15,
 			callback: func(anm *Anim) {
 				obj.removeMe = true
 			},
 		}
+		AddLove(game, 3, obj.pos.x, obj.pos.y)
 	}
 }
