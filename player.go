@@ -25,6 +25,7 @@ type Player struct {
 	love       int
 	state      PlayerState
 	shootTimer float64
+	hurtTimer  float64
 }
 
 var plSpriteNormal *Sprite
@@ -77,6 +78,19 @@ func (player *Player) Update(game *Game, obj *Object) {
 		player.shootTimer -= game.deltaTime
 	}
 
+	if player.hurtTimer > 0.0 {
+		player.hurtTimer -= game.deltaTime
+		if int(player.hurtTimer/0.125)%2 == 0 {
+			obj.hidden = false
+		} else {
+			obj.hidden = true
+		}
+		if player.hurtTimer <= 0.0 {
+			player.state = PS_NORMAL
+			obj.hidden = false
+		}
+	}
+
 	//Set sprite
 	switch player.state {
 	case PS_NORMAL:
@@ -123,7 +137,8 @@ func (player *Player) Update(game *Game, obj *Object) {
 }
 
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
-	if other.colType == CT_ITEM {
+	switch other.colType {
+	case CT_ITEM:
 		player.love++
 		if player.love >= game.mission.loveQuota {
 			player.love = game.mission.loveQuota
@@ -131,6 +146,16 @@ func (player *Player) OnCollision(game *Game, obj, other *Object) {
 				player.state = PS_ASCENDED
 				game.OnWin()
 			}
+		}
+	case CT_ENEMY, CT_ENEMYSHOT:
+		if player.state == PS_NORMAL {
+			player.state = PS_HURT
+			player.hurtTimer = 1.0
+			player.love -= 10
+			if player.love < 0 {
+				player.love = 0
+			}
+			PlaySound("player_hurt")
 		}
 	}
 }
