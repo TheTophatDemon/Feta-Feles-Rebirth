@@ -372,19 +372,24 @@ func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64) (
 	return
 }
 
-func (level *Level) ObjIntersects(obj *Object) bool {
-	gridMin, gridMax := level.GetGridAreaOverCapsule(obj.pos, obj.pos, obj.radius)
+//Determines if sphere intersects a solid tile. If so, the normal is returned.
+func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f) {
+	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius)
 
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {
 			if game.level.tiles[j][i]&TT_SOLIDS > 0 {
-				diff := level.ProjectPosOntoTile(obj.pos, i, j).Sub(obj.pos)
-				if diff.Length() < obj.radius {
-					return true
+				diff := pos.Clone().Sub(level.ProjectPosOntoTile(pos, i, j))
+				dLen := diff.Length()
+				if dLen < radius {
+					if dLen != 0.0 {
+						diff.Scale(1.0 / dLen)
+					}
+					return true, diff
 				}
 			}
 		}
 	}
 
-	return false
+	return false, nil
 }
