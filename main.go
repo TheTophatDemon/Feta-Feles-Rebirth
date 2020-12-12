@@ -2,16 +2,16 @@ package main
 
 /*
 TODO:
--Bouncy bullets
--Enemies, getting hurt and dying
+-Love system
+-Player hurting
 -Knight
 -Blargh
 -Gopnik
 -Worm
 -Barrels
--Love system
 -Cat
 -Text rendering
+-Fix audio loading issue
 -Feles
 -Music
 */
@@ -64,6 +64,11 @@ func (g *Game) Update() error {
 	g.deltaTime = now.Sub(g.lastTime).Seconds()
 	g.lastTime = now
 
+	//Prevent the game from going AWOL when the window is moved
+	if g.deltaTime > 0.25 {
+		return nil
+	}
+
 	//Update objects
 	toRemove := make([]*list.Element, 0, 4)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
@@ -104,6 +109,7 @@ func (g *Game) Update() error {
 	for _, objE := range toRemove {
 		g.objects.Remove(objE)
 	}
+
 	return nil
 }
 
@@ -164,6 +170,7 @@ func main() {
 	//Init game
 	game = new(Game)
 	game.lastTime = time.Now()
+	game.camPos = ZeroVec()
 
 	debugSpot = ZeroVec()
 	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
@@ -186,6 +193,7 @@ func main() {
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Feta Feles Remake")
+	//ebiten.SetRunnableOnUnfocused(true)
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)
 	}
