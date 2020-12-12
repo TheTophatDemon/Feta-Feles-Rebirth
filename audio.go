@@ -46,6 +46,7 @@ func PlaySound(name string) {
 		buffer = ring.New(PLAYERS_PER_SOUND)
 		for i := 0; i < PLAYERS_PER_SOUND; i++ {
 			player := audio.NewPlayerFromBytes(audioContext, bytes)
+			player.SetVolume(0.5)
 			buffer.Value = player
 			buffer = buffer.Next()
 		}
