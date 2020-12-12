@@ -27,6 +27,7 @@ type Object struct {
 	sprites    []*Sprite
 	components []Component
 	removeMe   bool
+	hidden     bool
 }
 
 func (obj *Object) Intersects(other *Object) bool {

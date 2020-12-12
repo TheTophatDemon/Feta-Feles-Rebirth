@@ -11,6 +11,28 @@ type Mob struct {
 	hurtTimer float64
 }
 
+func (mb *Mob) Update(game *Game, obj *Object) {
+	if mb.hurtTimer > 0.0 {
+		mb.hurtTimer -= game.deltaTime
+		if int(mb.hurtTimer/0.125)%2 == 0 {
+			obj.hidden = false
+		} else {
+			obj.hidden = true
+		}
+		if mb.hurtTimer < 0.0 {
+			obj.hidden = false
+			mb.hurtTimer = 0.0
+		}
+	}
+}
+
+func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
+	if mb.hurtTimer <= 0.0 && other.colType == CT_PLAYERSHOT {
+		mb.hurtTimer = 0.5
+		mb.health--
+	}
+}
+
 type Knight Mob
 
 var sprKnightNormal *Sprite
@@ -41,10 +63,9 @@ func AddKnight(game *Game, x, y float64) *Knight {
 
 func (kn *Knight) Update(game *Game, obj *Object) {
 	kn.Actor.Update(game, obj)
+	(*Mob)(kn).Update(game, obj)
 }
 
-func (kn *Knight) OnCollision(game *Game, obj *Object, other *Object) {
-	if other.colType == CT_PLAYERSHOT {
-		obj.removeMe = true
-	}
+func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
+	(*Mob)(kn).OnCollision(game, obj, other)
 }
