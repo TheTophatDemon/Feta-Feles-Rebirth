@@ -2,7 +2,7 @@ package main
 
 type Anim struct {
 	frames   []*Sprite
-	rate     float64 //Frames per second
+	speed    float64 //Frames per second
 	loop     bool
 	timer    float64
 	frame    int
@@ -15,7 +15,7 @@ func (anim *Anim) GetSprite() *Sprite {
 
 func (anim *Anim) Update(deltaTime float64) {
 	anim.timer += deltaTime
-	if anim.timer > anim.rate {
+	if anim.timer > anim.speed {
 		anim.timer = 0.0
 		anim.frame += 1
 		if anim.frame >= len(anim.frames) {

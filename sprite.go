@@ -44,9 +44,64 @@ func NewSprites(ofs *Vec2f, rects ...image.Rectangle) []*Sprite {
 	return sprites
 }
 
+//Creates a sprite that fills a given rectangle on the screen
+func SpriteFromScaledImg(subImg *ebiten.Image, dest image.Rectangle, orient int) *Sprite {
+	matrix := new(ebiten.GeoM)
+
+	//Perform rotation
+	hw := float64(subImg.Bounds().Dx()) / 2.0
+	hh := float64(subImg.Bounds().Dy()) / 2.0
+	matrix.Translate(-hw, -hh)
+	matrix.Rotate(float64(orient) * math.Pi / 2.0)
+	matrix.Translate(hw, hh)
+
+	//Perform scaling
+	matrix.Scale(
+		float64(dest.Dx())/float64(subImg.Bounds().Dx()),
+		float64(dest.Dy())/float64(subImg.Bounds().Dy()))
+	//Offset
+	matrix.Translate(float64(dest.Min.X), float64(dest.Min.Y))
+
+	return &Sprite{subImg, matrix}
+}
+
+type UIBox struct {
+	sprites []*Sprite
+	rect    image.Rectangle
+}
+
+func CreateUIBox(src, dest image.Rectangle) UIBox {
+	sprites := make([]*Sprite, 9)
+	bodyImg := GetGraphics().SubImage(image.Rect(src.Min.X+16, src.Min.Y, src.Min.X+24, src.Max.Y)).(*ebiten.Image)
+	sprites[0] = SpriteFromScaledImg(bodyImg, image.Rect(dest.Min.X+8, dest.Min.Y+8, dest.Max.X-8, dest.Max.Y-8), 0) //Middle
+	edgeImg := GetGraphics().SubImage(image.Rect(src.Min.X+8, src.Min.Y, src.Min.X+16, src.Max.Y)).(*ebiten.Image)
+	sprites[1] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Min.X+8, dest.Min.Y, dest.Max.X-8, dest.Min.Y+8), 0) //Top
+	sprites[2] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Max.X-8, dest.Min.Y+8, dest.Max.X, dest.Max.Y-8), 1) //Right
+	sprites[3] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Min.X+8, dest.Max.Y-8, dest.Max.X-8, dest.Max.Y), 2) //Bottom
+	sprites[4] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Min.X, dest.Min.Y+8, dest.Min.X+8, dest.Max.Y-8), 3) //Left
+	cornerImg := GetGraphics().SubImage(image.Rect(src.Min.X, src.Min.Y, src.Min.X+8, src.Max.Y)).(*ebiten.Image)
+	sprites[5] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Min.X, dest.Min.Y, dest.Min.X+8, dest.Min.Y+8), 0) //Top left
+	sprites[6] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Max.X-8, dest.Min.Y, dest.Max.X, dest.Min.Y+8), 1) //Top right
+	sprites[7] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Max.X-8, dest.Max.Y-8, dest.Max.X, dest.Max.Y), 2) //Bottom right
+	sprites[8] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Min.X, dest.Max.Y-8, dest.Min.X+8, dest.Max.Y), 3) //Bottom left
+	return UIBox{sprites, dest}
+}
+
+func (ui UIBox) Draw(target *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+	for _, sp := range ui.sprites {
+		if sp != nil {
+			op.GeoM = *sp.matrix
+			target.DrawImage(sp.subImg, op)
+		}
+	}
+}
+
 func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM = *spr.matrix
-	op.GeoM.Concat(*pt)
+	if pt != nil {
+		op.GeoM.Concat(*pt)
+	}
 	target.DrawImage(spr.subImg, op)
 }

@@ -43,7 +43,9 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 	//Wall bounce
 	hit, normal := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
 	if hit {
-		shot.vel = normal.Scale(shot.vel.Length())
+		if normal.x != 0.0 || normal.y != 0.0 {
+			shot.vel = normal.Scale(shot.vel.Length())
+		}
 		shot.bounces++
 		if shot.bounces == 2 {
 			shot.life = 0.0

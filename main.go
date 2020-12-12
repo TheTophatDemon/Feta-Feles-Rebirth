@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Love system
 -Player hurting
 -Knight
 -Blargh
@@ -18,7 +17,6 @@ TODO:
 
 import (
 	"container/list"
-	"fmt"
 	"image"
 	_ "image/color"
 	_ "image/png"
@@ -29,7 +27,6 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 const (
@@ -39,19 +36,43 @@ const (
 	SCR_HEIGHT_H = SCR_HEIGHT / 2
 )
 
-var (
-	__graphics *ebiten.Image
-)
+type Mission struct {
+	loveQuota  int
+	knightFreq float64
+	blarghFreq float64
+	gopnikFreq float64
+	wormFreq   float64
+	barrelFreq float64
+	crossFreq  float64
+}
+
+var missions [6]Mission
+
+func init() {
+	missions[0] = Mission{
+		loveQuota:  100,
+		knightFreq: 0.5,
+		blarghFreq: 0.5,
+		gopnikFreq: 0.5,
+		wormFreq:   0.5,
+		barrelFreq: 0.5,
+		crossFreq:  0.0,
+	}
+}
 
 //Game ...
 type Game struct {
-	objects   *list.List
-	level     *Level
-	deltaTime float64
-	lastTime  time.Time
-	camPos    *Vec2f
+	objects       *list.List
+	level         *Level
+	deltaTime     float64
+	lastTime      time.Time
+	camPos        *Vec2f
+	loveBarBorder UIBox
+	loveBar       *Sprite
+	mission       *Mission
 }
 
+var cheatText string = ""
 var game *Game
 
 //To mark points visually for inspection of collision detection
@@ -63,6 +84,8 @@ func (g *Game) Update() error {
 	now := time.Now()
 	g.deltaTime = now.Sub(g.lastTime).Seconds()
 	g.lastTime = now
+
+	cheatText += string(ebiten.InputChars())
 
 	//Prevent the game from going AWOL when the window is moved
 	if g.deltaTime > 0.25 {
@@ -131,6 +154,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
+	g.loveBarBorder.Draw(screen)
+	g.loveBar.Draw(screen, nil)
+
 	if debugSpot.x != 0.0 || debugSpot.y != 0.0 {
 		o := &ebiten.DrawImageOptions{}
 		o.GeoM.Concat(*camMat)
@@ -138,13 +164,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		debugSprite.Draw(screen, &o.GeoM)
 	}
 
-	ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
+	//ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
 }
 
 //Layout ...
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return SCR_WIDTH, SCR_HEIGHT
 }
+
+var __graphics *ebiten.Image
 
 //Returns the graphics page and loads it if it isn't there
 func GetGraphics() *ebiten.Image {
@@ -168,16 +196,18 @@ func GetGraphics() *ebiten.Image {
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Init game
-	game = new(Game)
-	game.lastTime = time.Now()
-	game.camPos = ZeroVec()
+	game = &Game{
+		objects:       list.New(),
+		level:         GenerateLevel(64, 64),
+		lastTime:      time.Now(),
+		camPos:        ZeroVec(),
+		loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
+		loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
+		mission:       &missions[0],
+	}
 
 	debugSpot = ZeroVec()
 	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
-
-	//Initialize world
-	game.objects = list.New()
-	game.level = GenerateLevel(64, 64)
 
 	center := func(x int) float64 {
 		return float64(x)*TILE_SIZE + 8.0
