@@ -8,7 +8,7 @@ import (
 
 const (
 	MAX_LOVE      = 100
-	PL_SHOOT_FREQ = 0.33
+	PL_SHOOT_FREQ = 0.2
 )
 
 type PlayerState int32
