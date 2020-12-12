@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"math"
+	"unicode/utf8"
 
 	"github.com/hajimehoshi/ebiten"
 )
@@ -34,6 +35,15 @@ func NewSprite(src image.Rectangle, ofs *Vec2f, flipH, flipV bool, orient int) *
 	matrix.Translate(ofs.x, ofs.y)
 
 	return &Sprite{subImg, matrix}
+}
+
+func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM = *spr.matrix
+	if pt != nil {
+		op.GeoM.Concat(*pt)
+	}
+	target.DrawImage(spr.subImg, op)
 }
 
 func NewSprites(ofs *Vec2f, rects ...image.Rectangle) []*Sprite {
@@ -97,11 +107,54 @@ func (ui UIBox) Draw(target *ebiten.Image) {
 	}
 }
 
-func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM = *spr.matrix
-	if pt != nil {
-		op.GeoM.Concat(*pt)
+type Text struct {
+	UIBox
+	text      string
+	fillPos   int //The character before which to stop rendering. Used for 'typing in' effect
+	fillTimer float64
+	fillSpeed float64
+}
+
+func GenerateText(text string, dest image.Rectangle) *Text {
+	sprites := make([]*Sprite, len(text))
+	lineLen := dest.Dx() / 8
+	for i := 0; i < len(text); i++ {
+		r, _ := utf8.DecodeRuneInString(text[i:])
+		if r > ' ' && r <= 'Z' {
+			charDestX := (i%lineLen)*8 + dest.Min.X
+			charDestY := (i/lineLen)*8 + dest.Min.Y
+			charSrcX := (int(r-' ')%12)*8 + 64
+			charSrcY := (int(r-' ') / 12) * 8
+			sprites[i] = NewSprite(image.Rect(charSrcX, charSrcY, charSrcX+8, charSrcY+8), &Vec2f{float64(charDestX), float64(charDestY)}, false, false, 0)
+		}
 	}
-	target.DrawImage(spr.subImg, op)
+	return &Text{
+		UIBox:     UIBox{sprites, dest},
+		text:      text,
+		fillPos:   len(text),
+		fillTimer: 0.0,
+		fillSpeed: 0.05,
+	}
+}
+
+func (text *Text) Update(deltaTime float64) {
+	text.fillTimer += deltaTime
+	if text.fillTimer > text.fillSpeed {
+		text.fillTimer = 0.0
+		if text.fillPos < len(text.text) {
+			PlaySound("voice")
+			text.fillPos++
+		}
+	}
+}
+
+func (text *Text) Draw(target *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+	for i := 0; i < text.fillPos; i++ {
+		sp := text.sprites[i]
+		if sp != nil {
+			op.GeoM = *sp.matrix
+			target.DrawImage(sp.subImg, op)
+		}
+	}
 }

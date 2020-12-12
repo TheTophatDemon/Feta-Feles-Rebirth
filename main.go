@@ -2,14 +2,14 @@ package main
 
 /*
 TODO:
+-Text rendering
+-Cat
 -Player hurting
 -Knight
 -Blargh
 -Gopnik
 -Worm
 -Barrels
--Cat
--Text rendering
 -Fix audio loading issue
 -Feles
 -Music
@@ -69,6 +69,7 @@ type Game struct {
 	camPos        *Vec2f
 	loveBarBorder UIBox
 	loveBar       *Sprite
+	winText       *Text
 	mission       *Mission
 }
 
@@ -133,6 +134,9 @@ func (g *Game) Update() error {
 		g.objects.Remove(objE)
 	}
 
+	//Animate UI
+	g.winText.Update(g.deltaTime)
+
 	return nil
 }
 
@@ -156,6 +160,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.loveBarBorder.Draw(screen)
 	g.loveBar.Draw(screen, nil)
+	g.winText.Draw(screen)
 
 	if debugSpot.x != 0.0 || debugSpot.y != 0.0 {
 		o := &ebiten.DrawImageOptions{}
@@ -179,10 +184,10 @@ func GetGraphics() *ebiten.Image {
 	if __graphics == nil {
 		//Load graphics
 		reader, err := os.Open("assets/graphics.png")
+		defer reader.Close()
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer reader.Close()
 
 		img, _, err := image.Decode(reader)
 		if err != nil {
@@ -203,8 +208,10 @@ func main() {
 		camPos:        ZeroVec(),
 		loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
 		loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
+		winText:       GenerateText("THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG...NANI!?", image.Rect(SCR_WIDTH_H-80, SCR_HEIGHT_H-16, SCR_WIDTH_H+80, SCR_HEIGHT_H+16)),
 		mission:       &missions[0],
 	}
+	game.winText.fillPos = 0
 
 	debugSpot = ZeroVec()
 	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
