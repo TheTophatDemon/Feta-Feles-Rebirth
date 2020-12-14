@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"math/rand"
 )
 
 type Vec2f struct {
@@ -87,4 +88,21 @@ func VecMax(v0, v1 *Vec2f) *Vec2f {
 		x: math.Max(v0.x, v1.x),
 		y: math.Max(v0.y, v1.y),
 	}
+}
+
+func RandomDirection() *Vec2f {
+	return (&Vec2f{
+		rand.Float64() - 0.5,
+		rand.Float64() - 0.5,
+	}).Normalize()
+}
+
+func (vec *Vec2f) Equals(other *Vec2f) bool {
+	return vec.x == other.x && vec.y == other.y
+}
+
+func (vec *Vec2f) Lerp(other *Vec2f, t float64) *Vec2f {
+	vec.x += (other.x - vec.x) * t
+	vec.y += (other.y - vec.y) * t
+	return vec
 }

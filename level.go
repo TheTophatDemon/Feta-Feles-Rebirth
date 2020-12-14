@@ -161,6 +161,15 @@ func GenerateLevel(w, h int) *Level {
 		x, y := rand.Intn(w-16)+8, rand.Intn(h-16)+8
 		p(x, y, 1.0, 0.25)
 	}
+	//Borders
+	for j := 0; j < h; j++ {
+		t[j][0] = TT_BLOCK
+		t[j][w-1] = TT_BLOCK
+	}
+	for i := 0; i < w; i++ {
+		t[0][i] = TT_BLOCK
+		t[h-1][i] = TT_BLOCK
+	}
 	//Smooth edges and create gaps
 	for j := 0; j < h; j++ {
 		for i := 0; i < w; i++ {

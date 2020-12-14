@@ -2,8 +2,7 @@ package main
 
 /*
 TODO:
--Player hurting
--Cat
+-Teleporting
 -Knight
 -Blargh
 -Gopnik
@@ -16,12 +15,14 @@ TODO:
 
 import (
 	"container/list"
+	"fmt"
 	"image"
 	_ "image/color"
 	_ "image/png"
 	"log"
 	"math/rand"
 	"os"
+	"strings"
 
 	"time"
 
@@ -71,7 +72,7 @@ func (g *Game) Update() error {
 	g.deltaTime = now.Sub(g.lastTime).Seconds()
 	g.lastTime = now
 
-	cheatText += string(ebiten.InputChars())
+	cheatText += strings.ToLower(string(ebiten.InputChars()))
 
 	//Prevent the game from going AWOL when the window is moved
 	if g.deltaTime > 0.25 {
@@ -160,6 +161,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		debugSprite.Draw(screen, &o.GeoM)
 	}
 
+	GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
 	//ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
 }
 
@@ -167,6 +169,7 @@ func (g *Game) OnWin() {
 	if g.winTimer <= 0.0 {
 		g.winTimer = 8.0
 		g.winText.fillPos = 0
+		AddCat(g)
 	}
 }
 

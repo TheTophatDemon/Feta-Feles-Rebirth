@@ -16,6 +16,10 @@ type Sprite struct {
 
 func NewSprite(src image.Rectangle, ofs *Vec2f, flipH, flipV bool, orient int) *Sprite {
 	subImg := GetGraphics().SubImage(src).(*ebiten.Image)
+	return NewSpriteFromSubImg(subImg, ofs, flipH, flipV, orient)
+}
+
+func NewSpriteFromSubImg(subImg *ebiten.Image, ofs *Vec2f, flipH, flipV bool, orient int) *Sprite {
 	matrix := new(ebiten.GeoM)
 
 	//Perform rotation and scaling with respect to the center
@@ -53,6 +57,27 @@ func NewSprites(ofs *Vec2f, rects ...image.Rectangle) []*Sprite {
 		sprites[i] = NewSprite(rect, ofs, false, false, 0)
 	}
 	return sprites
+}
+
+func (spr *Sprite) Flip(horz, vert bool) {
+	matrix := new(ebiten.GeoM)
+
+	//Perform rotation and scaling with respect to the center
+	hw := float64(spr.subImg.Bounds().Dx()) / 2.0
+	hh := float64(spr.subImg.Bounds().Dy()) / 2.0
+	matrix.Translate(-hw, -hh)
+	scx, scy := 1.0, 1.0
+	if horz {
+		scx = -1.0
+	}
+	if vert {
+		scy = -1.0
+	}
+	matrix.Scale(scx, scy)
+	matrix.Translate(hw, hh)
+
+	matrix.Concat(*spr.matrix)
+	spr.matrix = matrix
 }
 
 //Creates a sprite that fills a given rectangle on the screen

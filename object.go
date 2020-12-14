@@ -9,6 +9,7 @@ const (
 	CT_PLAYERSHOT ColType = 1 << 2
 	CT_ENEMYSHOT  ColType = 1 << 3
 	CT_ITEM       ColType = 1 << 4
+	CT_CAT        ColType = 1 << 5
 )
 
 type Component interface {

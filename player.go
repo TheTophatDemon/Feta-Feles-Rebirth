@@ -125,9 +125,15 @@ func (player *Player) Update(game *Game, obj *Object) {
 	game.camPos = obj.pos
 
 	//Love cheat code
-	if strings.Contains(strings.ToLower(cheatText), "tdnepotis") {
+	if strings.Contains(cheatText, "tdnepotis") {
 		player.love = game.mission.loveQuota - 1
 		cheatText = ""
+	}
+	if strings.Contains(cheatText, "tdnyaah") {
+		cheatText = ""
+		_, catObj := AddCat(game)
+		catObj.pos.x = obj.pos.x
+		catObj.pos.y = obj.pos.y
 	}
 	//Update UI with love amount
 	barRect := image.Rect(game.loveBarBorder.rect.Min.X+3, game.loveBarBorder.rect.Min.Y+3, game.loveBarBorder.rect.Max.X-3, game.loveBarBorder.rect.Max.Y-3)

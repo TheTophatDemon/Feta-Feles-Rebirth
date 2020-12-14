@@ -6,11 +6,11 @@ type Shot struct {
 	vel     *Vec2f  //Velocity
 	life    float64 //Time in seconds until it disappears
 	enemy   bool    //Will this shot hurt the player?
-	bounces int     //Number of times shot has hit wall
+	bounces int     //Number of times shot can hit the wall before dying
 }
 
 const (
-	SHOT_COLMASK ColType = CT_ENEMY
+	SHOT_COLMASK ColType = CT_ENEMY | CT_CAT
 )
 
 func AddShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool) *Shot {
@@ -43,12 +43,13 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 	//Wall bounce
 	hit, normal := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
 	if hit {
-		if normal.x != 0.0 || normal.y != 0.0 {
-			shot.vel = normal.Scale(shot.vel.Length())
-		}
-		shot.bounces++
-		if shot.bounces == 2 {
-			shot.life = 0.0
+		if shot.bounces > 0 {
+			if normal.x != 0.0 || normal.y != 0.0 {
+				shot.vel = normal.Scale(shot.vel.Length())
+			}
+			shot.bounces--
+		} else {
+			obj.removeMe = true
 		}
 		PlaySound("bullet_bounce")
 	}
