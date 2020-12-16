@@ -63,8 +63,12 @@ func init() {
 var cheatText string = ""
 
 //To mark points visually for inspection of collision detection
-var debugSpot *Vec2f
-var debugSprite *Sprite
+type DebugSpot struct {
+	pos *Vec2f
+	spr *Sprite
+}
+
+var __debugSpots []*DebugSpot
 
 //Update ...
 func (g *Game) Update() error {
@@ -154,11 +158,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		g.winText.Draw(screen)
 	}
 
-	if debugSpot.x != 0.0 || debugSpot.y != 0.0 {
+	for _, spot := range __debugSpots {
 		o := &ebiten.DrawImageOptions{}
 		o.GeoM.Concat(*camMat)
-		o.GeoM.Translate(debugSpot.x, debugSpot.y)
-		debugSprite.Draw(screen, &o.GeoM)
+		o.GeoM.Translate(spot.pos.x, spot.pos.y)
+		spot.spr.Draw(screen, &o.GeoM)
 	}
 
 	GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
@@ -215,6 +219,23 @@ type Game struct {
 	mission       *Mission
 }
 
+func AddDebugSpot(x, y float64, color int) {
+	var spr *Sprite
+	switch color {
+	case 0:
+		spr = NewSprite(image.Rect(112, 40, 116, 44), &Vec2f{-3.0, -3.0}, false, false, 0)
+	case 1:
+		spr = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
+	case 2:
+		spr = NewSprite(image.Rect(104, 40, 108, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
+	}
+	__debugSpots = append(__debugSpots, &DebugSpot{&Vec2f{x, y}, spr})
+}
+
+func ClearDebugSpots() {
+	__debugSpots = make([]*DebugSpot, 0, 10)
+}
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Init game
@@ -230,8 +251,7 @@ func main() {
 		mission:       &missions[0],
 	}
 
-	debugSpot = ZeroVec()
-	debugSprite = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
+	__debugSpots = make([]*DebugSpot, 0, 10)
 
 	center := func(x int) float64 {
 		return float64(x)*TILE_SIZE + 8.0

@@ -352,25 +352,29 @@ func (level *Level) ProjectPosOntoTile(pos *Vec2f, i, j int) *Vec2f {
 		//Project onto a diagonal plane using the dot product
 		tileCenter := tileMin.Clone().AddScalar(TILE_SIZE / 2.0)
 		cDiff := pos.Clone().Sub(tileCenter)
-		var angle float64
-		switch level.tiles[j][i] {
-		case TT_SLOPE_45:
-			angle = math.Pi / 4.0
-		case TT_SLOPE_135:
-			angle = 3.0 * math.Pi / 4.0
-		case TT_SLOPE_225:
-			angle = 5.0 * math.Pi / 4.0
-		case TT_SLOPE_315:
-			angle = 7.0 * math.Pi / 4.0
-		}
-		angle += math.Pi / 2.0
-		normal := &Vec2f{math.Cos(angle), math.Sin(angle)}
+		normal := GetSlopeNormal(level.tiles[j][i])
 		planeDist := VecDot(normal, cDiff)
 		proj = pos.Clone().Sub(normal.Clone().Scale(planeDist))
 		proj = VecMax(tileMin, VecMin(tileMax, proj))
 	}
 
 	return proj
+}
+
+func GetSlopeNormal(slope TileType) *Vec2f {
+	var angle float64
+	switch slope {
+	case TT_SLOPE_45:
+		angle = math.Pi / 4.0
+	case TT_SLOPE_135:
+		angle = 3.0 * math.Pi / 4.0
+	case TT_SLOPE_225:
+		angle = 5.0 * math.Pi / 4.0
+	case TT_SLOPE_315:
+		angle = 7.0 * math.Pi / 4.0
+	}
+	angle += math.Pi / 2.0
+	return &Vec2f{math.Cos(angle), math.Sin(angle)}
 }
 
 func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64) (gridMin, gridMax *Vec2f) {
@@ -401,4 +405,107 @@ func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f) 
 	}
 
 	return false, nil
+}
+
+func (level *Level) Raycast(pos *Vec2f, dir *Vec2f) bool {
+	var rx, ry, rdx, rdy, tan float64
+	if dir.x != 0.0 {
+		tan = dir.y / dir.x
+	}
+
+	castRay := func(x, y, dx, dy float64, vert bool) (bool, float64, float64) {
+		for {
+			ix := int(x / TILE_SIZE)
+			iy := int(y / TILE_SIZE)
+
+			if vert {
+				if dx < 0 {
+					ix--
+				}
+				//AddDebugSpot(x, y, 0)
+			} else {
+				if dy < 0 {
+					iy--
+				}
+				//AddDebugSpot(x, y, 1)
+			}
+
+			if ix < 0 || iy < 0 || ix >= level.cols || iy >= level.rows {
+				return false, 0.0, 0.0
+			}
+
+			if level.tiles[iy][ix]&TT_SLOPES > 0 {
+				//Test against slopes
+				slopeNormal := GetSlopeNormal(level.tiles[iy][ix])
+				tileCenter := &Vec2f{float64(ix)*TILE_SIZE + TILE_SIZE/2.0, float64(iy)*TILE_SIZE + TILE_SIZE/2.0}
+				//Calculate intersection point
+				t := (slopeNormal.x*(tileCenter.x-x) + slopeNormal.y*(tileCenter.y-y)) /
+					((slopeNormal.x * dx) + (slopeNormal.y * dy))
+				px, py := x+dx*t, y+dy*t
+				//AddDebugSpot(px, py, 2)
+				//Test if it is within the tile's boundaries
+				if px >= float64(ix)*TILE_SIZE && px < float64(ix+1)*TILE_SIZE &&
+					py >= float64(iy)*TILE_SIZE && py < float64(iy+1)*TILE_SIZE {
+					return true, px, py
+				}
+			} else if level.tiles[iy][ix]&TT_SOLIDS > 0 {
+				return true, x, y
+			}
+			x += dx
+			y += dy
+		}
+	}
+
+	ClearDebugSpots()
+
+	//Vertical line phase (moving x)
+	if dir.x > 0 {
+		rx = math.Ceil(pos.x/TILE_SIZE) * TILE_SIZE
+		rdx = TILE_SIZE
+	} else {
+		rx = math.Floor(pos.x/TILE_SIZE) * TILE_SIZE
+		rdx = -TILE_SIZE
+	}
+	ry = pos.y + (rx-pos.x)*tan
+	rdy = rdx * tan
+	//Raycast loop, etc.
+	var vHit bool
+	var vertX, vertY float64
+	if dir.x != 0.0 {
+		vHit, vertX, vertY = castRay(rx, ry, rdx, rdy, true)
+	}
+
+	//Horizontal line phase (moving y)
+	if dir.y > 0 {
+		ry = math.Ceil(pos.y/TILE_SIZE) * TILE_SIZE
+		rdy = TILE_SIZE
+	} else {
+		ry = math.Floor(pos.y/TILE_SIZE) * TILE_SIZE
+		rdy = -TILE_SIZE
+	}
+	if tan == 0.0 {
+		rx = pos.x
+		rdx = 0.0
+	} else {
+		rx = pos.x + (ry-pos.y)/tan
+		rdx = rdy / tan
+	}
+	//Raycast loop, etc.
+	var hHit bool
+	var horzX, horzY float64
+	if dir.y != 0.0 {
+		hHit, horzX, horzY = castRay(rx, ry, rdx, rdy, false)
+	}
+	//hHit, horzX, horzY := false, 0.0, 0.0
+
+	if vHit || hHit {
+		vDist := math.Pow(vertX-pos.x, 2.0) + math.Pow(vertY-pos.y, 2.0)
+		hDist := math.Pow(horzX-pos.x, 2.0) + math.Pow(horzY-pos.y, 2.0)
+		if hDist < vDist {
+			AddDebugSpot(horzX, horzY, 0)
+		} else {
+			AddDebugSpot(vertX, vertY, 0)
+		}
+	}
+	return false
 }
