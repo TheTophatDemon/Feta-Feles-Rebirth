@@ -2,13 +2,11 @@ package main
 
 import (
 	"image"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten"
 )
 
 const (
-	MAX_LOVE      = 100
 	PL_SHOOT_FREQ = 0.2
 )
 
@@ -22,7 +20,6 @@ const (
 
 type Player struct {
 	*Actor
-	love       int
 	state      PlayerState
 	shootTimer float64
 	hurtTimer  float64
@@ -40,22 +37,22 @@ func init() {
 	plSpriteAscended = NewSprite(image.Rect(48, 0, 64, 16), &Vec2f{-8.0, -8.0}, false, false, 0)
 }
 
-func AddPlayer(game *Game, x, y float64) *Player {
+func AddPlayer(game *Game, x, y float64) *Object {
 	player := &Player{
 		Actor: NewActor(120.0, 500_000.0, 50_000.0),
-		love:  0,
 		state: PS_NORMAL,
 	}
 
-	game.objects.PushBack(&Object{
+	obj := &Object{
 		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
 			plSpriteNormal,
 		},
 		components: []Component{player},
-	})
+	}
+	game.objects.PushBack(obj)
 
-	return player
+	return obj
 }
 
 func (player *Player) Update(game *Game, obj *Object) {
@@ -121,46 +118,19 @@ func (player *Player) Update(game *Game, obj *Object) {
 
 	player.Actor.Move(dx, dy)
 	player.Actor.Update(game, obj)
-
-	game.camPos = obj.pos
-
-	//Love cheat code
-	if strings.Contains(cheatText, "tdnepotis") {
-		player.love = game.mission.loveQuota - 1
-		cheatText = ""
-	}
-	if strings.Contains(cheatText, "tdnyaah") {
-		cheatText = ""
-		_, catObj := AddCat(game)
-		catObj.pos.x = obj.pos.x
-		catObj.pos.y = obj.pos.y
-	}
-	//Update UI with love amount
-	barRect := image.Rect(game.loveBarBorder.rect.Min.X+3, game.loveBarBorder.rect.Min.Y+3, game.loveBarBorder.rect.Max.X-3, game.loveBarBorder.rect.Max.Y-3)
-	barRect.Max.X = barRect.Min.X + int(float64(barRect.Dx())*float64(player.love)/float64(game.mission.loveQuota))
-	game.loveBar = SpriteFromScaledImg(game.loveBar.subImg, barRect, 0)
-
 }
 
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
 	switch other.colType {
 	case CT_ITEM:
-		player.love++
-		if player.love >= game.mission.loveQuota {
-			player.love = game.mission.loveQuota
-			if player.state != PS_ASCENDED {
-				player.state = PS_ASCENDED
-				game.OnWin()
-			}
+		if game.AddLoveCounter(1) && player.state != PS_ASCENDED {
+			player.state = PS_ASCENDED
 		}
 	case CT_ENEMY, CT_ENEMYSHOT:
 		if player.state == PS_NORMAL {
 			player.state = PS_HURT
 			player.hurtTimer = 1.0
-			player.love -= 10
-			if player.love < 0 {
-				player.love = 0
-			}
+			game.AddLoveCounter(-10)
 			PlaySound("player_hurt")
 		}
 	}

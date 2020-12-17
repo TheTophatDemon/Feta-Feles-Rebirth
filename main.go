@@ -2,8 +2,9 @@ package main
 
 /*
 TODO:
--Teleporting
 -Knight
+-Teleporting / Lazer?
+-Wrap around level / Infinite level?
 -Blargh
 -Gopnik
 -Worm
@@ -70,13 +71,24 @@ type DebugSpot struct {
 
 var __debugSpots []*DebugSpot
 
-//Update ...
 func (g *Game) Update() error {
 	now := time.Now()
 	g.deltaTime = now.Sub(g.lastTime).Seconds()
 	g.lastTime = now
 
 	cheatText += strings.ToLower(string(ebiten.InputChars()))
+
+	//Cheat codes
+	if strings.Contains(cheatText, "tdnepotis") {
+		g.love = g.mission.loveQuota - 1
+		cheatText = ""
+	}
+	if strings.Contains(cheatText, "tdnyaah") {
+		cheatText = ""
+		_, catObj := AddCat(g)
+		catObj.pos.x = g.playerObj.pos.x
+		catObj.pos.y = g.playerObj.pos.y
+	}
 
 	//Prevent the game from going AWOL when the window is moved
 	if g.deltaTime > 0.25 {
@@ -124,11 +136,20 @@ func (g *Game) Update() error {
 		g.objects.Remove(objE)
 	}
 
+	//Set camera to player position
+	g.camPos = g.playerObj.pos
+
 	//Animate UI
 	if g.winTimer > 0.0 {
-		g.winText.Update(g.deltaTime)
+		g.hud.winText.Update(g.deltaTime)
 		g.winTimer -= g.deltaTime
 	}
+
+	//Update UI with love amount
+	lbbRect := g.hud.loveBarBorder.rect
+	barRect := image.Rect(lbbRect.Min.X+3, lbbRect.Min.Y+3, lbbRect.Max.X-3, lbbRect.Max.Y-3)
+	barRect.Max.X = barRect.Min.X + int(float64(barRect.Dx())*float64(g.love)/float64(g.mission.loveQuota))
+	g.hud.loveBar = SpriteFromScaledImg(g.hud.loveBar.subImg, barRect, 0)
 
 	return nil
 }
@@ -151,11 +172,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	g.loveBarBorder.Draw(screen)
-	g.loveBar.Draw(screen, nil)
+	g.hud.loveBarBorder.Draw(screen)
+	g.hud.loveBar.Draw(screen, nil)
 	if g.winTimer > 0.0 {
-		g.winBox.Draw(screen)
-		g.winText.Draw(screen)
+		g.hud.winBox.Draw(screen)
+		g.hud.winText.Draw(screen)
 	}
 
 	for _, spot := range __debugSpots {
@@ -169,10 +190,26 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
 }
 
-func (g *Game) OnWin() {
+//Adds or removes from the love counter. Returns true if the operations causes the quota to be met.
+func (g *Game) AddLoveCounter(amt int) bool {
+	if g.love == g.mission.loveQuota {
+		return true
+	}
+	g.love += amt
+	if g.love < 0 {
+		g.love = 0
+	} else if g.love >= g.mission.loveQuota {
+		g.love = g.mission.loveQuota
+		g.Win()
+		return true
+	}
+	return false
+}
+
+func (g *Game) Win() {
 	if g.winTimer <= 0.0 {
 		g.winTimer = 8.0
-		g.winText.fillPos = 0
+		g.hud.winText.fillPos = 0
 		AddCat(g)
 	}
 }
@@ -206,18 +243,26 @@ func GetGraphics() *ebiten.Image {
 var game *Game
 
 type Game struct {
-	objects       *list.List
-	level         *Level
-	deltaTime     float64
-	lastTime      time.Time
-	camPos        *Vec2f
+	objects   *list.List
+	level     *Level
+	deltaTime float64
+	lastTime  time.Time
+	camPos    *Vec2f
+	winTimer  float64
+	hud       GameHUD
+	mission   *Mission
+	playerObj *Object
+	love      int
+}
+
+type GameHUD struct {
 	loveBarBorder UIBox
 	loveBar       *Sprite
 	winText       *Text
 	winBox        UIBox
-	winTimer      float64
-	mission       *Mission
 }
+
+const MAX_LOVE = 100
 
 func AddDebugSpot(x, y float64, color int) {
 	var spr *Sprite
@@ -240,15 +285,17 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//Init game
 	game = &Game{
-		objects:       list.New(),
-		level:         GenerateLevel(64, 64),
-		lastTime:      time.Now(),
-		camPos:        ZeroVec(),
-		loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
-		loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
-		winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
-		winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
-		mission:       &missions[0],
+		objects:  list.New(),
+		level:    GenerateLevel(64, 64),
+		lastTime: time.Now(),
+		camPos:   ZeroVec(),
+		hud: GameHUD{
+			loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
+			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
+			winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
+			winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
+		},
+		mission: &missions[0],
 	}
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
@@ -259,7 +306,7 @@ func main() {
 	for _, sp := range game.level.spawns {
 		switch sp.spawnType {
 		case SP_PLAYER:
-			AddPlayer(game, center(sp.ix), center(sp.iy))
+			game.playerObj = AddPlayer(game, center(sp.ix), center(sp.iy))
 		case SP_ENEMY:
 			AddKnight(game, center(sp.ix), center(sp.iy))
 		}
