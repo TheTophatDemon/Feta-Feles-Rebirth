@@ -1,21 +1,31 @@
 package main
 
 import (
+	"bytes"
 	"container/ring"
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/audio/wav"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
 )
 
 var audioContext *audio.Context
 var players map[string]*ring.Ring //Contains ring buffers of audio players for each sound effect that is loaded
+var audioFiles map[string][]byte
 
 func init() {
 	audioContext = audio.NewContext(44100)
 	players = make(map[string]*ring.Ring)
+	audioFiles = map[string][]byte{
+		"enemy_die":     assets.WAV_ENEMY_DIE,
+		"enemy_hurt":    assets.WAV_ENEMY_HURT,
+		"love_get":      assets.WAV_LOVE_GET,
+		"player_hurt":   assets.WAV_PLAYER_HURT,
+		"player_shot":   assets.WAV_PLAYER_SHOT,
+		"voice":         assets.WAV_VOICE,
+	}
 }
 
 const PLAYERS_PER_SOUND = 8
@@ -23,15 +33,7 @@ const PLAYERS_PER_SOUND = 8
 func PlaySound(name string) {
 	buffer, loaded := players[name]
 	if !loaded {
-		//Load sound file if not cached yet
-		reader, err := os.Open("assets/" + name + ".wav")
-		defer reader.Close()
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
-		stream, err := wav.Decode(audioContext, reader)
+		stream, err := wav.Decode(audioContext, bytes.NewReader(audioFiles[name]))
 		if err != nil {
 			log.Fatal(err)
 			return

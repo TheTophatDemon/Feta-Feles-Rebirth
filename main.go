@@ -2,9 +2,10 @@ package main
 
 /*
 TODO:
--Knight
--Teleporting / Lazer?
--Wrap around level / Infinite level?
+-Only draw tiles that are on screen
+-Teleporting / Laser?
+-Wrap around level?
+-Loading screen?
 -Blargh
 -Gopnik
 -Worm
@@ -15,6 +16,7 @@ TODO:
 */
 
 import (
+	"bytes"
 	"container/list"
 	"fmt"
 	"image"
@@ -22,12 +24,12 @@ import (
 	_ "image/png"
 	"log"
 	"math/rand"
-	"os"
 	"strings"
 
 	"time"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
 )
 
 const (
@@ -224,14 +226,7 @@ var __graphics *ebiten.Image
 //Returns the graphics page and loads it if it isn't there
 func GetGraphics() *ebiten.Image {
 	if __graphics == nil {
-		//Load graphics
-		reader, err := os.Open("assets/graphics.png")
-		defer reader.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		img, _, err := image.Decode(reader)
+		img, _, err := image.Decode(bytes.NewReader(assets.PNG_GRAPHICS))
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -51,7 +51,6 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 		} else {
 			obj.removeMe = true
 		}
-		PlaySound("bullet_bounce")
 	}
 
 	obj.pos.Add(shot.vel.Clone().Scale(game.deltaTime))
