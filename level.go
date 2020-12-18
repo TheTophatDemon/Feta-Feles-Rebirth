@@ -413,19 +413,23 @@ func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f) 
 }
 
 type RaycastResult struct {
+	hit      bool
 	pos      *Vec2f
 	distance float64
 	tile     TileType
 }
 
-func (level *Level) Raycast(pos *Vec2f, dir *Vec2f) *RaycastResult {
+func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastResult {
 	var rx, ry, rdx, rdy, tan float64
 	if dir.x != 0.0 {
 		tan = dir.y / dir.x
 	}
 
 	castRay := func(x, y, dx, dy float64, vert bool) (bool, float64, float64, TileType) {
-		for {
+		ox, oy := x, y
+		fauxDist := (&Vec2f{pos.x - x, pos.y - y}).Length()
+		fauxStep := (&Vec2f{dx, dy}).Length() //The approximate distance the ray travels each step
+		for ; fauxDist+fauxStep < maxDist; fauxDist += fauxStep {
 			ix := int(x / TILE_SIZE)
 			iy := int(y / TILE_SIZE)
 
@@ -440,7 +444,7 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f) *RaycastResult {
 			}
 
 			if ix < 0 || iy < 0 || ix >= level.cols || iy >= level.rows {
-				return false, 0.0, 0.0, TT_EMPTY
+				return false, x, y, TT_EMPTY
 			}
 
 			if level.tiles[iy][ix]&TT_SLOPES > 0 {
@@ -462,6 +466,7 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f) *RaycastResult {
 			x += dx
 			y += dy
 		}
+		return false, ox + (maxDist * dx / fauxStep), oy + (maxDist * dy / fauxStep), TT_EMPTY
 	}
 
 	//Vertical line phase (moving x)
@@ -506,23 +511,21 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f) *RaycastResult {
 	}
 	//hHit, horzX, horzY := false, 0.0, 0.0
 
-	if vHit || hHit {
-		vDist := math.Pow(vertX-pos.x, 2.0) + math.Pow(vertY-pos.y, 2.0)
-		hDist := math.Pow(horzX-pos.x, 2.0) + math.Pow(horzY-pos.y, 2.0)
-		if hDist < vDist {
-			return &RaycastResult{
-				pos:      &Vec2f{horzX, horzY},
-				distance: math.Sqrt(hDist),
-				tile:     hTile,
-			}
-		} else {
-			return &RaycastResult{
-				pos:      &Vec2f{vertX, vertY},
-				distance: math.Sqrt(vDist),
-				tile:     vTile,
-			}
+	vDist := math.Pow(vertX-pos.x, 2.0) + math.Pow(vertY-pos.y, 2.0)
+	hDist := math.Pow(horzX-pos.x, 2.0) + math.Pow(horzY-pos.y, 2.0)
+	if hDist < vDist {
+		return &RaycastResult{
+			hit:      hHit,
+			pos:      &Vec2f{horzX, horzY},
+			distance: math.Sqrt(hDist),
+			tile:     hTile,
+		}
+	} else {
+		return &RaycastResult{
+			hit:      vHit,
+			pos:      &Vec2f{vertX, vertY},
+			distance: math.Sqrt(vDist),
+			tile:     vTile,
 		}
 	}
-
-	return nil
 }

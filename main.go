@@ -2,9 +2,8 @@ package main
 
 /*
 TODO:
--Sprite sorting
 -Level transition
--Function to spawn things offscreen
+-Function to spawn things offscreen / Counting enemies onscreen
 -Teleporting / Laser?
 -Wrap around level?
 -Blargh
@@ -25,6 +24,7 @@ import (
 	_ "image/color"
 	_ "image/png"
 	"log"
+	"math"
 	"math/rand"
 	"strings"
 
@@ -41,39 +41,7 @@ const (
 	SCR_HEIGHT_H = SCR_HEIGHT / 2
 )
 
-type Mission struct {
-	loveQuota  int
-	knightFreq float64
-	blarghFreq float64
-	gopnikFreq float64
-	wormFreq   float64
-	barrelFreq float64
-	crossFreq  float64
-}
-
-var missions [6]Mission
-
-func init() {
-	missions[0] = Mission{
-		loveQuota:  100,
-		knightFreq: 0.5,
-		blarghFreq: 0.5,
-		gopnikFreq: 0.5,
-		wormFreq:   0.5,
-		barrelFreq: 0.5,
-		crossFreq:  0.0,
-	}
-}
-
 var cheatText string = ""
-
-//To mark points visually for inspection of collision detection
-type DebugSpot struct {
-	pos *Vec2f
-	spr *Sprite
-}
-
-var __debugSpots []*DebugSpot
 
 func (g *Game) Update() error {
 	now := time.Now()
@@ -92,6 +60,11 @@ func (g *Game) Update() error {
 		_, catObj := AddCat(g)
 		catObj.pos.x = g.playerObj.pos.x
 		catObj.pos.y = g.playerObj.pos.y
+	}
+	if strings.Contains(cheatText, "tdsanic") {
+		cheatText = ""
+		ply := g.playerObj.components[0].(*Player)
+		ply.maxSpeed = 400.0
 	}
 
 	//Prevent the game from going AWOL when the window is moved
@@ -194,8 +167,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	//ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
 }
 
+//Adds the object to the game, sorted by its draw priority
+func (g *Game) AddObject(newObj *Object) {
+	for e := g.objects.Front(); e != nil; e = e.Next() {
+		obj := e.Value.(*Object)
+		if obj.drawPriority > newObj.drawPriority {
+			g.objects.InsertBefore(newObj, e)
+			return
+		}
+	}
+	g.objects.PushBack(newObj)
+}
+
 //Adds or removes from the love counter. Returns true if the operations causes the quota to be met.
-func (g *Game) AddLoveCounter(amt int) bool {
+func (g *Game) IncLoveCounter(amt int) bool {
 	if g.love == g.mission.loveQuota {
 		return true
 	}
@@ -259,28 +244,11 @@ type GameHUD struct {
 	winBox        UIBox
 }
 
-const MAX_LOVE = 100
-
-func AddDebugSpot(x, y float64, color int) {
-	var spr *Sprite
-	switch color {
-	case 0:
-		spr = NewSprite(image.Rect(112, 40, 116, 44), &Vec2f{-3.0, -3.0}, false, false, 0)
-	case 1:
-		spr = NewSprite(image.Rect(136, 40, 140, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
-	case 2:
-		spr = NewSprite(image.Rect(104, 40, 108, 44), &Vec2f{-2.0, -2.0}, false, false, 0)
+func NewGame(mission int) {
+	if mission < 0 || mission >= len(missions) {
+		log.Println("Invalid mission number!")
+		mission = int(math.Max(0, math.Min(float64(len(missions)-1), float64(mission))))
 	}
-	__debugSpots = append(__debugSpots, &DebugSpot{&Vec2f{x, y}, spr})
-}
-
-func ClearDebugSpots() {
-	__debugSpots = make([]*DebugSpot, 0, 10)
-}
-
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	//Init game
 	game = &Game{
 		objects:  list.New(),
 		level:    GenerateLevel(64, 64),
@@ -292,7 +260,7 @@ func main() {
 			winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
 			winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
 		},
-		mission: &missions[0],
+		mission: &missions[mission],
 	}
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
@@ -308,6 +276,12 @@ func main() {
 			AddKnight(game, center(sp.ix), center(sp.iy))
 		}
 	}
+}
+
+func main() {
+	rand.Seed(time.Now().UnixNano())
+
+	NewGame(0)
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Feta Feles Remake")

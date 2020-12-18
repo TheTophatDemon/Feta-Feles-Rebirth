@@ -38,7 +38,7 @@ func AddLove(game *Game, count int, x, y float64) {
 			life:      6.0,
 		}
 		angle += rand.Float64() * math.Pi * 0.666
-		game.objects.PushBack(&Object{
+		game.AddObject(&Object{
 			pos: &Vec2f{x, y}, radius: 4.0, colType: CT_ITEM,
 			sprites: []*Sprite{
 				sprLoveBlink[0],

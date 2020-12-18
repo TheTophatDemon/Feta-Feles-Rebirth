@@ -22,13 +22,14 @@ type Collidable interface {
 
 //Object ...
 type Object struct {
-	pos        *Vec2f
-	radius     float64
-	colType    ColType
-	sprites    []*Sprite
-	components []Component
-	removeMe   bool
-	hidden     bool
+	pos          *Vec2f
+	radius       float64
+	colType      ColType
+	sprites      []*Sprite
+	components   []Component
+	drawPriority int
+	removeMe     bool
+	hidden       bool
 }
 
 func (obj *Object) Intersects(other *Object) bool {

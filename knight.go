@@ -30,7 +30,7 @@ func AddKnight(game *Game, x, y float64) *Knight {
 		},
 		chargeTimer: 0.0,
 	}
-	game.objects.PushBack(&Object{
+	game.AddObject(&Object{
 		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprKnightNormal},
 		components: []Component{knight},

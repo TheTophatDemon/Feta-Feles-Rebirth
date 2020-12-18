@@ -31,7 +31,7 @@ func AddCat(game *Game) (*Cat, *Object) {
 		sprites:    []*Sprite{sprCatRun[0]},
 		components: []Component{cat},
 	}
-	game.objects.PushBack(obj)
+	game.AddObject(obj)
 	d := RandomDirection()
 	if d.x > 0 {
 		for _, spr := range sprCatRun {

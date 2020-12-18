@@ -48,9 +48,10 @@ func AddPlayer(game *Game, x, y float64) *Object {
 		sprites: []*Sprite{
 			plSpriteNormal,
 		},
-		components: []Component{player},
+		components:   []Component{player},
+		drawPriority: 10,
 	}
-	game.objects.PushBack(obj)
+	game.AddObject(obj)
 
 	return obj
 }
@@ -123,14 +124,14 @@ func (player *Player) Update(game *Game, obj *Object) {
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
 	switch other.colType {
 	case CT_ITEM:
-		if game.AddLoveCounter(1) && player.state != PS_ASCENDED {
+		if game.IncLoveCounter(1) && player.state != PS_ASCENDED {
 			player.state = PS_ASCENDED
 		}
 	case CT_ENEMY, CT_ENEMYSHOT:
 		if player.state == PS_NORMAL {
 			player.state = PS_HURT
 			player.hurtTimer = 1.0
-			game.AddLoveCounter(-10)
+			game.IncLoveCounter(-10)
 			PlaySound("player_hurt")
 		}
 	}
