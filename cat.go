@@ -73,7 +73,7 @@ func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 			frames: sprCatDie,
 			speed:  0.5,
 			callback: func(anm *Anim) {
-				obj.removeMe = true
+
 			},
 		}
 	}

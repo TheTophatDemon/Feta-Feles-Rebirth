@@ -117,9 +117,9 @@ func (g *Game) Update() error {
 	g.camPos = g.playerObj.pos
 
 	//Animate UI
-	if g.winTimer > 0.0 {
+	if g.hud.winTextTimer > 0.0 {
 		g.hud.winText.Update(g.deltaTime)
-		g.winTimer -= g.deltaTime
+		g.hud.winTextTimer -= g.deltaTime
 	}
 
 	//Update UI with love amount
@@ -151,7 +151,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.hud.loveBarBorder.Draw(screen)
 	g.hud.loveBar.Draw(screen, nil)
-	if g.winTimer > 0.0 {
+	if g.hud.winTextTimer > 0.0 {
 		g.hud.winBox.Draw(screen)
 		g.hud.winText.Draw(screen)
 	}
@@ -189,18 +189,15 @@ func (g *Game) IncLoveCounter(amt int) bool {
 		g.love = 0
 	} else if g.love >= g.mission.loveQuota {
 		g.love = g.mission.loveQuota
-		g.Win()
+		if g.hud.winTextTimer <= 0.0 {
+			//Quota has been met. Trigger the endgame sequence
+			g.hud.winTextTimer = 8.0
+			g.hud.winText.fillPos = 0
+			AddCat(g)
+		}
 		return true
 	}
 	return false
-}
-
-func (g *Game) Win() {
-	if g.winTimer <= 0.0 {
-		g.winTimer = 8.0
-		g.hud.winText.fillPos = 0
-		AddCat(g)
-	}
 }
 
 //Layout ...
@@ -213,7 +210,7 @@ var __graphics *ebiten.Image
 //Returns the graphics page and loads it if it isn't there
 func GetGraphics() *ebiten.Image {
 	if __graphics == nil {
-		img, _, err := image.Decode(bytes.NewReader(assets.PNG_GRAPHICS))
+		img, _, err := image.Decode(bytes.NewReader(assets.Parse(assets.PNG_GRAPHICS)))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -242,6 +239,7 @@ type GameHUD struct {
 	loveBar       *Sprite
 	winText       *Text
 	winBox        UIBox
+	winTextTimer  float64
 }
 
 func NewGame(mission int) {

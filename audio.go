@@ -13,18 +13,18 @@ import (
 
 var audioContext *audio.Context
 var players map[string]*ring.Ring //Contains ring buffers of audio players for each sound effect that is loaded
-var audioFiles map[string][]byte
+var audioFiles map[string]string
 
 func init() {
 	audioContext = audio.NewContext(44100)
 	players = make(map[string]*ring.Ring)
-	audioFiles = map[string][]byte{
-		"enemy_die":     assets.WAV_ENEMY_DIE,
-		"enemy_hurt":    assets.WAV_ENEMY_HURT,
-		"love_get":      assets.WAV_LOVE_GET,
-		"player_hurt":   assets.WAV_PLAYER_HURT,
-		"player_shot":   assets.WAV_PLAYER_SHOT,
-		"voice":         assets.WAV_VOICE,
+	audioFiles = map[string]string{
+		"enemy_die":   assets.WAV_ENEMY_DIE,
+		"enemy_hurt":  assets.WAV_ENEMY_HURT,
+		"love_get":    assets.WAV_LOVE_GET,
+		"player_hurt": assets.WAV_PLAYER_HURT,
+		"player_shot": assets.WAV_PLAYER_SHOT,
+		"voice":       assets.WAV_VOICE,
 	}
 }
 
@@ -33,7 +33,7 @@ const PLAYERS_PER_SOUND = 8
 func PlaySound(name string) {
 	buffer, loaded := players[name]
 	if !loaded {
-		stream, err := wav.Decode(audioContext, bytes.NewReader(audioFiles[name]))
+		stream, err := wav.Decode(audioContext, bytes.NewReader(assets.Parse(audioFiles[name])))
 		if err != nil {
 			log.Fatal(err)
 			return
