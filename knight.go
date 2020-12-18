@@ -2,7 +2,10 @@ package main
 
 import "image"
 
-type Knight Mob
+type Knight struct {
+	Mob
+	chargeTimer float64
+}
 
 var sprKnightNormal *Sprite
 var sprKnightCharge *Sprite
@@ -18,12 +21,17 @@ func init() {
 
 func AddKnight(game *Game, x, y float64) *Knight {
 	knight := &Knight{
-		Actor:    NewActor(200.0, 1_000_000.0, 10_000.0),
-		health:   5,
-		currAnim: nil,
+		Mob: Mob{
+			Actor:             NewActor(200.0, 100_000.0, 35_000.0),
+			health:            5,
+			currAnim:          nil,
+			lastSeenPlayerPos: ZeroVec(),
+			vecToPlayer:       ZeroVec(),
+		},
+		chargeTimer: 0.0,
 	}
 	game.objects.PushBack(&Object{
-		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_ENEMY,
+		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprKnightNormal},
 		components: []Component{knight},
 	})
@@ -33,16 +41,37 @@ func AddKnight(game *Game, x, y float64) *Knight {
 func (kn *Knight) Update(game *Game, obj *Object) {
 	if kn.hurtTimer > 0.0 {
 		obj.sprites[0] = sprKnightHurt
+	} else if kn.chargeTimer < 1.0 {
+		obj.sprites[0] = sprKnightCharge
 	} else {
 		obj.sprites[0] = sprKnightNormal
 	}
 
+	kn.Mob.Update(game, obj)
+
+	kn.chargeTimer += game.deltaTime
+	if kn.chargeTimer > 2.0 {
+		kn.chargeTimer = 0.0
+		if kn.hunting {
+			if kn.seesPlayer {
+				kn.Move(kn.vecToPlayer.x, kn.vecToPlayer.y)
+			} else {
+				diff := kn.lastSeenPlayerPos.Clone().Sub(obj.pos)
+				kn.Move(diff.x, diff.y)
+			}
+		} else {
+			//r := RandomDirection()
+			//kn.Move(r.x, r.y)
+		}
+	} else if kn.chargeTimer > 0.5 {
+		kn.Move(0.0, 0.0)
+	}
+
 	kn.Actor.Update(game, obj)
-	(*Mob)(kn).Update(game, obj)
 }
 
 func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
-	(*Mob)(kn).OnCollision(game, obj, other)
+	kn.Mob.OnCollision(game, obj, other)
 
 	//Death
 	if kn.health <= 0 && !kn.dead {

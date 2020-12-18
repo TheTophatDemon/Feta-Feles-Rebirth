@@ -2,13 +2,28 @@ package main
 
 type Mob struct {
 	*Actor
-	health    int
-	hurtTimer float64
-	currAnim  *Anim
-	dead      bool
+	health            int
+	hurtTimer         float64
+	currAnim          *Anim
+	dead              bool
+	lastSeenPlayerPos *Vec2f
+	vecToPlayer       *Vec2f
+	seesPlayer        bool
+	hunting           bool
 }
 
 func (mb *Mob) Update(game *Game, obj *Object) {
+	mb.vecToPlayer = game.playerObj.pos.Clone().Sub(obj.pos)
+	if raycast := game.level.Raycast(obj.pos.Clone(), mb.vecToPlayer); raycast != nil {
+		if raycast.distance >= mb.vecToPlayer.Length() {
+			mb.lastSeenPlayerPos = game.playerObj.pos.Clone()
+			mb.seesPlayer = true
+			mb.hunting = true
+		} else {
+			mb.seesPlayer = false
+		}
+	}
+
 	if mb.hurtTimer > 0.0 {
 		mb.hurtTimer -= game.deltaTime
 		if int(mb.hurtTimer/0.125)%2 == 0 {

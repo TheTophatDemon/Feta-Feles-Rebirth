@@ -44,7 +44,7 @@ func AddPlayer(game *Game, x, y float64) *Object {
 	}
 
 	obj := &Object{
-		pos: &Vec2f{x, y}, radius: 8.0, colType: CT_PLAYER,
+		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
 			plSpriteNormal,
 		},
