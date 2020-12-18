@@ -2,14 +2,16 @@ package main
 
 /*
 TODO:
--Only draw tiles that are on screen
+-Sprite sorting
+-Level transition
+-Function to spawn things offscreen
 -Teleporting / Laser?
 -Wrap around level?
--Loading screen?
 -Blargh
 -Gopnik
--Worm
 -Barrels
+-Worm
+-Loading screen?
 -Fix audio loading issue
 -Feles
 -Music
@@ -161,7 +163,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	camMat := &ebiten.GeoM{}
 	camMat.Translate(-g.camPos.x+SCR_WIDTH_H, -g.camPos.y+SCR_HEIGHT_H)
 
-	g.level.Draw(screen, camMat)
+	g.level.Draw(g, screen, camMat)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
 		if !obj.hidden {

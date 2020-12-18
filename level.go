@@ -326,10 +326,15 @@ func GenerateLevel(w, h int) *Level {
 	return level
 }
 
-//Todo: Perhaps this can be optimized by having all the tiles share the same ebiten.DrawImageOptions?
-func (lev *Level) Draw(screen *ebiten.Image, pt *ebiten.GeoM) {
-	for j := 0; j < lev.rows; j++ {
-		for i := 0; i < lev.cols; i++ {
+func (lev *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
+	gridMin := game.camPos.Clone().Sub(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Floor()
+	gridMax := game.camPos.Clone().Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Ceil()
+	iminx := int(math.Max(0.0, gridMin.x))
+	iminy := int(math.Max(0.0, gridMin.y))
+	imaxx := int(math.Min(float64(lev.cols), gridMax.x))
+	imaxy := int(math.Min(float64(lev.rows), gridMax.y))
+	for j := iminy; j < imaxy; j++ {
+		for i := iminx; i < imaxx; i++ {
 			if lev.sprites[j][i] != nil {
 				mat := lev.positions[j][i]
 				mat.Concat(*pt)
