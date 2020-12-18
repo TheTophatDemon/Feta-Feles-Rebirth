@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Level transition
 -Function to spawn things offscreen / Counting enemies onscreen
 -Teleporting / Laser?
 -Wrap around level?
@@ -41,76 +40,103 @@ const (
 	SCR_HEIGHT_H = SCR_HEIGHT / 2
 )
 
+type App int //Dummy type implementing interface for Ebiten to plug into
+
+func (a *App) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return SCR_WIDTH, SCR_HEIGHT
+}
+
 var cheatText string = ""
 
-func (g *Game) Update() error {
+func (a *App) Update() error {
+	g := game
 	now := time.Now()
 	g.deltaTime = now.Sub(g.lastTime).Seconds()
 	g.lastTime = now
 
-	cheatText += strings.ToLower(string(ebiten.InputChars()))
+	if g.fade == FM_NO_FADE {
 
-	//Cheat codes
-	if strings.Contains(cheatText, "tdnepotis") {
-		g.love = g.mission.loveQuota - 1
-		cheatText = ""
-	}
-	if strings.Contains(cheatText, "tdnyaah") {
-		cheatText = ""
-		_, catObj := AddCat(g)
-		catObj.pos.x = g.playerObj.pos.x
-		catObj.pos.y = g.playerObj.pos.y
-	}
-	if strings.Contains(cheatText, "tdsanic") {
-		cheatText = ""
-		ply := g.playerObj.components[0].(*Player)
-		ply.maxSpeed = 400.0
-	}
+		cheatText += strings.ToLower(string(ebiten.InputChars()))
 
-	//Prevent the game from going AWOL when the window is moved
-	if g.deltaTime > 0.25 {
-		return nil
-	}
+		//Cheat codes
+		if strings.Contains(cheatText, "tdnepotis") {
+			g.love = g.mission.loveQuota - 1
+			cheatText = ""
+		}
+		if strings.Contains(cheatText, "tdnyaah") {
+			cheatText = ""
+			_, catObj := AddCat(g)
+			catObj.pos.x = g.playerObj.pos.x
+			catObj.pos.y = g.playerObj.pos.y
+		}
+		if strings.Contains(cheatText, "tdsanic") {
+			cheatText = ""
+			ply := g.playerObj.components[0].(*Player)
+			ply.maxSpeed = 400.0
+		}
 
-	//Update objects
-	toRemove := make([]*list.Element, 0, 4)
-	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
-		obj := objE.Value.(*Object)
-		//Update components
-		for _, c := range obj.components {
-			if c != nil {
-				c.Update(g, obj)
+		//Prevent the game from going AWOL when the window is moved
+		if g.deltaTime > 0.25 {
+			return nil
+		}
+
+		//Update objects
+		toRemove := make([]*list.Element, 0, 4)
+		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
+			obj := objE.Value.(*Object)
+			//Update components
+			for _, c := range obj.components {
+				if c != nil {
+					c.Update(g, obj)
+				}
+			}
+			//Objects are removed later so that they doesn't interfere with collision events
+			if obj.removeMe {
+				toRemove = append(toRemove, objE)
 			}
 		}
-		//Objects are removed later so that they doesn't interfere with collision events
-		if obj.removeMe {
-			toRemove = append(toRemove, objE)
-		}
-	}
-	//Resolve inter-object collisions
-	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
-		obj := objE.Value.(*Object)
-		if obj.colType != CT_NONE {
-			//O(n^2)...Bleh!
-			for obj2E := g.objects.Front(); obj2E != nil; obj2E = obj2E.Next() {
-				obj2 := obj2E.Value.(*Object)
-				if obj2.colType != CT_NONE && obj2 != obj {
-					if obj.Intersects(obj2) {
-						for _, c := range obj.components {
-							col, ok := c.(Collidable)
-							if ok {
-								//An equivalent event will be sent for the other object when it is evaluated in the outer loop
-								col.OnCollision(g, obj, obj2)
+		//Resolve inter-object collisions
+		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
+			obj := objE.Value.(*Object)
+			if obj.colType != CT_NONE {
+				//O(n^2)...Bleh!
+				for obj2E := g.objects.Front(); obj2E != nil; obj2E = obj2E.Next() {
+					obj2 := obj2E.Value.(*Object)
+					if obj2.colType != CT_NONE && obj2 != obj {
+						if obj.Intersects(obj2) {
+							for _, c := range obj.components {
+								col, ok := c.(Collidable)
+								if ok {
+									//An equivalent event will be sent for the other object when it is evaluated in the outer loop
+									col.OnCollision(g, obj, obj2)
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-	}
-	//Remove objects flagged for removal
-	for _, objE := range toRemove {
-		g.objects.Remove(objE)
+		//Remove objects flagged for removal
+		for _, objE := range toRemove {
+			g.objects.Remove(objE)
+		}
+
+	} else { //Handle level transition FX
+		g.fadeTimer += g.deltaTime
+		if g.fadeTimer > 0.25 {
+			g.fadeTimer = 0.0
+			g.fadeStage++
+			g.renderTarget.Clear()
+			if g.fadeStage >= FADE_STAGES {
+				g.fadeStage = 0
+				//If the level is ending, start a new game
+				if g.fade == FM_FADE_OUT {
+					NewGame(0)
+					return nil
+				}
+				g.fade = FM_NO_FADE
+			}
+		}
 	}
 
 	//Set camera to player position
@@ -132,7 +158,8 @@ func (g *Game) Update() error {
 }
 
 //Draw ...
-func (g *Game) Draw(screen *ebiten.Image) {
+func (a *App) Draw(screen *ebiten.Image) {
+	g := game
 	camMat := &ebiten.GeoM{}
 	camMat.Translate(-g.camPos.x+SCR_WIDTH_H, -g.camPos.y+SCR_HEIGHT_H)
 
@@ -164,7 +191,23 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
-	//ebitenutil.DebugPrint(screen, fmt.Sprint(ebiten.CurrentFPS()))
+
+	if g.fade != FM_NO_FADE {
+		op := &ebiten.DrawImageOptions{}
+		var stage float64
+		if g.fade == FM_FADE_IN {
+			stage = float64(FADE_STAGES - g.fadeStage)
+		} else if g.fade == FM_FADE_OUT {
+			stage = float64(1 + g.fadeStage)
+		}
+		op.GeoM.Scale(1.0/stage, 1.0/stage)
+		g.renderTarget.DrawImage(screen, op)
+		op.GeoM.Reset()
+		op.GeoM.Scale(stage, stage)
+		screen.Clear()
+		screen.DrawImage(g.renderTarget, op)
+	}
+
 }
 
 //Adds the object to the game, sorted by its draw priority
@@ -200,9 +243,8 @@ func (g *Game) IncLoveCounter(amt int) bool {
 	return false
 }
 
-//Layout ...
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return SCR_WIDTH, SCR_HEIGHT
+func (g *Game) BeginEndTransition() {
+	g.fade = FM_FADE_OUT
 }
 
 var __graphics *ebiten.Image
@@ -221,17 +263,30 @@ func GetGraphics() *ebiten.Image {
 
 var game *Game
 
+type FadeMode int
+
+const (
+	FM_FADE_OUT FadeMode = -1
+	FM_NO_FADE  FadeMode = 0
+	FM_FADE_IN  FadeMode = 1
+	FADE_STAGES int      = 8
+)
+
 type Game struct {
-	objects   *list.List
-	level     *Level
-	deltaTime float64
-	lastTime  time.Time
-	camPos    *Vec2f
-	winTimer  float64
-	hud       GameHUD
-	mission   *Mission
-	playerObj *Object
-	love      int
+	objects      *list.List
+	level        *Level
+	deltaTime    float64
+	lastTime     time.Time
+	camPos       *Vec2f
+	winTimer     float64
+	hud          GameHUD
+	mission      *Mission
+	playerObj    *Object
+	love         int
+	fade         FadeMode
+	fadeTimer    float64
+	fadeStage    int
+	renderTarget *ebiten.Image
 }
 
 type GameHUD struct {
@@ -258,7 +313,9 @@ func NewGame(mission int) {
 			winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
 			winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
 		},
-		mission: &missions[mission],
+		mission:      &missions[mission],
+		fade:         FM_FADE_IN,
+		renderTarget: ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT),
 	}
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
@@ -284,7 +341,7 @@ func main() {
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Feta Feles Remake")
 	//ebiten.SetRunnableOnUnfocused(true)
-	if err := ebiten.RunGame(game); err != nil {
+	if err := ebiten.RunGame(new(App)); err != nil {
 		log.Fatal(err)
 	}
 }
