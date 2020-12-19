@@ -25,6 +25,8 @@ func init() {
 		"player_hurt": assets.WAV_PLAYER_HURT,
 		"player_shot": assets.WAV_PLAYER_SHOT,
 		"voice":       assets.WAV_VOICE,
+		"intro_chime": assets.WAV_INTRO_CHIME,
+		"outro_chime": assets.WAV_OUTRO_CHIME,
 	}
 }
 

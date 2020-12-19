@@ -22,7 +22,7 @@ func init() {
 func AddKnight(game *Game, x, y float64) *Knight {
 	knight := &Knight{
 		Mob: Mob{
-			Actor:             NewActor(200.0, 100_000.0, 35_000.0),
+			Actor:             NewActor(200.0, 200_000.0, 25_000.0),
 			health:            5,
 			currAnim:          nil,
 			lastSeenPlayerPos: ZeroVec(),
@@ -63,7 +63,7 @@ func (kn *Knight) Update(game *Game, obj *Object) {
 			//r := RandomDirection()
 			//kn.Move(r.x, r.y)
 		}
-	} else if kn.chargeTimer > 0.5 {
+	} else if kn.chargeTimer > 0.25 {
 		kn.Move(0.0, 0.0)
 	}
 

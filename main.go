@@ -25,6 +25,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"runtime"
 	"strings"
 
 	"time"
@@ -245,6 +246,7 @@ func (g *Game) IncLoveCounter(amt int) bool {
 
 func (g *Game) BeginEndTransition() {
 	g.fade = FM_FADE_OUT
+	PlaySound("outro_chime")
 }
 
 var __graphics *ebiten.Image
@@ -331,6 +333,10 @@ func NewGame(mission int) {
 			AddKnight(game, center(sp.ix), center(sp.iy))
 		}
 	}
+
+	PlaySound("intro_chime")
+
+	runtime.GC()
 }
 
 func main() {
