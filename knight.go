@@ -1,6 +1,9 @@
 package main
 
-import "image"
+import (
+	"image"
+	"math/rand"
+)
 
 type Knight struct {
 	Mob
@@ -28,7 +31,7 @@ func AddKnight(game *Game, x, y float64) *Knight {
 			lastSeenPlayerPos: ZeroVec(),
 			vecToPlayer:       ZeroVec(),
 		},
-		chargeTimer: 0.0,
+		chargeTimer: rand.Float64(),
 	}
 	game.AddObject(&Object{
 		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_ENEMY,
@@ -81,8 +84,8 @@ func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
 			speed:  0.15,
 			callback: func(anm *Anim) {
 				obj.removeMe = true
+				AddLove(game, 3, obj.pos.x, obj.pos.y)
 			},
 		}
-		AddLove(game, 3, obj.pos.x, obj.pos.y)
 	}
 }

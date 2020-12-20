@@ -48,14 +48,14 @@ func (actor *Actor) ApplyMovement(obj *Object, vel *Vec2f) {
 	newPos := obj.pos.Clone().Add(vel)
 
 	//Iterate over portion of the level grid that roughly covers the area between the object and its destination
-	gridMin, gridMax := game.level.GetGridAreaOverCapsule(obj.pos, newPos, obj.radius)
+	gridMin, gridMax := game.level.GetGridAreaOverCapsule(obj.pos, newPos, obj.radius, false)
 
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {
-			if game.level.tiles[j][i]&TT_SOLIDS > 0 {
+			t := game.level.GetTile(i, j, true)
+			if t.IsSolid() {
 				dest := obj.pos.Clone().Add(vel)
-				proj := game.level.ProjectPosOntoTile(dest, i, j)
-				//debugSpot = proj.Clone()
+				proj := game.level.ProjectPosOntoTile(dest, t)
 				diff := dest.Clone().Sub(proj)
 				push := obj.radius - diff.Length()
 				if push > 0 {

@@ -25,9 +25,9 @@ func AddCat(game *Game) (*Cat, *Object) {
 			loop:   true,
 		},
 	}
-	ix, iy := game.level.FindEmptySpace(2)
+	t := game.level.FindEmptySpace(2)
 	obj := &Object{
-		pos: &Vec2f{float64(ix)*TILE_SIZE + 8.0, float64(iy)*TILE_SIZE + 8.0}, radius: 8.0, colType: CT_CAT,
+		pos: &Vec2f{t.centerX, t.centerY}, radius: 8.0, colType: CT_CAT,
 		sprites:    []*Sprite{sprCatRun[0]},
 		components: []Component{cat},
 	}

@@ -16,7 +16,7 @@ type Mob struct {
 func (mb *Mob) Update(game *Game, obj *Object) {
 	mb.vecToPlayer = game.playerObj.pos.Clone().Sub(obj.pos)
 	mb.distToPlayer = mb.vecToPlayer.Length()
-	if raycast := game.level.Raycast(obj.pos.Clone(), mb.vecToPlayer, SCR_WIDTH); raycast != nil {
+	if raycast := game.level.Raycast(obj.pos.Clone(), mb.vecToPlayer, SCR_HEIGHT); raycast != nil {
 		if raycast.distance >= mb.vecToPlayer.Length() {
 			mb.lastSeenPlayerPos = game.playerObj.pos.Clone()
 			mb.seesPlayer = true

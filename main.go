@@ -2,12 +2,17 @@ package main
 
 /*
 TODO:
--Function to spawn things offscreen / Counting enemies onscreen
--Teleporting / Laser?
--Wrap around level?
+-Make actors wrap around the screen at boundaries
+-Screen warp collisions
+-Solution to being trapped
+	-Search out all empty areas and connect them?
+	-Make tiles breakable?
+	-Give player teleportation ability?
+-Disappearing enemies glitch...?
 -Blargh
 -Gopnik
 -Barrels
+-Mob Director
 -Worm
 -Loading screen?
 -Fix audio loading issue
@@ -322,16 +327,14 @@ func NewGame(mission int) {
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
 
-	center := func(x int) float64 {
-		return float64(x)*TILE_SIZE + 8.0
-	}
-	for _, sp := range game.level.spawns {
-		switch sp.spawnType {
-		case SP_PLAYER:
-			game.playerObj = AddPlayer(game, center(sp.ix), center(sp.iy))
-		case SP_ENEMY:
-			AddKnight(game, center(sp.ix), center(sp.iy))
-		}
+	//Spawn entities
+	playerSpawn := game.level.FindEmptySpace(2)
+	game.playerObj = AddPlayer(game, playerSpawn.centerX, playerSpawn.centerY)
+
+	//TODO: Replace this with a dynamic enemy spawn director
+	for i := 0; i < 30; i++ {
+		knightSpawn := game.level.FindEmptySpace(1)
+		AddKnight(game, knightSpawn.centerX, knightSpawn.centerY)
 	}
 
 	PlaySound("intro_chime")
