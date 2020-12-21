@@ -2,8 +2,9 @@ package main
 
 /*
 TODO:
--Make actors wrap around the screen at boundaries
--Screen warp collisions
+-Make raycasts go across boundaries?
+-Reimplement runes
+-Make runes explode?
 -Solution to being trapped
 	-Search out all empty areas and connect them?
 	-Make tiles breakable?
@@ -100,6 +101,8 @@ func (a *App) Update() error {
 			if obj.removeMe {
 				toRemove = append(toRemove, objE)
 			}
+			//Wrap objects around the map if they exit its boundaries
+			obj.pos.x, obj.pos.y = g.level.WrapPixelCoords(obj.pos.x, obj.pos.y)
 		}
 		//Resolve inter-object collisions
 		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
@@ -147,6 +150,9 @@ func (a *App) Update() error {
 
 	//Set camera to player position
 	g.camPos = g.playerObj.pos
+	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
+	g.camMin = g.camPos.Clone().Sub(hscr)
+	g.camMax = g.camPos.Clone().Add(hscr)
 
 	//Animate UI
 	if g.hud.winTextTimer > 0.0 {
@@ -169,23 +175,62 @@ func (a *App) Draw(screen *ebiten.Image) {
 	camMat := &ebiten.GeoM{}
 	camMat.Translate(-g.camPos.x+SCR_WIDTH_H, -g.camPos.y+SCR_HEIGHT_H)
 
+	g.hud.mapBorder.Draw(screen, camMat)
+
+	//Define rectangles representing the camera's position relative to each level boundary and corner
+	cloneCamRect := func(ofsX, ofsY float64) (*Vec2f, *Vec2f) {
+		min := &Vec2f{x: g.camMin.x + ofsX, y: g.camMin.y + ofsY}
+		return min, min.Clone().Add(&Vec2f{SCR_WIDTH, SCR_HEIGHT})
+	}
+	rCamMin, rCamMax := cloneCamRect(+g.level.pixelWidth, 0.0)
+	lCamMin, lCamMax := cloneCamRect(-g.level.pixelWidth, 0.0)
+	tCamMin, tCamMax := cloneCamRect(0.0, -g.level.pixelHeight)
+	bCamMin, bCamMax := cloneCamRect(0.0, +g.level.pixelHeight)
+	tlCamMin, tlCamMax := cloneCamRect(-g.level.pixelWidth, -g.level.pixelHeight)
+	trCamMin, trCamMax := cloneCamRect(+g.level.pixelWidth, -g.level.pixelHeight)
+	blCamMin, blCamMax := cloneCamRect(-g.level.pixelWidth, +g.level.pixelHeight)
+	brCamMin, brCamMax := cloneCamRect(+g.level.pixelWidth, +g.level.pixelHeight)
+
 	g.level.Draw(g, screen, camMat)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
-		if !obj.hidden {
+		if !obj.hidden && g.SquareOnScreen(obj.pos.x, obj.pos.y, obj.radius, true) {
 			objM := &ebiten.DrawImageOptions{}
 			objM.GeoM.Concat(*camMat)
 			objM.GeoM.Translate(obj.pos.x, obj.pos.y)
+
+			//If the camera's worldspace boundaries are outside of the level boundaries, then modify the position to render objects from the other side of the level.
+			objMin := &Vec2f{x: obj.pos.x - obj.radius, y: obj.pos.y - obj.radius}
+			objMax := &Vec2f{x: obj.pos.x + obj.radius, y: obj.pos.y + obj.radius}
+			switch {
+			case RectsIntersect(objMin, objMax, lCamMin, lCamMax):
+				objM.GeoM.Translate(+g.level.pixelWidth, 0.0)
+			case RectsIntersect(objMin, objMax, rCamMin, rCamMax):
+				objM.GeoM.Translate(-g.level.pixelWidth, 0.0)
+			case RectsIntersect(objMin, objMax, tCamMin, tCamMax):
+				objM.GeoM.Translate(0.0, +g.level.pixelHeight)
+			case RectsIntersect(objMin, objMax, bCamMin, bCamMax):
+				objM.GeoM.Translate(0.0, -g.level.pixelHeight)
+			case RectsIntersect(objMin, objMax, tlCamMin, tlCamMax):
+				objM.GeoM.Translate(+g.level.pixelWidth, +g.level.pixelHeight)
+			case RectsIntersect(objMin, objMax, trCamMin, trCamMax):
+				objM.GeoM.Translate(-g.level.pixelWidth, +g.level.pixelHeight)
+			case RectsIntersect(objMin, objMax, brCamMin, brCamMax):
+				objM.GeoM.Translate(-g.level.pixelWidth, -g.level.pixelHeight)
+			case RectsIntersect(objMin, objMax, blCamMin, blCamMax):
+				objM.GeoM.Translate(+g.level.pixelWidth, -g.level.pixelHeight)
+			}
+
 			for _, spr := range obj.sprites {
 				spr.Draw(screen, &objM.GeoM)
 			}
 		}
 	}
 
-	g.hud.loveBarBorder.Draw(screen)
+	g.hud.loveBarBorder.Draw(screen, nil)
 	g.hud.loveBar.Draw(screen, nil)
 	if g.hud.winTextTimer > 0.0 {
-		g.hud.winBox.Draw(screen)
+		g.hud.winBox.Draw(screen, nil)
 		g.hud.winText.Draw(screen)
 	}
 
@@ -254,6 +299,23 @@ func (g *Game) BeginEndTransition() {
 	PlaySound("outro_chime")
 }
 
+func (g *Game) SquareOnScreen(x, y, radius float64, wrapped bool) bool {
+	if x+radius > g.camMin.x && x-radius < g.camMax.x && y+radius > g.camMin.y && y-radius < g.camMax.y {
+		return true
+	} else if wrapped {
+		return g.SquareOnScreen(x-g.level.pixelWidth, y, radius, false) ||
+			g.SquareOnScreen(x+g.level.pixelWidth, y, radius, false) ||
+			g.SquareOnScreen(x-g.level.pixelWidth, y-g.level.pixelHeight, radius, false) ||
+			g.SquareOnScreen(x, y-g.level.pixelHeight, radius, false) ||
+			g.SquareOnScreen(x+g.level.pixelWidth, y-g.level.pixelHeight, radius, false) ||
+			g.SquareOnScreen(x-g.level.pixelWidth, y+g.level.pixelHeight, radius, false) ||
+			g.SquareOnScreen(x, y+g.level.pixelHeight, radius, false) ||
+			g.SquareOnScreen(x+g.level.pixelWidth, y+g.level.pixelHeight, radius, false)
+	}
+
+	return false
+}
+
 var __graphics *ebiten.Image
 
 //Returns the graphics page and loads it if it isn't there
@@ -268,8 +330,6 @@ func GetGraphics() *ebiten.Image {
 	return __graphics
 }
 
-var game *Game
-
 type FadeMode int
 
 const (
@@ -279,12 +339,16 @@ const (
 	FADE_STAGES int      = 8
 )
 
+var game *Game
+
 type Game struct {
 	objects      *list.List
 	level        *Level
 	deltaTime    float64
 	lastTime     time.Time
 	camPos       *Vec2f
+	camMin       *Vec2f
+	camMax       *Vec2f
 	winTimer     float64
 	hud          GameHUD
 	mission      *Mission
@@ -302,6 +366,7 @@ type GameHUD struct {
 	winText       *Text
 	winBox        UIBox
 	winTextTimer  float64
+	mapBorder     UIBox
 }
 
 func NewGame(mission int) {
@@ -314,11 +379,14 @@ func NewGame(mission int) {
 		level:    GenerateLevel(64, 64),
 		lastTime: time.Now(),
 		camPos:   ZeroVec(),
+		camMin:   ZeroVec(),
+		camMax:   ZeroVec(),
 		hud: GameHUD{
 			loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
 			winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
 			winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
+			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
 		},
 		mission:      &missions[mission],
 		fade:         FM_FADE_IN,

@@ -5,6 +5,10 @@ import (
 	"math/rand"
 )
 
+func RectsIntersect(min0, max0, min1, max1 *Vec2f) bool {
+	return max0.x > min1.x && min0.x < max1.x && max0.y > min1.y && min0.y < max1.y
+}
+
 type Vec2f struct {
 	x, y float64
 }

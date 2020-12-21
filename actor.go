@@ -55,6 +55,17 @@ func (actor *Actor) ApplyMovement(obj *Object, vel *Vec2f) {
 			t := game.level.GetTile(i, j, true)
 			if t.IsSolid() {
 				dest := obj.pos.Clone().Add(vel)
+				//For tiles on the other side of the map, the player's apparent position must be adjusted relative to them
+				if i < 0 {
+					dest.x += game.level.pixelWidth
+				} else if i >= game.level.cols {
+					dest.x -= game.level.pixelWidth
+				}
+				if j < 0 {
+					dest.y += game.level.pixelHeight
+				} else if j >= game.level.rows {
+					dest.y -= game.level.pixelHeight
+				}
 				proj := game.level.ProjectPosOntoTile(dest, t)
 				diff := dest.Clone().Sub(proj)
 				push := obj.radius - diff.Length()

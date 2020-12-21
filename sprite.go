@@ -123,11 +123,14 @@ func CreateUIBox(src, dest image.Rectangle) UIBox {
 	return UIBox{sprites, dest}
 }
 
-func (ui UIBox) Draw(target *ebiten.Image) {
+func (ui UIBox) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	op := &ebiten.DrawImageOptions{}
 	for _, sp := range ui.sprites {
 		if sp != nil {
 			op.GeoM = *sp.matrix
+			if pt != nil {
+				op.GeoM.Concat(*pt)
+			}
 			target.DrawImage(sp.subImg, op)
 		}
 	}

@@ -33,24 +33,36 @@ func NewLevel(cols, rows int) *Level {
 		}
 	}
 
-	pixelWidth := float64(cols*TILE_SIZE + TILE_SIZE)
-	pixelHeight := float64(rows*TILE_SIZE + TILE_SIZE)
+	pixelWidth := float64(cols * TILE_SIZE)
+	pixelHeight := float64(rows * TILE_SIZE)
 
 	return &Level{tiles, rows, cols, pixelWidth, pixelHeight}
 }
 
-func (level *Level) WrapCoords(x, y int) (int, int) {
+func (level *Level) WrapGridCoords(x, y int) (int, int) {
 	if x < 0 {
 		x += level.cols
-	}
-	if x >= level.cols {
+	} else if x >= level.cols {
 		x -= level.cols
 	}
 	if y < 0 {
 		y += level.rows
-	}
-	if y >= level.rows {
+	} else if y >= level.rows {
 		y -= level.rows
+	}
+	return x, y
+}
+
+func (level *Level) WrapPixelCoords(x, y float64) (float64, float64) {
+	if x < 0.0 {
+		x += level.pixelWidth
+	} else if x >= level.pixelWidth {
+		x -= level.pixelWidth
+	}
+	if y < 0.0 {
+		y += level.pixelHeight
+	} else if y >= level.pixelHeight {
+		y -= level.pixelHeight
 	}
 	return x, y
 }
@@ -58,7 +70,7 @@ func (level *Level) WrapCoords(x, y int) (int, int) {
 //Sets the tile at the coordinate to specified type. Returns true if coordinate is valid. If wrap is set, out of bounds coordinates will be offset to the other side of the level.
 func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 	if wrap {
-		x, y = level.WrapCoords(x, y)
+		x, y = level.WrapGridCoords(x, y)
 	} else if x < 0 || y < 0 || x >= level.cols || y >= level.rows {
 		return false
 	}
@@ -70,7 +82,7 @@ func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 //Gets a reference to the tile at the coordinates. Returns nil if out of bounds unless wrap is enabled.
 func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 	if wrap {
-		x, y = level.WrapCoords(x, y)
+		x, y = level.WrapGridCoords(x, y)
 	} else if x < 0 || y < 0 || x >= level.cols || y >= level.rows {
 		return nil
 	}
@@ -113,19 +125,27 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 	//Determine the area of the grid that is on screen
 	gridMin := game.camPos.Clone().Sub(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Floor()
 	gridMax := game.camPos.Clone().Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Ceil()
-	iminx := int(math.Max(0.0, gridMin.x))
-	iminy := int(math.Max(0.0, gridMin.y))
-	imaxx := int(math.Min(float64(level.cols), gridMax.x))
-	imaxy := int(math.Min(float64(level.rows), gridMax.y))
 	//Draw only the tiles in that area
-	for j := iminy; j < imaxy; j++ {
-		for i := iminx; i < imaxx; i++ {
-			if level.tiles[j][i].modified {
-				level.tiles[j][i].RegenSprite()
-				level.tiles[j][i].modified = false
+	for j := int(gridMin.y); j < int(gridMax.y); j++ {
+		for i := int(gridMin.x); i < int(gridMax.x); i++ {
+			t := level.GetTile(i, j, true)
+			if t.modified {
+				t.RegenSprite()
+				t.modified = false
 			}
-			if level.tiles[j][i].spr != nil {
-				level.tiles[j][i].spr.Draw(screen, pt)
+			if t.spr != nil {
+				mat := *pt
+				if i < 0 {
+					mat.Translate(-level.pixelWidth, 0.0)
+				} else if i >= level.cols {
+					mat.Translate(level.pixelWidth, 0.0)
+				}
+				if j < 0 {
+					mat.Translate(0.0, -level.pixelHeight)
+				} else if j >= level.rows {
+					mat.Translate(0.0, level.pixelHeight)
+				}
+				t.spr.Draw(screen, &mat)
 			}
 		}
 	}
@@ -172,6 +192,17 @@ func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f) 
 			t := game.level.GetTile(i, j, true)
 			if t.IsSolid() {
 				diff := pos.Clone().Sub(level.ProjectPosOntoTile(pos, t))
+				//Consider coordinates from other side of map if need be
+				if i < 0 {
+					diff.x += level.pixelWidth
+				} else if i >= level.cols {
+					diff.x -= level.pixelWidth
+				}
+				if j < 0 {
+					diff.y += level.pixelHeight
+				} else if j >= level.rows {
+					diff.y -= level.pixelHeight
+				}
 				dLen := diff.Length()
 				if dLen < radius {
 					if dLen != 0.0 {
