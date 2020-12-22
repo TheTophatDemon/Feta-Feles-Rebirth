@@ -56,15 +56,8 @@ func (kn *Knight) Update(game *Game, obj *Object) {
 	if kn.chargeTimer > 2.0 {
 		kn.chargeTimer = 0.0
 		if kn.hunting {
-			if kn.seesPlayer {
-				kn.Move(kn.vecToPlayer.x, kn.vecToPlayer.y)
-			} else {
-				diff := kn.lastSeenPlayerPos.Clone().Sub(obj.pos)
-				kn.Move(diff.x, diff.y)
-			}
-		} else {
-			//r := RandomDirection()
-			//kn.Move(r.x, r.y)
+			diff := kn.lastSeenPlayerPos.Clone().Sub(obj.pos)
+			kn.Move(diff.x, diff.y)
 		}
 	} else if kn.chargeTimer > 0.25 {
 		kn.Move(0.0, 0.0)

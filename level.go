@@ -40,15 +40,13 @@ func NewLevel(cols, rows int) *Level {
 }
 
 func (level *Level) WrapGridCoords(x, y int) (int, int) {
+	x = x % level.cols
+	y = y % level.rows
 	if x < 0 {
 		x += level.cols
-	} else if x >= level.cols {
-		x -= level.cols
 	}
 	if y < 0 {
 		y += level.rows
-	} else if y >= level.rows {
-		y -= level.rows
 	}
 	return x, y
 }
@@ -174,11 +172,11 @@ func (level *Level) ProjectPosOntoTile(pos *Vec2f, t *Tile) *Vec2f {
 func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64, clamp bool) (gridMin, gridMax *Vec2f) {
 	gridMin = VecMin(start, dest).SubScalar(radius).Scale(1.0 / TILE_SIZE).Floor()
 	if clamp {
-		//gridMin = VecMax(ZeroVec(), gridMin)
+		gridMin = VecMax(ZeroVec(), gridMin)
 	}
 	gridMax = VecMax(start, dest).AddScalar(radius).Scale(1.0 / TILE_SIZE).Ceil()
 	if clamp {
-		//gridMax = VecMin(&Vec2f{x: float64(level.cols), y: float64(level.rows)}, gridMax)
+		gridMax = VecMin(&Vec2f{x: float64(level.cols), y: float64(level.rows)}, gridMax)
 	}
 	return
 }
@@ -247,19 +245,17 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastRes
 					iy--
 				}
 			}
-
-			if ix < 0 || iy < 0 || ix >= level.cols || iy >= level.rows {
-				return nil, x, y
-			}
+			ix, iy = level.WrapGridCoords(ix, iy)
 
 			t := level.tiles[iy][ix]
 			if t.IsSlope() {
 				//Test against slopes
 				slopeNormal := level.tiles[iy][ix].GetSlopeNormal()
 				//Calculate intersection point
-				t := (slopeNormal.x*(t.centerX-x) + slopeNormal.y*(t.centerY-y)) /
+				wx, wy := level.WrapPixelCoords(x, y)
+				t := (slopeNormal.x*(t.centerX-wx) + slopeNormal.y*(t.centerY-wy)) /
 					((slopeNormal.x * dx) + (slopeNormal.y * dy))
-				px, py := x+dx*t, y+dy*t
+				px, py := wx+dx*t, wy+dy*t
 				//Test if it is within the tile's boundaries
 				if px >= float64(ix)*TILE_SIZE && px < float64(ix+1)*TILE_SIZE &&
 					py >= float64(iy)*TILE_SIZE && py < float64(iy+1)*TILE_SIZE {

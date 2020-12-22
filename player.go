@@ -65,6 +65,10 @@ func (player *Player) Update(game *Game, obj *Object) {
 				cx, cy := ebiten.CursorPosition()
 				rPos := obj.pos.Clone().Sub(game.camPos).Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
 				dir = (&Vec2f{float64(cx), float64(cy)}).Sub(rPos)
+				raycast := game.level.Raycast(obj.pos, dir, 128.0)
+				if raycast.hit {
+					AddDebugSpot(raycast.pos.x, raycast.pos.y, 0)
+				}
 			} else if ebiten.IsKeyPressed(ebiten.KeySpace) {
 				dir = player.facing.Clone()
 			}
