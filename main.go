@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Make raycasts go across boundaries?
 -Reimplement runes
 -Make runes explode?
 -Solution to being trapped
@@ -149,7 +148,7 @@ func (a *App) Update() error {
 	}
 
 	//Set camera to player position
-	g.camPos = g.playerObj.pos
+	g.camPos = VecMax(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}, VecMin(&Vec2f{g.level.pixelWidth - SCR_WIDTH_H, g.level.pixelHeight - SCR_HEIGHT_H}, g.playerObj.pos))
 	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
 	g.camMin = g.camPos.Clone().Sub(hscr)
 	g.camMax = g.camPos.Clone().Add(hscr)
@@ -175,52 +174,13 @@ func (a *App) Draw(screen *ebiten.Image) {
 	camMat := &ebiten.GeoM{}
 	camMat.Translate(-g.camPos.x+SCR_WIDTH_H, -g.camPos.y+SCR_HEIGHT_H)
 
-	g.hud.mapBorder.Draw(screen, camMat)
-
-	//Define rectangles representing the camera's position relative to each level boundary and corner
-	cloneCamRect := func(ofsX, ofsY float64) (*Vec2f, *Vec2f) {
-		min := &Vec2f{x: g.camMin.x + ofsX, y: g.camMin.y + ofsY}
-		return min, min.Clone().Add(&Vec2f{SCR_WIDTH, SCR_HEIGHT})
-	}
-	rCamMin, rCamMax := cloneCamRect(+g.level.pixelWidth, 0.0)
-	lCamMin, lCamMax := cloneCamRect(-g.level.pixelWidth, 0.0)
-	tCamMin, tCamMax := cloneCamRect(0.0, -g.level.pixelHeight)
-	bCamMin, bCamMax := cloneCamRect(0.0, +g.level.pixelHeight)
-	tlCamMin, tlCamMax := cloneCamRect(-g.level.pixelWidth, -g.level.pixelHeight)
-	trCamMin, trCamMax := cloneCamRect(+g.level.pixelWidth, -g.level.pixelHeight)
-	blCamMin, blCamMax := cloneCamRect(-g.level.pixelWidth, +g.level.pixelHeight)
-	brCamMin, brCamMax := cloneCamRect(+g.level.pixelWidth, +g.level.pixelHeight)
-
 	g.level.Draw(g, screen, camMat)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
-		if !obj.hidden && g.SquareOnScreen(obj.pos.x, obj.pos.y, obj.radius, true) {
+		if !obj.hidden && g.SquareOnScreen(obj.pos.x, obj.pos.y, obj.radius) {
 			objM := &ebiten.DrawImageOptions{}
 			objM.GeoM.Concat(*camMat)
 			objM.GeoM.Translate(obj.pos.x, obj.pos.y)
-
-			//If the camera's worldspace boundaries are outside of the level boundaries, then modify the position to render objects from the other side of the level.
-			objMin := &Vec2f{x: obj.pos.x - obj.radius, y: obj.pos.y - obj.radius}
-			objMax := &Vec2f{x: obj.pos.x + obj.radius, y: obj.pos.y + obj.radius}
-			switch {
-			case RectsIntersect(objMin, objMax, lCamMin, lCamMax):
-				objM.GeoM.Translate(+g.level.pixelWidth, 0.0)
-			case RectsIntersect(objMin, objMax, rCamMin, rCamMax):
-				objM.GeoM.Translate(-g.level.pixelWidth, 0.0)
-			case RectsIntersect(objMin, objMax, tCamMin, tCamMax):
-				objM.GeoM.Translate(0.0, +g.level.pixelHeight)
-			case RectsIntersect(objMin, objMax, bCamMin, bCamMax):
-				objM.GeoM.Translate(0.0, -g.level.pixelHeight)
-			case RectsIntersect(objMin, objMax, tlCamMin, tlCamMax):
-				objM.GeoM.Translate(+g.level.pixelWidth, +g.level.pixelHeight)
-			case RectsIntersect(objMin, objMax, trCamMin, trCamMax):
-				objM.GeoM.Translate(-g.level.pixelWidth, +g.level.pixelHeight)
-			case RectsIntersect(objMin, objMax, brCamMin, brCamMax):
-				objM.GeoM.Translate(-g.level.pixelWidth, -g.level.pixelHeight)
-			case RectsIntersect(objMin, objMax, blCamMin, blCamMax):
-				objM.GeoM.Translate(+g.level.pixelWidth, -g.level.pixelHeight)
-			}
-
 			for _, spr := range obj.sprites {
 				spr.Draw(screen, &objM.GeoM)
 			}
@@ -299,21 +259,8 @@ func (g *Game) BeginEndTransition() {
 	PlaySound("outro_chime")
 }
 
-func (g *Game) SquareOnScreen(x, y, radius float64, wrapped bool) bool {
-	if x+radius > g.camMin.x && x-radius < g.camMax.x && y+radius > g.camMin.y && y-radius < g.camMax.y {
-		return true
-	} else if wrapped {
-		return g.SquareOnScreen(x-g.level.pixelWidth, y, radius, false) ||
-			g.SquareOnScreen(x+g.level.pixelWidth, y, radius, false) ||
-			g.SquareOnScreen(x-g.level.pixelWidth, y-g.level.pixelHeight, radius, false) ||
-			g.SquareOnScreen(x, y-g.level.pixelHeight, radius, false) ||
-			g.SquareOnScreen(x+g.level.pixelWidth, y-g.level.pixelHeight, radius, false) ||
-			g.SquareOnScreen(x-g.level.pixelWidth, y+g.level.pixelHeight, radius, false) ||
-			g.SquareOnScreen(x, y+g.level.pixelHeight, radius, false) ||
-			g.SquareOnScreen(x+g.level.pixelWidth, y+g.level.pixelHeight, radius, false)
-	}
-
-	return false
+func (g *Game) SquareOnScreen(x, y, radius float64) bool {
+	return x+radius > g.camMin.x && x-radius < g.camMax.x && y+radius > g.camMin.y && y-radius < g.camMax.y
 }
 
 var __graphics *ebiten.Image
