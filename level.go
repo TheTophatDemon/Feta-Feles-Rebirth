@@ -182,7 +182,7 @@ func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64, c
 }
 
 //Determines if sphere intersects a solid tile. If so, the normal is returned.
-func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f) {
+func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, *Tile) {
 	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius, false)
 
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
@@ -206,13 +206,13 @@ func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f) 
 					if dLen != 0.0 {
 						diff.Scale(1.0 / dLen)
 					}
-					return true, diff
+					return true, diff, t
 				}
 			}
 		}
 	}
 
-	return false, nil
+	return false, nil, nil
 }
 
 type RaycastResult struct {

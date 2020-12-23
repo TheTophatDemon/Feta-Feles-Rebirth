@@ -27,6 +27,38 @@ func PropagateBlob(level *Level, x, y int, spreadChance float64) {
 	}
 }
 
+func PropagateRune(level *Level, x, y int, dir int, life int) {
+	level.SetTile(x, y, TT_RUNE, true)
+	if life > 0 {
+		if dir == 2 && level.GetTile(x-1, y, true).tt == TT_BLOCK {
+			PropagateRune(level, x-1, y, dir, life-1)
+		} else if dir == 0 && level.GetTile(x+1, y, true).tt == TT_BLOCK {
+			PropagateRune(level, x+1, y, dir, life-1)
+		} else if dir == 1 && level.GetTile(x, y-1, true).tt == TT_BLOCK {
+			PropagateRune(level, x, y-1, dir, life-1)
+		} else if dir == 3 && level.GetTile(x, y+1, true).tt == TT_BLOCK {
+			PropagateRune(level, x, y+1, dir, life-1)
+		}
+		if rand.Float32() < 0.2 {
+			var nd int
+			if dir == 2 || dir == 0 {
+				if rand.Float32() > 0.5 {
+					nd = 1
+				} else {
+					nd = 3
+				}
+			} else {
+				if rand.Float32() > 0.5 {
+					nd = 2
+				} else {
+					nd = 0
+				}
+			}
+			PropagateRune(level, x, y, nd, life-1)
+		}
+	}
+}
+
 func GenerateLevel(w, h int) *Level {
 	level := NewLevel(w, h)
 
@@ -78,44 +110,12 @@ func GenerateLevel(w, h int) *Level {
 	}
 
 	//Add rune bars
-	/*var rune func(x, y, d, l int)
-	rune = func(x, y, d, l int) {
-		level.tiles[y][x] = TT_RUNE
-		if l > 0 {
-			if d == 2 && level.IsOccupied(x-1, y) && x > 0 {
-				rune(x-1, y, d, l-1)
-			} else if d == 0 && level.IsOccupied(x+1, y) && x < w-1 {
-				rune(x+1, y, d, l-1)
-			} else if d == 1 && level.IsOccupied(x, y-1) && y > 0 {
-				rune(x, y-1, d, l-1)
-			} else if d == 3 && level.IsOccupied(x, y+1) && y < h-1 {
-				rune(x, y+1, d, l-1)
-			}
-			if rand.Float32() < 0.2 {
-				var nd int
-				if d == 2 || d == 0 {
-					if rand.Float32() > 0.5 {
-						nd = 1
-					} else {
-						nd = 3
-					}
-				} else {
-					if rand.Float32() > 0.5 {
-						nd = 2
-					} else {
-						nd = 0
-					}
-				}
-				rune(x, y, nd, l)
-			}
+	for i := 0; i < w*h/1024; i++ {
+		t := level.FindFullSpace(0)
+		for j := 0; j < 4; j++ {
+			PropagateRune(level, t.gridX, t.gridY, j, 4)
 		}
 	}
-	for i := 0; i < w*h/1024; i++ {
-		rx, ry := level.FindFullSpace()
-		for j := 0; j < 4; j++ {
-			rune(rx, ry, j, 4)
-		}
-	}*/
 
 	//Add pylons
 	for i := 0; i < w*h/48; i++ {

@@ -27,6 +27,7 @@ func init() {
 		"voice":       assets.WAV_VOICE,
 		"intro_chime": assets.WAV_INTRO_CHIME,
 		"outro_chime": assets.WAV_OUTRO_CHIME,
+		"explode":     assets.WAV_EXPLODE,
 	}
 }
 

@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Reimplement runes
 -Make runes explode?
 -Solution to being trapped
 	-Search out all empty areas and connect them?

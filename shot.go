@@ -41,8 +41,11 @@ func AddShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool) *Shot {
 func (shot *Shot) Update(game *Game, obj *Object) {
 
 	//Wall bounce
-	hit, normal := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
+	hit, normal, hitTile := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
 	if hit {
+		if hitTile.tt == TT_RUNE {
+			AddExplosion(game, hitTile.centerX, hitTile.centerY)
+		}
 		if shot.bounces > 0 {
 			if normal.x != 0.0 || normal.y != 0.0 {
 				shot.vel = normal.Scale(shot.vel.Length())

@@ -65,10 +65,10 @@ func (player *Player) Update(game *Game, obj *Object) {
 				cx, cy := ebiten.CursorPosition()
 				rPos := obj.pos.Clone().Sub(game.camPos).Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
 				dir = (&Vec2f{float64(cx), float64(cy)}).Sub(rPos)
-				raycast := game.level.Raycast(obj.pos, dir, 128.0)
+				/*raycast := game.level.Raycast(obj.pos, dir, 128.0)
 				if raycast.hit {
 					AddDebugSpot(raycast.pos.x, raycast.pos.y, 0)
-				}
+				}*/
 			} else if ebiten.IsKeyPressed(ebiten.KeySpace) {
 				dir = player.facing.Clone()
 			}
@@ -128,14 +128,19 @@ func (player *Player) Update(game *Game, obj *Object) {
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
 	switch other.colType {
 	case CT_ITEM:
-		if game.IncLoveCounter(1) && player.state != PS_ASCENDED {
+		ascend := game.IncLoveCounter(1)
+		if ascend && player.state != PS_ASCENDED {
 			player.state = PS_ASCENDED
 		}
-	case CT_ENEMY, CT_ENEMYSHOT:
+	case CT_ENEMY, CT_ENEMYSHOT, CT_EXPLOSION:
 		if player.state == PS_NORMAL {
 			player.state = PS_HURT
 			player.hurtTimer = 1.0
-			game.IncLoveCounter(-10)
+			if other.colType == CT_EXPLOSION {
+				game.IncLoveCounter(-20)
+			} else {
+				game.IncLoveCounter(-10)
+			}
 			PlaySound("player_hurt")
 		}
 	}

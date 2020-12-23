@@ -45,7 +45,7 @@ func AddCat(game *Game) (*Cat, *Object) {
 func (cat *Cat) Update(game *Game, obj *Object) {
 	pMov := cat.movement.Clone()
 
-	hit, normal := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
+	hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
 	if hit {
 		normal.Lerp(RandomDirection(), 0.25).Normalize()
 		cat.Move(normal.x, normal.y)
@@ -73,7 +73,9 @@ func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 			frames: sprCatDie,
 			speed:  0.5,
 			callback: func(anm *Anim) {
-				game.BeginEndTransition()
+				if anm.finished {
+					game.BeginEndTransition()
+				}
 			},
 		}
 	}

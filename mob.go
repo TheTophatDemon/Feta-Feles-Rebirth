@@ -45,8 +45,11 @@ func (mb *Mob) Update(game *Game, obj *Object) {
 }
 
 func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
-	if mb.hurtTimer <= 0.0 && other.colType == CT_PLAYERSHOT {
+	if mb.hurtTimer <= 0.0 && (other.colType == CT_PLAYERSHOT || other.colType == CT_EXPLOSION) {
 		mb.health--
+		if other.colType == CT_EXPLOSION {
+			mb.health -= 2
+		}
 		if mb.health > 0 {
 			mb.hurtTimer = 0.5
 			PlaySound("enemy_hurt")
