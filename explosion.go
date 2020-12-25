@@ -40,11 +40,21 @@ func AddExplosion(game *Game, x, y float64) *Object {
 			if anm.finished {
 				obj.removeMe = true
 			} else {
+				//Expand collision shape along with sprite
 				if anm.frame == 1 {
 					obj.radius = 16
 				} else if anm.frame > 1 {
 					obj.radius = 24
 				}
+			}
+			//Destroy adjacent tiles
+			tiles := game.level.GetTilesWithinRadius(obj.pos, obj.radius)
+			for _, t := range tiles {
+				//Make runes spawn more explosions
+				if t.tt == TT_RUNE {
+					AddExplosion(game, t.centerX, t.centerY)
+				}
+				t.SetType(TT_EMPTY)
 			}
 		},
 	}

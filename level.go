@@ -181,6 +181,23 @@ func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64, c
 	return
 }
 
+func (level *Level) GetTilesWithinRadius(pos *Vec2f, radius float64) []*Tile {
+	gridMin := pos.Clone().SubScalar(radius).Scale(1.0 / TILE_SIZE).Floor()
+	gridMax := pos.Clone().AddScalar(radius).Scale(1.0 / TILE_SIZE).Ceil()
+	result := make([]*Tile, 0, int(radius*2.0*radius*2.0))
+	for i := int(gridMin.x); i < int(gridMax.x); i++ {
+		for j := int(gridMin.y); j < int(gridMax.y); j++ {
+			if t := level.GetTile(i, j, true); t != nil {
+				diff := (&Vec2f{t.centerX, t.centerY}).Sub(pos)
+				if diff.Length() < radius {
+					result = append(result, t)
+				}
+			}
+		}
+	}
+	return result
+}
+
 //Determines if sphere intersects a solid tile. If so, the normal is returned.
 func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, *Tile) {
 	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius, false)

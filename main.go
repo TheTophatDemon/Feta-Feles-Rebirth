@@ -2,12 +2,10 @@ package main
 
 /*
 TODO:
--Make runes explode?
 -Solution to being trapped
 	-Search out all empty areas and connect them?
 	-Make tiles breakable?
 	-Give player teleportation ability?
--Disappearing enemies glitch...?
 -Blargh
 -Gopnik
 -Barrels
@@ -15,9 +13,14 @@ TODO:
 -Worm
 -Loading screen?
 -Mission 0: Show basics of game
--Fix audio loading issue
 -Feles
 -Music
+*/
+
+/*
+Bugs / Oddities
+-Disappearing enemies glitch...?
+-Jittering at beginning
 */
 
 import (

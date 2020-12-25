@@ -44,6 +44,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 	hit, normal, hitTile := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
 	if hit {
 		if hitTile.tt == TT_RUNE {
+			hitTile.SetType(TT_EMPTY)
 			AddExplosion(game, hitTile.centerX, hitTile.centerY)
 		}
 		if shot.bounces > 0 {
