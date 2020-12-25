@@ -245,7 +245,10 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastRes
 					iy--
 				}
 			}
-			ix, iy = level.WrapGridCoords(ix, iy)
+			//ix, iy = level.WrapGridCoords(ix, iy)
+			if ix < 0 || iy < 0 || ix >= level.cols || iy >= level.rows {
+				return nil, x, y
+			}
 
 			t := level.tiles[iy][ix]
 			if t.IsSlope() {

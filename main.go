@@ -14,6 +14,7 @@ TODO:
 -Mob Director
 -Worm
 -Loading screen?
+-Mission 0: Show basics of game
 -Fix audio loading issue
 -Feles
 -Music
