@@ -72,8 +72,7 @@ func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 	} else if x < 0 || y < 0 || x >= level.cols || y >= level.rows {
 		return false
 	}
-	level.tiles[y][x].tt = newType
-	level.tiles[y][x].modified = true
+	level.tiles[y][x].SetType(newType)
 	return true
 }
 
@@ -154,16 +153,16 @@ func (level *Level) ProjectPosOntoTile(pos *Vec2f, t *Tile) *Vec2f {
 	tileMin := &Vec2f{x: t.left, y: t.top}
 	tileMax := &Vec2f{x: t.right, y: t.bottom}
 
-	var proj *Vec2f
-	if !t.IsSlope() {
-		//Project onto a box by clamping the destination to the box boundaries
-		proj = VecMax(tileMin, VecMin(tileMax, pos))
-	} else {
-		//Project onto a diagonal plane using the dot product
+	//Project onto a box by clamping the destination to the box boundaries
+	proj := VecMax(tileMin, VecMin(tileMax, pos))
+	if t.IsSlope() {
+		//Project onto a diagonal plane using the dot product if positing is coming from the right direction
 		cDiff := pos.Clone().Sub(&Vec2f{x: t.centerX, y: t.centerY})
 		planeDist := VecDot(t.GetSlopeNormal(), cDiff)
-		proj = pos.Clone().Sub(t.GetSlopeNormal().Scale(planeDist))
-		proj = VecMax(tileMin, VecMin(tileMax, proj))
+		if planeDist > 0.0 {
+			proj = pos.Clone().Sub(t.GetSlopeNormal().Scale(planeDist))
+			proj = VecMax(tileMin, VecMin(tileMax, proj))
+		}
 	}
 
 	return proj

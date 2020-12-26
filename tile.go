@@ -36,6 +36,9 @@ func (t *Tile) GetSlopeNormal() *Vec2f {
 }
 
 func (t *Tile) SetType(newType TileType) {
+	if t.IsSolid() && newType == TT_EMPTY {
+		defer game.level.SmoothEdges()
+	}
 	t.tt = newType
 	t.modified = true
 }
@@ -80,8 +83,9 @@ const (
 	TT_RUNE           TileType = 1 << 9
 	TT_PYLON          TileType = 1 << 10
 
-	TT_SOLIDS TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON | TT_RUNE
-	TT_SLOPES TileType = TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315
+	TT_SOLIDS    TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON | TT_RUNE
+	TT_SLOPES    TileType = TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315
+	TT_TENTACLES TileType = TT_TENTACLE_UP | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_RIGHT
 )
 
 var tileTypeRects map[TileType]image.Rectangle
@@ -101,11 +105,11 @@ func init() {
 		TT_RUNE:           image.Rect(0, 112, 16, 128),
 		TT_PYLON:          image.Rect(48, 96, 64, 112),
 	}
-
+	//45 & 225 are backwards
 	slopeNormals = map[TileType]*Vec2f{
-		TT_SLOPE_45:  &Vec2f{math.Cos(3.0 * math.Pi / 4.0), math.Sin(3.0 * math.Pi / 4.0)},
+		TT_SLOPE_45:  &Vec2f{-math.Cos(3.0 * math.Pi / 4.0), -math.Sin(3.0 * math.Pi / 4.0)},
 		TT_SLOPE_135: &Vec2f{math.Cos(5.0 * math.Pi / 4.0), math.Sin(5.0 * math.Pi / 4.0)},
-		TT_SLOPE_225: &Vec2f{math.Cos(7.0 * math.Pi / 4.0), math.Sin(7.0 * math.Pi / 4.0)},
+		TT_SLOPE_225: &Vec2f{-math.Cos(7.0 * math.Pi / 4.0), -math.Sin(7.0 * math.Pi / 4.0)},
 		TT_SLOPE_315: &Vec2f{math.Cos(9.0 * math.Pi / 4.0), math.Sin(9.0 * math.Pi / 4.0)},
 	}
 }

@@ -59,18 +59,10 @@ func PropagateRune(level *Level, x, y int, dir int, life int) {
 	}
 }
 
-func GenerateLevel(w, h int) *Level {
-	level := NewLevel(w, h)
-
-	//Generate blobs
-	for k := 0; k < w*h/64; k++ {
-		x, y := rand.Intn(w), rand.Intn(h)
-		PropagateBlob(level, x, y, 1.0)
-	}
-
-	//Smooth edges and create gaps
-	for j := 0; j < h; j++ {
-		for i := 0; i < w; i++ {
+//Replaces tiles with slopes wherever it makes sense. Removes oddities after terrain deformation.
+func (level *Level) SmoothEdges() {
+	for j := 0; j < level.rows; j++ {
+		for i := 0; i < level.cols; i++ {
 			t := level.GetTile(i, j, false)
 			ln := level.GetTile(i-1, j, true) //Left neighbor
 			lns := ln.IsSolid()
@@ -80,10 +72,6 @@ func GenerateLevel(w, h int) *Level {
 			tns := tn.IsSolid()
 			bn := level.GetTile(i, j+1, true) //Bottom neighbor
 			bns := bn.IsSolid()
-			//Remove random holes
-			if lns && rns && tns && bns {
-				level.SetTile(i, j, TT_BLOCK, false)
-			}
 			if t.tt == TT_BLOCK {
 				//Turn poking structures into tentacles
 				if bns && !tns && !rns && !lns && bn.tt == TT_BLOCK {
@@ -105,12 +93,43 @@ func GenerateLevel(w, h int) *Level {
 				} else if lns && tns && !rns && !bns {
 					level.SetTile(i, j, TT_SLOPE_315, false)
 				}
+			} else if t.tt&TT_TENTACLES > 0 {
+				//Remove lonely tentacles
+				if !lns && !rns && !tns && !bns {
+					level.SetTile(i, j, TT_EMPTY, false)
+				}
+			}
+		}
+	}
+}
+
+func GenerateLevel(w, h int) *Level {
+	level := NewLevel(w, h)
+
+	//Generate blobs
+	for k := 0; k < w*h/48; k++ {
+		x, y := rand.Intn(w), rand.Intn(h)
+		PropagateBlob(level, x, y, 1.0)
+	}
+
+	//Remove random holes
+	for j := 0; j < h; j++ {
+		for i := 0; i < w; i++ {
+			lns := level.GetTile(i-1, j, true).IsSolid() //Left neighbor
+			rns := level.GetTile(i+1, j, true).IsSolid() //Right neighbor
+			tns := level.GetTile(i, j-1, true).IsSolid() //Top neighbor
+			bns := level.GetTile(i, j+1, true).IsSolid() //Bottom neighbor
+			//Remove random holes
+			if lns && rns && tns && bns {
+				level.SetTile(i, j, TT_BLOCK, false)
 			}
 		}
 	}
 
+	level.SmoothEdges()
+
 	//Add rune bars
-	for i := 0; i < w*h/1024; i++ {
+	for i := 0; i < w*h/720; i++ {
 		t := level.FindFullSpace(0)
 		for j := 0; j < 4; j++ {
 			PropagateRune(level, t.gridX, t.gridY, j, 4)
