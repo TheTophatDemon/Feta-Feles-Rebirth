@@ -20,9 +20,10 @@ const (
 
 type Player struct {
 	*Actor
-	state      PlayerState
-	shootTimer float64
-	hurtTimer  float64
+	state        PlayerState
+	shootTimer   float64
+	hurtTimer    float64
+	lastShootDir *Vec2f
 }
 
 var plSpriteNormal *Sprite
@@ -39,8 +40,9 @@ func init() {
 
 func AddPlayer(game *Game, x, y float64) *Object {
 	player := &Player{
-		Actor: NewActor(120.0, 500_000.0, 50_000.0),
-		state: PS_NORMAL,
+		Actor:        NewActor(120.0, 500_000.0, 50_000.0),
+		state:        PS_NORMAL,
+		lastShootDir: ZeroVec(),
 	}
 
 	obj := &Object{
@@ -59,19 +61,21 @@ func AddPlayer(game *Game, x, y float64) *Object {
 func (player *Player) Update(game *Game, obj *Object) {
 	//Attack
 	if player.shootTimer <= 0.0 {
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) || ebiten.IsKeyPressed(ebiten.KeySpace) {
-			var dir *Vec2f
-			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-				cx, cy := ebiten.CursorPosition()
-				rPos := obj.pos.Clone().Sub(game.camPos).Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
-				dir = (&Vec2f{float64(cx), float64(cy)}).Sub(rPos)
-				/*raycast := game.level.Raycast(obj.pos, dir, 128.0)
-				if raycast.hit {
-					AddDebugSpot(raycast.pos.x, raycast.pos.y, 0)
-				}*/
-			} else if ebiten.IsKeyPressed(ebiten.KeySpace) {
-				dir = player.facing.Clone()
+		var dir *Vec2f
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			cx, cy := ebiten.CursorPosition()
+			rPos := obj.pos.Clone().Sub(game.camPos).Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
+			dir = (&Vec2f{float64(cx), float64(cy)}).Sub(rPos)
+			player.lastShootDir = dir
+		} else if ebiten.IsKeyPressed(ebiten.KeySpace) {
+			if player.lastShootDir == nil {
+				player.lastShootDir = player.facing.Clone()
 			}
+			dir = player.lastShootDir
+		} else {
+			player.lastShootDir = nil
+		}
+		if dir != nil {
 			AddShot(game, obj.pos, dir, 240.0, false)
 			PlaySound("player_shot")
 			player.shootTimer = PL_SHOOT_FREQ
