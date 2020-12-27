@@ -2,6 +2,7 @@ package main
 
 import (
 	"container/list"
+	"image"
 	"image/color"
 	"math"
 	"math/rand"
@@ -11,7 +12,7 @@ import (
 
 type Level struct {
 	tiles                   [][]Tile
-	spaces                  []Space
+	spaces                  []*Space
 	rows, cols              int
 	pixelWidth, pixelHeight float64
 }
@@ -39,7 +40,7 @@ func NewLevel(cols, rows int) *Level {
 	pixelWidth := float64(cols * TILE_SIZE)
 	pixelHeight := float64(rows * TILE_SIZE)
 
-	return &Level{tiles, make([]Space, 0, 10), rows, cols, pixelWidth, pixelHeight}
+	return &Level{tiles, make([]*Space, 0, 10), rows, cols, pixelWidth, pixelHeight}
 }
 
 func (level *Level) WrapGridCoords(x, y int) (int, int) {
@@ -121,14 +122,16 @@ func (level *Level) FindFullSpace(r int) *Tile {
 	}
 }
 
-//Struct represents a glob of contiguous empty space
+//Struct represents a glob of contiguous empty space (Not taking into account screen wrapping)
 type Space struct {
-	tiles    []*Tile
-	frontier []*Tile //These tiles are on the border of the space
+	tiles            []*Tile
+	frontier         []*Tile //These tiles are on the border of the space\
+	centerX, centerY float64 //The average position of all its tiles, used for approximation
 }
 
 var spaceImg *ebiten.Image
 var spaceColors [255]color.RGBA
+var spaceCenterImg *ebiten.Image
 
 func init() {
 	spaceImg = ebiten.NewImage(8, 8)
@@ -136,8 +139,10 @@ func init() {
 	for i := 0; i < 255; i++ {
 		spaceColors[i] = color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), 255}
 	}
+	spaceCenterImg = GetGraphics().SubImage(image.Rect(96, 96, 112, 112)).(*ebiten.Image)
 }
 
+//Draws a colored square for debugging
 func (space *Space) Draw(screen *ebiten.Image, pt *ebiten.GeoM, clr color.RGBA) {
 	for _, t := range space.tiles {
 		op := &ebiten.DrawImageOptions{}
@@ -149,6 +154,24 @@ func (space *Space) Draw(screen *ebiten.Image, pt *ebiten.GeoM, clr color.RGBA) 
 		op.ColorM.Translate(fr/255.0, fg/255.0, fb/255.0, 0.0)
 		screen.DrawImage(spaceImg, op)
 	}
+	//Draw frontier tiles with small inner squares
+	for _, t := range space.frontier {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(-4.0, -4.0)
+		op.GeoM.Scale(0.5, 0.5)
+		op.GeoM.Translate(t.centerX, t.centerY)
+		op.GeoM.Concat(*pt)
+		op.ColorM.Scale(0.0, 0.0, 0.0, 1.0)
+		fr, fg, fb := 1.0-float64(clr.R), 1.0-float64(clr.G), 1.0-float64(clr.B)
+		op.ColorM.Translate(fr/255.0, fg/255.0, fb/255.0, 0.0)
+		screen.DrawImage(spaceImg, op)
+	}
+	//Draw symbol at center
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-8.0, -8.0)
+	op.GeoM.Translate(space.centerX, space.centerY)
+	op.GeoM.Concat(*pt)
+	screen.DrawImage(spaceCenterImg, op)
 }
 
 func (level *Level) FindSpaces() {
@@ -164,32 +187,44 @@ func (level *Level) FindSpaces() {
 	for e := tilesLeft.Front(); e != nil; e = e.Next() {
 		t := e.Value.(*Tile)
 		if t.space == nil {
-			var space Space
-			level.PropagateSpace(t, &space)
+			space := new(Space)
+			level.PropagateSpace(t, space)
 			level.spaces = append(level.spaces, space)
 		}
 	}
+	//Calculate center
+	for _, sp := range level.spaces {
+		sp.centerX, sp.centerY = 0.0, 0.0
+		for _, t := range sp.tiles {
+			sp.centerX += t.centerX
+			sp.centerY += t.centerY
+		}
+		sp.centerX /= float64(len(sp.tiles))
+		sp.centerY /= float64(len(sp.tiles))
+	}
 }
 
-//Recursively adds to the space's domain by checking neighbors and propagating to empty neighbors
+//Recursively adds to the space's domain by checking neighbors and propagating to empty neighbors (within the level bounds)
 func (level *Level) PropagateSpace(tile *Tile, space *Space) {
 	tile.space = space
 	space.tiles = append(space.tiles, tile)
 	neighbors := []*Tile{
-		level.GetTile(tile.gridX-1, tile.gridY, true),
-		level.GetTile(tile.gridX, tile.gridY-1, true),
-		level.GetTile(tile.gridX+1, tile.gridY, true),
-		level.GetTile(tile.gridX, tile.gridY+1, true),
-		level.GetTile(tile.gridX+1, tile.gridY+1, true),
-		level.GetTile(tile.gridX-1, tile.gridY+1, true),
-		level.GetTile(tile.gridX+1, tile.gridY-1, true),
-		level.GetTile(tile.gridX-1, tile.gridY-1, true),
+		level.GetTile(tile.gridX-1, tile.gridY, false),
+		level.GetTile(tile.gridX, tile.gridY-1, false),
+		level.GetTile(tile.gridX+1, tile.gridY, false),
+		level.GetTile(tile.gridX, tile.gridY+1, false),
+		level.GetTile(tile.gridX+1, tile.gridY+1, false),
+		level.GetTile(tile.gridX-1, tile.gridY+1, false),
+		level.GetTile(tile.gridX+1, tile.gridY-1, false),
+		level.GetTile(tile.gridX-1, tile.gridY-1, false),
 	}
 	for _, n := range neighbors {
-		if n.IsSolid() {
-			space.frontier = append(space.frontier, tile)
-		} else if n.space == nil {
-			level.PropagateSpace(n, space)
+		if n != nil {
+			if n.IsSolid() {
+				space.frontier = append(space.frontier, tile)
+			} else if n.space == nil {
+				level.PropagateSpace(n, space)
+			}
 		}
 	}
 }
@@ -223,9 +258,11 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 		}
 	}
 
-	//Draw spaces
-	for i, sp := range level.spaces {
-		sp.Draw(screen, pt, spaceColors[i%len(spaceColors)])
+	if debugDraw {
+		//Draw spaces
+		for i, sp := range level.spaces {
+			sp.Draw(screen, pt, spaceColors[i%len(spaceColors)])
+		}
 	}
 }
 

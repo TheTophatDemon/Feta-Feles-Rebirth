@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"math/rand"
 )
 
@@ -103,6 +104,96 @@ func (level *Level) SmoothEdges() {
 	}
 }
 
+//Ensures that each space in the level is accessible to the player by digging tunnels
+func (level *Level) ConnectCaves() {
+	//Find the largest space, which is the main "area" of the gameplay
+	maxSize := -1
+	var mainSpace *Space
+	for _, sp := range level.spaces {
+		if len(sp.tiles) > maxSize {
+			maxSize = len(sp.tiles)
+			mainSpace = sp
+		}
+	}
+
+	//Determine start and endpoints of tunnels from smaller spaces to main space
+	for _, space := range level.spaces {
+		if space == mainSpace {
+			continue
+		}
+
+		maxDist := -1.0
+		var tileA *Tile //The tile on the space's frontier that is farthest away from the center
+		for _, tile := range space.frontier {
+			dist := math.Pow(tile.centerX-space.centerX, 2.0) + math.Pow(tile.centerY-space.centerY, 2.0)
+			if dist > maxDist {
+				maxDist = dist
+				tileA = tile
+			}
+		}
+
+		minDist := math.MaxFloat64
+		var tileB *Tile //The tile on the main space's frontier that is closest to our current space
+		for _, tile := range mainSpace.frontier {
+			dist := math.Pow(tile.centerX-space.centerX, 2.0) + math.Pow(tile.centerY-space.centerY, 2.0)
+			if dist < minDist {
+				minDist = dist
+				tileB = tile
+			}
+		}
+
+		level.DigTunnel(tileA, tileB)
+	}
+}
+
+//Empties tiles in a linear-ish path from the start tile to the end tile
+func (level *Level) DigTunnel(start *Tile, end *Tile) {
+	dx := end.gridX - start.gridX
+	dy := end.gridY - start.gridY
+	dxCount := int(math.Abs(float64(dx)))
+	dyCount := int(math.Abs(float64(dy)))
+	var sdx, sdy int
+	if dx > 0 {
+		sdx = 1
+	} else if dx < 0 {
+		sdx = -1
+	}
+	if dy > 0 {
+		sdy = 1
+	} else if dy < 0 {
+		sdy = -1
+	}
+	currTile := start
+	for currTile != end {
+		currTile.SetType(TT_EMPTY)
+
+		var direction bool //False for moving in x, true for moving in Y
+		if dxCount > 0 && dyCount > 0 {
+			direction = rand.Float64() < 0.5
+		} else if dyCount > 0 {
+			direction = true
+		} else if dxCount > 0 {
+			direction = false
+		}
+
+		if direction {
+			currTile = level.GetTile(currTile.gridX, currTile.gridY+sdy, true)
+			dyCount--
+			//Add some unevenness
+			if rand.Float64() < 0.25 {
+				level.SetTile(currTile.gridX+rand.Intn(3)-1, currTile.gridY, TT_EMPTY, true)
+			}
+		} else {
+			currTile = level.GetTile(currTile.gridX+sdx, currTile.gridY, true)
+			dxCount--
+			//Add some unevenness
+			if rand.Float64() < 0.25 {
+				level.SetTile(currTile.gridX, currTile.gridY+rand.Intn(3)-1, TT_EMPTY, true)
+			}
+		}
+	}
+}
+
 func GenerateLevel(w, h int) *Level {
 	level := NewLevel(w, h)
 
@@ -125,8 +216,6 @@ func GenerateLevel(w, h int) *Level {
 		}
 	}
 
-	level.SmoothEdges()
-
 	//Add rune bars
 	for i := 0; i < w*h/720; i++ {
 		t := level.FindFullSpace(0)
@@ -142,6 +231,8 @@ func GenerateLevel(w, h int) *Level {
 	}
 
 	level.FindSpaces()
+	level.ConnectCaves()
+	level.SmoothEdges()
 
 	return level
 }

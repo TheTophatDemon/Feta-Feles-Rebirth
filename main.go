@@ -6,10 +6,13 @@ TODO:
 	-Search out all empty areas and connect them?
 	-Make tiles breakable?
 	-Give player teleportation ability?
+-Use better algorithm for finding empty spots
+-Prevent love from entering walls
 -Blargh
 -Gopnik
 -Barrels
 -Mob Director
+-Powerups in little caverns?
 -Worm
 -Loading screen?
 -Mission 0: Show basics of game
@@ -56,6 +59,7 @@ func (a *App) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight
 }
 
 var cheatText string = ""
+var debugDraw bool
 
 func (a *App) Update() error {
 	g := game
@@ -81,7 +85,20 @@ func (a *App) Update() error {
 		if strings.Contains(cheatText, "tdsanic") {
 			cheatText = ""
 			ply := g.playerObj.components[0].(*Player)
-			ply.maxSpeed = 400.0
+			if ply.maxSpeed <= 120.0 {
+				ply.maxSpeed = 400.0
+			} else {
+				ply.maxSpeed = 120.0
+			}
+		}
+		if strings.Contains(cheatText, "tdnovymir") {
+			cheatText = ""
+			NewGame(0)
+			return nil
+		}
+		if strings.Contains(cheatText, "tdcruoris") {
+			cheatText = ""
+			debugDraw = !debugDraw
 		}
 
 		//Prevent the game from going AWOL when the window is moved
