@@ -107,19 +107,18 @@ func GenerateLevel(w, h int) *Level {
 	level := NewLevel(w, h)
 
 	//Generate blobs
-	for k := 0; k < w*h/48; k++ {
+	for k := 0; k < w*h/32; k++ {
 		x, y := rand.Intn(w), rand.Intn(h)
 		PropagateBlob(level, x, y, 1.0)
 	}
 
-	//Remove random holes
+	//Remove random little holes
 	for j := 0; j < h; j++ {
 		for i := 0; i < w; i++ {
 			lns := level.GetTile(i-1, j, true).IsSolid() //Left neighbor
 			rns := level.GetTile(i+1, j, true).IsSolid() //Right neighbor
 			tns := level.GetTile(i, j-1, true).IsSolid() //Top neighbor
 			bns := level.GetTile(i, j+1, true).IsSolid() //Bottom neighbor
-			//Remove random holes
 			if lns && rns && tns && bns {
 				level.SetTile(i, j, TT_BLOCK, false)
 			}
@@ -141,6 +140,8 @@ func GenerateLevel(w, h int) *Level {
 		pylonSpawn := level.FindEmptySpace(1)
 		pylonSpawn.SetType(TT_PYLON)
 	}
+
+	level.FindSpaces()
 
 	return level
 }

@@ -18,6 +18,7 @@ type Tile struct {
 	left, right, top, bottom float64 //Coordinates of tile boundaries in world space / pixels
 	centerX, centerY         float64 //In world space/ pixels
 	modified                 bool    //Is true when the tile has changed and needs its sprite regenerated
+	space                    *Space  //Body of empty space the tile has been assigned to, if any
 }
 
 func (t *Tile) IsSolid() bool {
