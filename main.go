@@ -2,7 +2,7 @@ package main
 
 /*
 TODO:
--Prevent love from entering walls
+-Pylons spawning in walls bug
 -Blargh
 -Gopnik
 -Barrels

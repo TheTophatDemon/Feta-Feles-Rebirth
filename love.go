@@ -12,7 +12,7 @@ const (
 )
 
 type Love struct {
-	vel       *Vec2f
+	Actor
 	blinkAnim *Anim
 	life      float64
 }
@@ -33,10 +33,11 @@ func AddLove(game *Game, count int, x, y float64) {
 	angle := rand.Float64() * math.Pi * 2.0
 	for i := 0; i < count; i++ {
 		lv := &Love{
-			vel:       (&Vec2f{math.Cos(angle), math.Sin(angle)}).Scale(LOVE_SPEED),
+			Actor:     *NewActor(LOVE_SPEED, 0.0, LOVE_FRICTION),
 			blinkAnim: anim,
 			life:      6.0,
 		}
+		lv.velocity = (&Vec2f{math.Cos(angle), math.Sin(angle)}).Scale(LOVE_SPEED)
 		angle += rand.Float64() * math.Pi * 0.666
 		game.AddObject(&Object{
 			pos: &Vec2f{x, y}, radius: 4.0, colType: CT_ITEM,
@@ -50,13 +51,7 @@ func AddLove(game *Game, count int, x, y float64) {
 }
 
 func (lv *Love) Update(game *Game, obj *Object) {
-	//Friction
-	spd := lv.vel.Length()
-	if spd != 0.0 {
-		lv.vel.Sub(lv.vel.Clone().Scale(1.0 / spd).Scale(math.Min(spd, LOVE_FRICTION*game.deltaTime*game.deltaTime)))
-	}
-	//Movement
-	obj.pos.Add(lv.vel.Clone().Scale(game.deltaTime))
+	lv.Actor.Update(game, obj)
 
 	lv.blinkAnim.Update(game.deltaTime)
 	obj.sprites[0] = lv.blinkAnim.GetSprite()
