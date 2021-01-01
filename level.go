@@ -90,20 +90,22 @@ func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 	return &level.tiles[y][x]
 }
 
-//Returns the tile at the center of an empty space of tile radius r
-func (level *Level) FindEmptySpace(r int) *Tile {
-	for {
-		x, y := rand.Intn(level.cols), rand.Intn(level.rows)
-		for j := y - r; j <= y+r; j++ {
-			for i := x - r; i <= x+r; i++ {
-				if level.GetTile(i, j, true).IsSolid() {
-					goto reject
-				}
-			}
-		}
-		return level.GetTile(x, y, true)
-	reject:
+//Randomly chooses an empty tile
+func (level *Level) FindSpawnPoint() *Tile {
+	totalEmptyTiles := 0
+	for _, sp := range level.spaces {
+		totalEmptyTiles += len(sp.tiles)
 	}
+	rando := rand.Intn(totalEmptyTiles)
+	var chosenSpace *Space
+	for _, sp := range level.spaces {
+		if rando-len(sp.tiles) <= 0 {
+			chosenSpace = sp
+			break
+		}
+		rando -= len(sp.tiles)
+	}
+	return chosenSpace.tiles[rand.Intn(len(chosenSpace.tiles))]
 }
 
 //Like FindEmptySpace except for finding places inside of the walls
@@ -175,11 +177,15 @@ func (space *Space) Draw(screen *ebiten.Image, pt *ebiten.GeoM, clr color.RGBA) 
 }
 
 func (level *Level) FindSpaces() {
-	tilesLeft := list.New() //List of empty tiles that haven't yet been assigned to a space
+	//Clear existing space data
+	level.spaces = make([]*Space, 0, 10)
+
+	tilesLeft := list.New() //List of empty tiles to be assigned to spaces
 	for j := 0; j < level.rows; j++ {
 		for i := 0; i < level.cols; i++ {
 			t := level.GetTile(i, j, false)
 			if t.tt == TT_EMPTY {
+				t.space = nil
 				tilesLeft.PushBack(t)
 			}
 		}

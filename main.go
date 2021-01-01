@@ -2,11 +2,6 @@ package main
 
 /*
 TODO:
--Solution to being trapped
-	-Search out all empty areas and connect them?
-	-Make tiles breakable?
-	-Give player teleportation ability?
--Use better algorithm for finding empty spots
 -Prevent love from entering walls
 -Blargh
 -Gopnik
@@ -221,7 +216,9 @@ func (a *App) Draw(screen *ebiten.Image) {
 		spot.spr.Draw(screen, &o.GeoM)
 	}
 
-	GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
+	if debugDraw {
+		GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
+	}
 
 	if g.fade != FM_NO_FADE {
 		op := &ebiten.DrawImageOptions{}
@@ -363,12 +360,12 @@ func NewGame(mission int) {
 	__debugSpots = make([]*DebugSpot, 0, 10)
 
 	//Spawn entities
-	playerSpawn := game.level.FindEmptySpace(2)
+	playerSpawn := game.level.FindSpawnPoint()
 	game.playerObj = AddPlayer(game, playerSpawn.centerX, playerSpawn.centerY)
 
 	//TODO: Replace this with a dynamic enemy spawn director
 	for i := 0; i < 30; i++ {
-		knightSpawn := game.level.FindEmptySpace(1)
+		knightSpawn := game.level.FindSpawnPoint()
 		AddKnight(game, knightSpawn.centerX, knightSpawn.centerY)
 	}
 

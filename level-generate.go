@@ -224,13 +224,17 @@ func GenerateLevel(w, h int) *Level {
 		}
 	}
 
+	level.FindSpaces()
+
 	//Add pylons
 	for i := 0; i < w*h/48; i++ {
-		pylonSpawn := level.FindEmptySpace(1)
+		pylonSpawn := level.FindSpawnPoint()
 		pylonSpawn.SetType(TT_PYLON)
 	}
 
+	//Recalculate spaces to account for pylons
 	level.FindSpaces()
+
 	level.ConnectCaves()
 	level.SmoothEdges()
 
