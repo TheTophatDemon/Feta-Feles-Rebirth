@@ -242,16 +242,17 @@ func (a *App) Draw(screen *ebiten.Image) {
 
 }
 
-//Adds the object to the game, sorted by its draw priority
-func (g *Game) AddObject(newObj *Object) {
+//Adds the object to the game, sorted by its draw priority, and returns the object
+func (g *Game) AddObject(newObj *Object) *Object {
 	for e := g.objects.Front(); e != nil; e = e.Next() {
 		obj := e.Value.(*Object)
 		if obj.drawPriority > newObj.drawPriority {
 			g.objects.InsertBefore(newObj, e)
-			return
+			return newObj
 		}
 	}
 	g.objects.PushBack(newObj)
+	return newObj
 }
 
 //Adds or removes from the love counter. Returns true if the operations causes the quota to be met.
@@ -368,9 +369,19 @@ func NewGame(mission int) {
 	game.playerObj = AddPlayer(game, playerSpawn.centerX, playerSpawn.centerY)
 
 	//TODO: Replace this with a dynamic enemy spawn director
+	const (
+		ENM_KNIGHT = iota
+		ENM_BLARGH
+		ENM_MAX
+	)
 	for i := 0; i < 30; i++ {
-		knightSpawn := game.level.FindSpawnPoint()
-		AddKnight(game, knightSpawn.centerX, knightSpawn.centerY)
+		spawn := game.level.FindSpawnPoint()
+		switch rand.Intn(ENM_MAX) {
+		case ENM_KNIGHT:
+			AddKnight(game, spawn.centerX, spawn.centerY)
+		case ENM_BLARGH:
+			AddBlargh(game, spawn.centerX, spawn.centerY)
+		}
 	}
 
 	PlaySound("intro_chime")

@@ -9,15 +9,16 @@ type Shot struct {
 	bounces int     //Number of times shot can hit the wall before dying
 }
 
-const (
-	SHOT_COLMASK ColType = CT_ENEMY | CT_CAT
-)
-
 func AddShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool) *Shot {
+	return AddBouncyShot(game, pos, dir, speed, enemy, 0)
+}
+
+func AddBouncyShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool, bounces int) *Shot {
 	shot := &Shot{
-		vel:   dir.Clone().Normalize().Scale(speed),
-		life:  3.0,
-		enemy: enemy,
+		vel:     dir.Clone().Normalize().Scale(speed),
+		life:    3.0,
+		enemy:   enemy,
+		bounces: bounces,
 	}
 	var rect image.Rectangle
 	var ct ColType
@@ -66,7 +67,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 }
 
 func (shot *Shot) OnCollision(game *Game, obj, other *Object) {
-	if other.colType&SHOT_COLMASK > 0 {
+	if (other.colType == CT_ENEMY && !shot.enemy) || (other.colType == CT_PLAYER && shot.enemy) || other.colType == CT_CAT {
 		obj.removeMe = true
 	}
 }

@@ -26,7 +26,7 @@ func AddKnight(game *Game, x, y float64) *Knight {
 	knight := &Knight{
 		Mob: Mob{
 			Actor:             NewActor(200.0, 200_000.0, 25_000.0),
-			health:            5,
+			health:            3,
 			currAnim:          nil,
 			lastSeenPlayerPos: ZeroVec(),
 			vecToPlayer:       ZeroVec(),

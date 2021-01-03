@@ -27,7 +27,7 @@ func AddCat(game *Game) (*Cat, *Object) {
 	}
 	t := game.level.FindSpawnPoint()
 	obj := &Object{
-		pos: &Vec2f{t.centerX, t.centerY}, radius: 8.0, colType: CT_CAT,
+		pos: &Vec2f{t.centerX, t.centerY}, radius: 6.0, colType: CT_CAT,
 		sprites:    []*Sprite{sprCatRun[0]},
 		components: []Component{cat},
 	}
