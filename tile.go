@@ -16,7 +16,7 @@ type Tile struct {
 	spr                      *Sprite
 	gridX, gridY             int
 	left, right, top, bottom float64 //Coordinates of tile boundaries in world space / pixels
-	centerX, centerY         float64 //In world space/ pixels
+	centerX, centerY         float64 //In world space/pixels
 	modified                 bool    //Is true when the tile has changed and needs its sprite regenerated
 	space                    *Space  //Body of empty space the tile has been assigned to, if any
 }
@@ -27,6 +27,10 @@ func (t *Tile) IsSolid() bool {
 
 func (t *Tile) IsSlope() bool {
 	return t.tt&TT_SLOPES > 0
+}
+
+func (t *Tile) IsTerrain() bool {
+	return t.tt&TT_TERRAIN > 0
 }
 
 func (t *Tile) GetSlopeNormal() *Vec2f {
@@ -86,6 +90,7 @@ const (
 
 	TT_SOLIDS    TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON | TT_RUNE
 	TT_SLOPES    TileType = TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315
+	TT_TERRAIN   TileType = TT_SLOPES | TT_BLOCK | TT_TENTACLES | TT_RUNE
 	TT_TENTACLES TileType = TT_TENTACLE_UP | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_RIGHT
 )
 

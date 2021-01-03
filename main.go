@@ -2,7 +2,7 @@ package main
 
 /*
 TODO:
--Pylons spawning in walls bug
+-Enemies getting spawned in walls?
 -Blargh
 -Gopnik
 -Barrels
@@ -15,7 +15,7 @@ TODO:
 -Music
 */
 
-/*
+/*s
 Bugs / Oddities
 -Disappearing enemies glitch...?
 -Jittering at beginning
@@ -94,6 +94,10 @@ func (a *App) Update() error {
 		if strings.Contains(cheatText, "tdcruoris") {
 			cheatText = ""
 			debugDraw = !debugDraw
+		}
+		if strings.Contains(cheatText, "tdasplode") {
+			cheatText = ""
+			AddExplosion(game, game.playerObj.pos.x, game.playerObj.pos.y)
 		}
 
 		//Prevent the game from going AWOL when the window is moved

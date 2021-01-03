@@ -90,13 +90,14 @@ func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 	return &level.tiles[y][x]
 }
 
-//Randomly chooses an empty tile
+//Randomly chooses an empty tile.
 func (level *Level) FindSpawnPoint() *Tile {
 	totalEmptyTiles := 0
 	for _, sp := range level.spaces {
 		totalEmptyTiles += len(sp.tiles)
 	}
 	rando := rand.Intn(totalEmptyTiles)
+	//Choose a space based on a probability weighted by the space's number of tiles
 	var chosenSpace *Space
 	for _, sp := range level.spaces {
 		if rando-len(sp.tiles) <= 0 {
@@ -105,7 +106,13 @@ func (level *Level) FindSpawnPoint() *Tile {
 		}
 		rando -= len(sp.tiles)
 	}
-	return chosenSpace.tiles[rand.Intn(len(chosenSpace.tiles))]
+	var tile *Tile
+	tt := TT_BLOCK
+	for tt != TT_EMPTY { //Because sometimes things like pylons will be placed within a space after it is generated
+		tile = chosenSpace.tiles[rand.Intn(len(chosenSpace.tiles))]
+		tt = tile.tt
+	}
+	return tile
 }
 
 //Like FindEmptySpace except for finding places inside of the walls
@@ -219,10 +226,10 @@ func (level *Level) PropagateSpace(tile *Tile, space *Space) {
 		level.GetTile(tile.gridX, tile.gridY-1, false),
 		level.GetTile(tile.gridX+1, tile.gridY, false),
 		level.GetTile(tile.gridX, tile.gridY+1, false),
-		level.GetTile(tile.gridX+1, tile.gridY+1, false),
-		level.GetTile(tile.gridX-1, tile.gridY+1, false),
-		level.GetTile(tile.gridX+1, tile.gridY-1, false),
-		level.GetTile(tile.gridX-1, tile.gridY-1, false),
+		//level.GetTile(tile.gridX+1, tile.gridY+1, false),
+		//level.GetTile(tile.gridX-1, tile.gridY+1, false),
+		//level.GetTile(tile.gridX+1, tile.gridY-1, false),
+		//level.GetTile(tile.gridX-1, tile.gridY-1, false),
 	}
 	for _, n := range neighbors {
 		if n != nil {

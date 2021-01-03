@@ -66,13 +66,13 @@ func (level *Level) SmoothEdges() {
 		for i := 0; i < level.cols; i++ {
 			t := level.GetTile(i, j, false)
 			ln := level.GetTile(i-1, j, true) //Left neighbor
-			lns := ln.IsSolid()
+			lns := ln.IsTerrain()
 			rn := level.GetTile(i+1, j, true) //Right neighbor
-			rns := rn.IsSolid()
+			rns := rn.IsTerrain()
 			tn := level.GetTile(i, j-1, true) //Top neighbor
-			tns := tn.IsSolid()
+			tns := tn.IsTerrain()
 			bn := level.GetTile(i, j+1, true) //Bottom neighbor
-			bns := bn.IsSolid()
+			bns := bn.IsTerrain()
 			if t.tt == TT_BLOCK {
 				//Turn poking structures into tentacles
 				if bns && !tns && !rns && !lns && bn.tt == TT_BLOCK {
@@ -229,12 +229,16 @@ func GenerateLevel(w, h int) *Level {
 	//Add pylons
 	for i := 0; i < w*h/48; i++ {
 		pylonSpawn := level.FindSpawnPoint()
-		pylonSpawn.SetType(TT_PYLON)
+		x, y := pylonSpawn.gridX, pylonSpawn.gridY
+		if level.GetTile(x-1, y, true).tt != TT_PYLON &&
+			level.GetTile(x+1, y, true).tt != TT_PYLON &&
+			level.GetTile(x, y-1, true).tt != TT_PYLON &&
+			level.GetTile(x, y+1, true).tt != TT_PYLON {
+			pylonSpawn.SetType(TT_PYLON)
+		}
 	}
 
-	//Recalculate spaces to account for pylons
 	level.FindSpaces()
-
 	level.ConnectCaves()
 	level.SmoothEdges()
 
