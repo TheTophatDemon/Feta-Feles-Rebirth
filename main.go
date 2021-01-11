@@ -2,23 +2,23 @@ package main
 
 /*
 TODO:
--Enemies getting spawned in walls?
--Blargh
 -Gopnik
 -Barrels
 -Mob Director
 -Powerups in little caverns?
 -Worm
 -Loading screen?
+-Time limit?
 -Mission 0: Show basics of game
 -Feles
 -Music
 */
 
-/*s
+/*
 Bugs / Oddities
 -Disappearing enemies glitch...?
 -Jittering at beginning
+-Enemies getting spawned in walls?
 */
 
 import (

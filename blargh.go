@@ -25,7 +25,7 @@ func init() {
 func AddBlargh(game *Game, x, y float64) *Object {
 	blargh := &Blargh{
 		Mob: Mob{
-			Actor:             NewActor(90.0, 100_000.0, 50_000.0),
+			Actor:             NewActor(50.0, 100_000.0, 50_000.0),
 			health:            5,
 			currAnim:          nil,
 			lastSeenPlayerPos: ZeroVec(),
@@ -41,8 +41,8 @@ func AddBlargh(game *Game, x, y float64) *Object {
 }
 
 const (
-	BLARGH_SHOOT_COOLDOWN  float64 = 2.0
-	BLARGH_SHOOT_THRESHOLD float64 = 0.5
+	BLARGH_SHOOT_INTERVAL  float64 = 2.0
+	BLARGH_SHOOT_THRESHOLD float64 = 0.5 //The actual shot is made _ seconds before the timer reaches 0, so the animation can look better
 )
 
 func (bl *Blargh) Update(game *Game, obj *Object) {
@@ -60,10 +60,20 @@ func (bl *Blargh) Update(game *Game, obj *Object) {
 		if bl.shootTimer > BLARGH_SHOOT_THRESHOLD && bl.shootTimer-game.deltaTime < BLARGH_SHOOT_THRESHOLD {
 			AddBouncyShot(game, obj.pos.Clone(), bl.vecToPlayer.Clone(), 80.0, true, 1)
 		}
-		if bl.seesPlayer || bl.shootTimer < BLARGH_SHOOT_THRESHOLD {
+		//Move for 0.5 seconds after timer starts
+		if bl.shootTimer < BLARGH_SHOOT_INTERVAL-0.5 {
+			bl.Move(bl.vecToPlayer.x, bl.vecToPlayer.y)
+		} else {
+			bl.Move(0.0, 0.0)
+		}
+		if bl.shootTimer < BLARGH_SHOOT_INTERVAL {
 			bl.shootTimer -= game.deltaTime
 			if bl.shootTimer < 0.0 {
-				bl.shootTimer = BLARGH_SHOOT_COOLDOWN
+				bl.shootTimer = BLARGH_SHOOT_INTERVAL
+			}
+		} else {
+			if bl.seesPlayer { //Restart ticking once player is spotted again
+				bl.shootTimer -= game.deltaTime
 			}
 		}
 	}

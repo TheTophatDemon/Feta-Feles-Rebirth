@@ -16,11 +16,13 @@ func init() {
 }
 
 func AddCat(game *Game) (*Cat, *Object) {
+	//Cats are the only mobs that can change their sprites' directions, so they much each have a unique copy of their sprite
+	runFrames := CloneSprites(sprCatRun)
 	cat := &Cat{
 		Actor:  NewActor(120.0, 100_000.0, 75_000.0),
 		health: 3,
 		currAnim: &Anim{
-			frames: sprCatRun,
+			frames: runFrames,
 			speed:  0.1,
 			loop:   true,
 		},
@@ -28,13 +30,13 @@ func AddCat(game *Game) (*Cat, *Object) {
 	t := game.level.FindSpawnPoint()
 	obj := &Object{
 		pos: &Vec2f{t.centerX, t.centerY}, radius: 6.0, colType: CT_CAT,
-		sprites:    []*Sprite{sprCatRun[0]},
+		sprites:    []*Sprite{runFrames[0]},
 		components: []Component{cat},
 	}
 	game.AddObject(obj)
 	d := RandomDirection()
 	if d.x > 0 {
-		for _, spr := range sprCatRun {
+		for _, spr := range runFrames {
 			spr.Flip(true, false)
 		}
 	}

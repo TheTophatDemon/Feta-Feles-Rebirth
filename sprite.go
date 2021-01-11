@@ -42,6 +42,21 @@ func NewSpriteFromSubImg(subImg *ebiten.Image, ofs *Vec2f, flipH, flipV bool, or
 	return &Sprite{subImg, matrix}
 }
 
+func CloneSprite(org *Sprite) *Sprite {
+	return &Sprite{
+		org.subImg,
+		&(*org.matrix),
+	}
+}
+
+func CloneSprites(orgs []*Sprite) []*Sprite {
+	out := make([]*Sprite, len(orgs))
+	for i, spr := range orgs {
+		out[i] = CloneSprite(spr)
+	}
+	return out
+}
+
 func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM = *spr.matrix
