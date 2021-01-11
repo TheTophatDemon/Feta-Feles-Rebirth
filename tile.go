@@ -51,6 +51,7 @@ func (t *Tile) SetType(newType TileType) {
 func (t *Tile) RegenSprite() {
 	if t.tt != TT_EMPTY {
 		orient := 0
+		rect := tileTypeRects[t.tt]
 
 		switch t.tt {
 		case TT_SLOPE_45, TT_TENTACLE_RIGHT:
@@ -59,14 +60,17 @@ func (t *Tile) RegenSprite() {
 			orient = 2
 		case TT_SLOPE_225, TT_TENTACLE_LEFT:
 			orient = 3
+		case TT_RUNE: //Randomize rune sprite
+			orient = rand.Intn(4)
+			x := rand.Intn(4) * 16
+			rect = image.Rect(rect.Min.X+x, rect.Min.Y, rect.Max.X+x, rect.Max.Y)
+		case TT_BLOCK: //Alternate between different sprites
+			orient = rand.Intn(4)
+			x := rand.Intn(2) * 16
+			rect = image.Rect(rect.Min.X+x, rect.Min.Y, rect.Max.X+x, rect.Max.Y)
 		}
 
-		if t.tt == TT_RUNE {
-			x := int(math.Floor(rand.Float64()*4.0)) * 16
-			tileTypeRects[t.tt] = image.Rect(x, 112, x+16, 128)
-		}
-
-		t.spr = NewSprite(tileTypeRects[t.tt], &Vec2f{t.left, t.top}, false, false, orient)
+		t.spr = NewSprite(rect, &Vec2f{t.left, t.top}, false, false, orient)
 	} else {
 		t.spr = nil
 	}
@@ -104,10 +108,10 @@ func init() {
 		TT_SLOPE_135:      image.Rect(0, 96, 16, 112),
 		TT_SLOPE_225:      image.Rect(0, 96, 16, 112),
 		TT_SLOPE_315:      image.Rect(0, 96, 16, 112),
-		TT_TENTACLE_UP:    image.Rect(32, 96, 48, 112),
-		TT_TENTACLE_DOWN:  image.Rect(32, 96, 48, 112),
-		TT_TENTACLE_LEFT:  image.Rect(32, 96, 48, 112),
-		TT_TENTACLE_RIGHT: image.Rect(32, 96, 48, 112),
+		TT_TENTACLE_UP:    image.Rect(64, 80, 80, 96),
+		TT_TENTACLE_DOWN:  image.Rect(64, 80, 80, 96),
+		TT_TENTACLE_LEFT:  image.Rect(64, 80, 80, 96),
+		TT_TENTACLE_RIGHT: image.Rect(64, 80, 80, 96),
 		TT_RUNE:           image.Rect(0, 112, 16, 128),
 		TT_PYLON:          image.Rect(48, 96, 64, 112),
 	}
