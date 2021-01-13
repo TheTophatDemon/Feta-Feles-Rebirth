@@ -101,6 +101,13 @@ func RandomDirection() *Vec2f {
 	}).Normalize()
 }
 
+func VecFromAngle(angle, magnitude float64) *Vec2f {
+	return &Vec2f{
+		math.Cos(angle) * magnitude,
+		math.Sin(angle) * magnitude,
+	}
+}
+
 func (vec *Vec2f) Equals(other *Vec2f) bool {
 	return vec.x == other.x && vec.y == other.y
 }

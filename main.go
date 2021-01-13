@@ -2,12 +2,14 @@ package main
 
 /*
 TODO:
--Gopnik
 -Barrels
 -Mob Director
 -Powerups in little caverns?
+-Crosses
 -Worm
--Loading screen?
+-Cat sounds
+-Minimap?
+-Bullet fx
 -Time limit?
 -Mission 0: Show basics of game
 -Feles
@@ -372,6 +374,7 @@ func NewGame(mission int) {
 	const (
 		ENM_KNIGHT = iota
 		ENM_BLARGH
+		ENM_GOPNIK
 		ENM_MAX
 	)
 	for i := 0; i < 30; i++ {
@@ -381,6 +384,8 @@ func NewGame(mission int) {
 			AddKnight(game, spawn.centerX, spawn.centerY)
 		case ENM_BLARGH:
 			AddBlargh(game, spawn.centerX, spawn.centerY)
+		case ENM_GOPNIK:
+			AddGopnik(game, spawn.centerX, spawn.centerY)
 		}
 	}
 

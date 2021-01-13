@@ -93,7 +93,7 @@ func (bl *Blargh) OnCollision(game *Game, obj, other *Object) {
 			callback: func(anm *Anim) {
 				if anm.finished {
 					obj.removeMe = true
-					AddLove(game, 5, obj.pos.x, obj.pos.y)
+					AddLove(game, 4, obj.pos.x, obj.pos.y)
 				}
 			},
 		}
