@@ -66,14 +66,9 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 
 func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 	//Make the cat immune to non-bouncy shots by skipping the mob's default behavior
-	if other.colType == CT_PLAYERSHOT {
-		shot := other.components[0].(*Shot)
-		if shot.bouncy == false {
-			goto skip
-		}
+	if other.HasColType(CT_BOUNCYSHOT) || !other.HasColType(CT_PLAYERSHOT) {
+		(*Mob)(cat).OnCollision(game, obj, other)
 	}
-	(*Mob)(cat).OnCollision(game, obj, other)
-skip:
 
 	//Death
 	if cat.health <= 0 && !cat.dead {

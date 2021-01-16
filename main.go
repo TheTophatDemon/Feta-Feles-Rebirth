@@ -6,7 +6,6 @@ TODO:
 -Powerups in little caverns?
 -Worm
 -Cat sounds
--Minimap?
 -Bullet fx
 -Time limit?
 -Mission 0: Show basics of game

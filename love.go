@@ -66,7 +66,7 @@ func (lv *Love) Update(game *Game, obj *Object) {
 }
 
 func (lv *Love) OnCollision(game *Game, obj, other *Object) {
-	if other.colType == CT_PLAYER {
+	if other.HasColType(CT_PLAYER) {
 		PlaySound("love_get")
 		obj.removeMe = true
 	}

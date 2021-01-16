@@ -35,21 +35,20 @@ func AddBouncyShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool, bounc
 		life:    5.0,
 		enemy:   enemy,
 		bounces: bounces,
-		bouncy:  false,
 		anim:    nil,
 	}
 	var spr *Sprite
-	var ct ColType
+	ct := CT_SHOT
 	//Set animation & Collision
 	if bounces > 0 {
 		shot.anim = &Anim{
 			loop:  true,
 			speed: 0.5,
 		}
-		shot.bouncy = true
+		ct |= CT_BOUNCYSHOT
 	}
 	if enemy {
-		ct = CT_ENEMYSHOT
+		ct |= CT_ENEMYSHOT
 		if shot.anim != nil {
 			shot.anim.frames = sprShotEnemyBouncy
 			spr = shot.anim.frames[0]
@@ -57,7 +56,7 @@ func AddBouncyShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool, bounc
 			spr = sprShotEnemy
 		}
 	} else {
-		ct = CT_PLAYERSHOT
+		ct |= CT_PLAYERSHOT
 		if shot.anim != nil {
 			shot.anim.frames = sprShotPlayerBouncy
 			spr = shot.anim.frames[0]
@@ -105,7 +104,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 }
 
 func (shot *Shot) OnCollision(game *Game, obj, other *Object) {
-	if (other.colType == CT_ENEMY && !shot.enemy) || (other.colType == CT_PLAYER && shot.enemy) || other.colType == CT_CAT {
+	if (other.HasColType(CT_ENEMY) && !shot.enemy) || (other.HasColType(CT_PLAYER) && shot.enemy) || other.HasColType(CT_CAT) {
 		obj.removeMe = true
 	}
 }

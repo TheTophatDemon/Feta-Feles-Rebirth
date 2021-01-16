@@ -130,13 +130,13 @@ func (player *Player) Update(game *Game, obj *Object) {
 }
 
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
-	switch other.colType {
-	case CT_ITEM:
+	switch {
+	case other.HasColType(CT_ITEM):
 		ascend := game.IncLoveCounter(1)
 		if ascend {
 			player.ascended = true
 		}
-	case CT_ENEMY, CT_ENEMYSHOT, CT_EXPLOSION:
+	case other.HasColType(CT_ENEMY | CT_ENEMYSHOT | CT_EXPLOSION):
 		if !player.hurt {
 			player.hurt = true
 			player.hurtTimer = 1.0
