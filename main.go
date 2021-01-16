@@ -7,7 +7,6 @@ TODO:
 -Worm
 -Cat sounds
 -Bullet fx
--Time limit?
 -Mission 0: Show basics of game
 -Feles
 -Music
@@ -405,6 +404,11 @@ func NewGame(mission int) {
 		case ENM_GOPNIK:
 			AddGopnik(game, spawn.centerX, spawn.centerY)
 		}
+	}
+
+	for i := 0; i < 10; i++ {
+		spawn := game.level.FindSpawnPoint()
+		AddBarrel(game, spawn.centerX, spawn.centerY)
 	}
 
 	PlaySound("intro_chime")

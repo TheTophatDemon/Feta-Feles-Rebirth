@@ -81,7 +81,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 	//Wall bounce
 	hit, normal, hitTile := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
 	if hit {
-		if hitTile.tt == TT_RUNE {
+		if hitTile.tt == TT_RUNE && obj.HasColType(CT_BOUNCYSHOT) {
 			hitTile.SetType(TT_EMPTY)
 			AddExplosion(game, hitTile.centerX, hitTile.centerY)
 		}
@@ -104,7 +104,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 }
 
 func (shot *Shot) OnCollision(game *Game, obj, other *Object) {
-	if (other.HasColType(CT_ENEMY) && !shot.enemy) || (other.HasColType(CT_PLAYER) && shot.enemy) || other.HasColType(CT_CAT) {
+	if (other.HasColType(CT_ENEMY) && !shot.enemy) || (other.HasColType(CT_PLAYER) && shot.enemy) || other.HasColType(CT_CAT|CT_BARREL) {
 		obj.removeMe = true
 	}
 }
