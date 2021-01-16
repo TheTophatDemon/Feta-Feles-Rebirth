@@ -58,7 +58,7 @@ func (bl *Blargh) Update(game *Game, obj *Object) {
 
 	if bl.hunting {
 		if bl.shootTimer > BLARGH_SHOOT_THRESHOLD && bl.shootTimer-game.deltaTime < BLARGH_SHOOT_THRESHOLD {
-			AddBouncyShot(game, obj.pos.Clone(), bl.vecToPlayer.Clone(), 80.0, true, 1)
+			AddBouncyShot(game, obj.pos.Clone(), bl.vecToPlayer.Clone(), 80.0, true, 2)
 		}
 		//Move for 0.5 seconds after timer starts
 		if bl.shootTimer < BLARGH_SHOOT_INTERVAL-0.5 {

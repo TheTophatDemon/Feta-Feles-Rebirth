@@ -2,10 +2,8 @@ package main
 
 /*
 TODO:
--Barrels
 -Mob Director
 -Powerups in little caverns?
--Crosses
 -Worm
 -Cat sounds
 -Minimap?
@@ -257,22 +255,43 @@ func (g *Game) AddObject(newObj *Object) *Object {
 	return newObj
 }
 
-//Adds or removes from the love counter. Returns true if the operations causes the quota to be met.
+//Adds to the love counter. Returns true if the operations causes the quota to be met.
 func (g *Game) IncLoveCounter(amt int) bool {
 	if g.love == g.mission.loveQuota {
 		return true
 	}
+	if amt < 0 {
+		log.Println("Invalid amt. Use DecLoveCounter instead?")
+		return false
+	}
 	g.love += amt
-	if g.love < 0 {
-		g.love = 0
-	} else if g.love >= g.mission.loveQuota {
+	if g.love >= g.mission.loveQuota {
 		g.love = g.mission.loveQuota
 		if g.hud.winTextTimer <= 0.0 {
-			//Quota has been met. Trigger the endgame sequence
-			g.hud.winTextTimer = 8.0
-			g.hud.winText.fillPos = 0
-			AddCat(g)
+			if (g.playerObj.components[0].(*Player)).ascended == false {
+				//Quota has been met. Trigger the endgame sequence
+				g.hud.winTextTimer = 8.0
+				g.hud.winText.fillPos = 0
+				AddCat(g)
+			}
 		}
+		return true
+	}
+	return false
+}
+
+//Subtracts from the love counter. Returns true if the operation causes to counter to hit zero.
+func (g *Game) DecLoveCounter(amt int) bool {
+	if g.love == 0 {
+		return true
+	}
+	if amt < 0 {
+		log.Println("Invalid amt. Use IncLoveCounter instead?")
+		return false
+	}
+	g.love -= amt
+	if g.love <= 0 {
+		g.love = 0
 		return true
 	}
 	return false
@@ -347,7 +366,7 @@ func NewGame(mission int) {
 	}
 	game = &Game{
 		objects:  list.New(),
-		level:    GenerateLevel(64, 64),
+		level:    GenerateLevel(48, 48),
 		lastTime: time.Now(),
 		camPos:   ZeroVec(),
 		camMin:   ZeroVec(),

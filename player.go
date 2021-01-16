@@ -10,20 +10,12 @@ const (
 	PL_SHOOT_FREQ = 0.2
 )
 
-type PlayerState int32
-
-const (
-	PS_NORMAL = iota
-	PS_HURT
-	PS_ASCENDED
-)
-
 type Player struct {
 	*Actor
-	state        PlayerState
-	shootTimer   float64
-	hurtTimer    float64
-	lastShootDir *Vec2f
+	hurt, ascended bool
+	shootTimer     float64
+	hurtTimer      float64
+	lastShootDir   *Vec2f
 }
 
 var plSpriteNormal *Sprite
@@ -41,7 +33,8 @@ func init() {
 func AddPlayer(game *Game, x, y float64) *Object {
 	player := &Player{
 		Actor:        NewActor(120.0, 500_000.0, 50_000.0),
-		state:        PS_NORMAL,
+		hurt:         false,
+		ascended:     false,
 		lastShootDir: ZeroVec(),
 	}
 
@@ -61,13 +54,14 @@ func AddPlayer(game *Game, x, y float64) *Object {
 func (player *Player) Update(game *Game, obj *Object) {
 	//Attack
 	if player.shootTimer <= 0.0 {
+		//Set direction
 		var dir *Vec2f
-		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) { //Shoot in direction of mouse click
 			cx, cy := ebiten.CursorPosition()
 			rPos := obj.pos.Clone().Sub(game.camPos).Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
 			dir = (&Vec2f{float64(cx), float64(cy)}).Sub(rPos)
 			player.lastShootDir = dir
-		} else if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		} else if ebiten.IsKeyPressed(ebiten.KeySpace) { //Or shoot in direction of last movement
 			if player.lastShootDir == nil {
 				player.lastShootDir = player.facing.Clone()
 			}
@@ -75,8 +69,13 @@ func (player *Player) Update(game *Game, obj *Object) {
 		} else {
 			player.lastShootDir = nil
 		}
+		//Add shot
 		if dir != nil {
-			AddShot(game, obj.pos, dir, 240.0, false)
+			if player.ascended {
+				AddBouncyShot(game, obj.pos, dir, 240.0, false, 2)
+			} else {
+				AddShot(game, obj.pos, dir, 240.0, false)
+			}
 			PlaySound("player_shot")
 			player.shootTimer = PL_SHOOT_FREQ
 		}
@@ -92,23 +91,24 @@ func (player *Player) Update(game *Game, obj *Object) {
 			obj.hidden = true
 		}
 		if player.hurtTimer <= 0.0 {
-			player.state = PS_NORMAL
+			player.hurt = false
 			obj.hidden = false
 		}
 	}
 
 	//Set sprite
-	switch player.state {
-	case PS_NORMAL:
-		if player.shootTimer > 0.0 {
-			obj.sprites[0] = plSpriteShoot
-		} else {
-			obj.sprites[0] = plSpriteNormal
-		}
-	case PS_HURT:
+	if player.hurt {
 		obj.sprites[0] = plSpriteHurt
-	case PS_ASCENDED:
-		obj.sprites[0] = plSpriteAscended
+	} else {
+		if player.ascended {
+			obj.sprites[0] = plSpriteAscended
+		} else {
+			if player.shootTimer > 0.0 {
+				obj.sprites[0] = plSpriteShoot
+			} else {
+				obj.sprites[0] = plSpriteNormal
+			}
+		}
 	}
 
 	//Movement
@@ -133,17 +133,21 @@ func (player *Player) OnCollision(game *Game, obj, other *Object) {
 	switch other.colType {
 	case CT_ITEM:
 		ascend := game.IncLoveCounter(1)
-		if ascend && player.state != PS_ASCENDED {
-			player.state = PS_ASCENDED
+		if ascend {
+			player.ascended = true
 		}
 	case CT_ENEMY, CT_ENEMYSHOT, CT_EXPLOSION:
-		if player.state == PS_NORMAL {
-			player.state = PS_HURT
+		if !player.hurt {
+			player.hurt = true
 			player.hurtTimer = 1.0
+			lost := false
 			if other.colType == CT_EXPLOSION {
-				game.IncLoveCounter(-20)
+				lost = game.DecLoveCounter(20)
 			} else {
-				game.IncLoveCounter(-10)
+				lost = game.DecLoveCounter(10)
+			}
+			if lost {
+				player.ascended = false
 			}
 			PlaySound("player_hurt")
 		}
