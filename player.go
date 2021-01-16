@@ -73,11 +73,12 @@ func (player *Player) Update(game *Game, obj *Object) {
 		if dir != nil {
 			if player.ascended {
 				AddBouncyShot(game, obj.pos, dir, 240.0, false, 2)
+				player.shootTimer = PL_SHOOT_FREQ / 2.0
 			} else {
 				AddShot(game, obj.pos, dir, 240.0, false)
+				player.shootTimer = PL_SHOOT_FREQ
 			}
 			PlaySound("player_shot")
-			player.shootTimer = PL_SHOOT_FREQ
 		}
 	} else {
 		player.shootTimer -= game.deltaTime
