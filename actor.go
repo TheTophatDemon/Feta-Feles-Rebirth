@@ -40,10 +40,10 @@ func (actor *Actor) Update(game *Game, obj *Object) {
 		actor.velocity.Clone().Normalize().Scale(
 			math.Min(game.deltaTime*game.deltaTime*actor.friction, speed)))
 
-	actor.ApplyMovement(obj, actor.velocity.Clone().Scale(game.deltaTime))
+	actor.ApplyMovement(game, obj, actor.velocity.Clone().Scale(game.deltaTime))
 }
 
-func (actor *Actor) ApplyMovement(obj *Object, vel *Vec2f) {
+func (actor *Actor) ApplyMovement(game *Game, obj *Object, vel *Vec2f) {
 	vel = vel.Clone()
 	newPos := obj.pos.Clone().Add(vel)
 

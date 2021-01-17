@@ -41,9 +41,6 @@ func (t *Tile) GetSlopeNormal() *Vec2f {
 }
 
 func (t *Tile) SetType(newType TileType) {
-	if game != nil && t.IsSolid() && newType == TT_EMPTY {
-		defer game.level.SmoothEdges()
-	}
 	t.tt = newType
 	t.modified = true
 }

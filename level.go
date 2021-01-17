@@ -80,6 +80,14 @@ func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 	return true
 }
 
+//Removes a solid tile and reshapes the surrounding terrain to make the deformation smooth
+func (level *Level) DestroyTile(t *Tile) {
+	if t.IsSolid() {
+		defer level.SmoothEdges()
+	}
+	t.SetType(TT_EMPTY)
+}
+
 //Gets a reference to the tile at the coordinates. Returns nil if out of bounds unless wrap is enabled.
 func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 	if wrap {
@@ -334,7 +342,7 @@ func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, 
 
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {
-			t := game.level.GetTile(i, j, true)
+			t := level.GetTile(i, j, true)
 			if t.IsSolid() {
 				diff := pos.Clone().Sub(level.ProjectPosOntoTile(pos, t))
 				//Consider coordinates from other side of map if need be

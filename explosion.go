@@ -54,7 +54,7 @@ func AddExplosion(game *Game, x, y float64) *Object {
 				if t.tt == TT_RUNE {
 					AddExplosion(game, t.centerX, t.centerY)
 				}
-				t.SetType(TT_EMPTY)
+				game.level.DestroyTile(t)
 			}
 		},
 	}
