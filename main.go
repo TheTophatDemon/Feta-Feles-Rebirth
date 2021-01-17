@@ -45,6 +45,8 @@ const (
 type AppState interface {
 	Update(deltaTime float64)
 	Draw(screen *ebiten.Image)
+	Enter()
+	Leave()
 }
 
 type App struct{}
@@ -71,6 +73,17 @@ func (a *App) Draw(screen *ebiten.Image) {
 	__appState.Draw(screen)
 }
 
+func ChangeAppState(newState AppState) {
+	if newState == nil {
+		panic("Can't change into nil app state!")
+	}
+	if __appState != nil {
+		__appState.Leave()
+	}
+	__appState = newState
+	newState.Enter()
+}
+
 var __graphics *ebiten.Image
 
 //Returns the graphics page and loads it if it isn't there
@@ -92,7 +105,7 @@ func main() {
 	ebiten.SetWindowTitle("Feta Feles Remake")
 	ebiten.SetRunnableOnUnfocused(true)
 
-	__appState = NewGame(0)
+	ChangeAppState(NewGame(0))
 
 	if err := ebiten.RunGame(new(App)); err != nil {
 		log.Fatal(err)

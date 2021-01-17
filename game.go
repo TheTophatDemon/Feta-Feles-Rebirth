@@ -114,6 +114,14 @@ func NewGame(mission int) *Game {
 	return game
 }
 
+func (g *Game) Enter() {
+
+}
+
+func (g *Game) Leave() {
+
+}
+
 var cheatText string = ""
 var debugDraw bool
 
@@ -145,7 +153,7 @@ func (g *Game) Update(deltaTime float64) {
 		}
 		if strings.Contains(cheatText, "tdnovymir") {
 			cheatText = ""
-			NewGame(g.missionNumber)
+			ChangeAppState(NewGame(g.missionNumber))
 			return
 		}
 		if strings.Contains(cheatText, "tdcruoris") {
@@ -215,7 +223,7 @@ func (g *Game) Update(deltaTime float64) {
 				g.fadeStage = 0
 				//If the level is ending, start a new game
 				if g.fade == FM_FADE_OUT {
-					NewGame(g.missionNumber + 1)
+					ChangeAppState(NewGame(g.missionNumber + 1))
 					return
 				}
 				g.fade = FM_NO_FADE
