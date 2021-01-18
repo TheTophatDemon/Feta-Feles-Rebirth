@@ -87,6 +87,7 @@ func (bl *Blargh) OnCollision(game *Game, obj, other *Object) {
 	//Death
 	if bl.health <= 0 && !bl.dead {
 		bl.dead = true
+		PlaySound("enemy_die")
 		bl.currAnim = &Anim{
 			frames: sprBlarghDie,
 			speed:  0.15,

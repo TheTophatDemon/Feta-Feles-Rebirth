@@ -53,8 +53,6 @@ func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
 		if mb.health > 0 {
 			mb.hurtTimer = 0.5
 			PlaySound("enemy_hurt")
-		} else if !mb.dead {
-			PlaySound("enemy_die")
 		}
 	}
 	if other.colType == obj.colType {

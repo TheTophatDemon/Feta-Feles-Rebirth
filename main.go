@@ -2,23 +2,16 @@ package main
 
 /*
 TODO:
--Mob Director
 -Powerups in little caverns?
 -Worm
--Cat sounds
 -Bullet fx
 -Title Screen
 -Mission 0: Show basics of game
 -Feles
 -Music
 -Store assets as embedded zip file...?
-*/
-
-/*
-Oddities
--Disappearing enemies glitch...?
--Jittering at beginning
--Enemies getting spawned in walls?
+-Fix jitter at beginning
+-Fix cats getting stuck in walls...?
 */
 
 import (

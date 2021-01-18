@@ -151,6 +151,17 @@ func (g *Game) Update(deltaTime float64) {
 			cheatText = ""
 			AddExplosion(g, g.playerObj.pos.x, g.playerObj.pos.y)
 		}
+		if strings.Contains(cheatText, "tdascend") {
+			cheatText = ""
+			g.love = g.mission.loveQuota
+			ply := g.playerObj.components[0].(*Player)
+			ply.ascended = true
+		}
+		if strings.Contains(cheatText, "tdgottam") {
+			cheatText = ""
+			ChangeAppState(NewGame(g.missionNumber + 1))
+			return
+		}
 
 		//Prevent the game from going AWOL when the window is moved
 		if g.deltaTime > 0.25 {

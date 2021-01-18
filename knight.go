@@ -72,6 +72,7 @@ func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
 	//Death
 	if kn.health <= 0 && !kn.dead {
 		kn.dead = true
+		PlaySound("enemy_die")
 		kn.currAnim = &Anim{
 			frames: sprKnightDie,
 			speed:  0.15,

@@ -5,6 +5,7 @@ import (
 	"container/ring"
 	"io/ioutil"
 	"log"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/audio/wav"
@@ -28,12 +29,18 @@ func init() {
 		"intro_chime": assets.WAV_INTRO_CHIME,
 		"outro_chime": assets.WAV_OUTRO_CHIME,
 		"explode":     assets.WAV_EXPLODE,
+		"cat_die":     assets.WAV_CAT_DIE,
+		"cat_meow":    assets.WAV_CAT_MEOW,
 	}
 }
 
 const PLAYERS_PER_SOUND = 8
 
 func PlaySound(name string) {
+	PlaySoundVolume(name, 0.5)
+}
+
+func PlaySoundVolume(name string, volume float64) {
 	buffer, loaded := players[name]
 	if !loaded {
 		stream, err := wav.Decode(audioContext, bytes.NewReader(assets.Parse(audioFiles[name])))
@@ -51,7 +58,7 @@ func PlaySound(name string) {
 		buffer = ring.New(PLAYERS_PER_SOUND)
 		for i := 0; i < PLAYERS_PER_SOUND; i++ {
 			player := audio.NewPlayerFromBytes(audioContext, bytes)
-			player.SetVolume(0.5)
+			player.SetVolume(volume)
 			buffer.Value = player
 			buffer = buffer.Next()
 		}
@@ -61,9 +68,18 @@ func PlaySound(name string) {
 		player := buffer.Value.(*audio.Player)
 		if !player.IsPlaying() {
 			player.Rewind()
+			player.SetVolume(volume)
 			player.Play()
 			break
 		}
 		buffer = buffer.Next()
 	}
+}
+
+//Plays a sound that gets quieter the farther it is from the camera
+func (g *Game) PlaySoundAttenuated(name string, x, y, factor float64) {
+	point := &Vec2f{x, y}
+	closestCamPoint := VecMin(g.camMax, VecMax(g.camMin, point))
+	dist := closestCamPoint.Clone().Sub(point).Length()
+	PlaySoundVolume(name, math.Max(0.0, 0.5-(dist/factor)))
 }

@@ -69,6 +69,7 @@ func (gp *Gopnik) OnCollision(game *Game, obj, other *Object) {
 	//Death
 	if gp.health <= 0 && !gp.dead {
 		gp.dead = true
+		PlaySound("enemy_die")
 		gp.currAnim = &Anim{
 			frames: sprGopnikDie,
 			speed:  0.15,

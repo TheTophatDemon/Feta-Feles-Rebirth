@@ -3,9 +3,13 @@ package main
 import (
 	"image"
 	"math"
+	"math/rand"
 )
 
-type Cat Mob
+type Cat struct {
+	Mob
+	meowTimer float64
+}
 
 var sprCatRun []*Sprite
 var sprCatDie []*Sprite
@@ -19,13 +23,16 @@ func AddCat(game *Game) (*Cat, *Object) {
 	//Cats are the only mobs that can change their sprites' directions, so they much each have a unique copy of their sprite
 	runFrames := CloneSprites(sprCatRun)
 	cat := &Cat{
-		Actor:  NewActor(120.0, 100_000.0, 75_000.0),
-		health: 3,
-		currAnim: &Anim{
-			frames: runFrames,
-			speed:  0.1,
-			loop:   true,
+		Mob: Mob{
+			Actor:  NewActor(120.0, 100_000.0, 75_000.0),
+			health: 3,
+			currAnim: &Anim{
+				frames: runFrames,
+				speed:  0.1,
+				loop:   true,
+			},
 		},
+		meowTimer: rand.Float64() * 5.0,
 	}
 	t := game.level.FindSpawnPoint()
 	obj := &Object{
@@ -45,35 +52,43 @@ func AddCat(game *Game) (*Cat, *Object) {
 }
 
 func (cat *Cat) Update(game *Game, obj *Object) {
-	pMov := cat.movement.Clone()
+	if !cat.dead {
+		pMov := cat.movement.Clone()
+		hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
+		if hit {
+			normal.Lerp(RandomDirection(), 0.25).Normalize()
+			cat.Move(normal.x, normal.y)
+		}
 
-	hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
-	if hit {
-		normal.Lerp(RandomDirection(), 0.25).Normalize()
-		cat.Move(normal.x, normal.y)
-	}
+		cat.meowTimer += game.deltaTime
+		if cat.meowTimer > 5.0 {
+			game.PlaySoundAttenuated("cat_meow", obj.pos.x, obj.pos.y, 256.0)
+			cat.meowTimer = 0.0
+		}
 
-	//Flip the sprites in the animation to match movement direction
-	if math.Signbit(cat.movement.x) != math.Signbit(pMov.x) {
-		for _, spr := range cat.currAnim.frames {
-			spr.Flip(true, false)
+		//Flip the sprites in the animation to match movement direction
+		if math.Signbit(cat.movement.x) != math.Signbit(pMov.x) {
+			for _, spr := range cat.currAnim.frames {
+				spr.Flip(true, false)
+			}
 		}
 	}
 
 	cat.Actor.Update(game, obj)
-	(*Mob)(cat).Update(game, obj)
+	cat.Mob.Update(game, obj)
 }
 
 func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 	//Make the cat immune to non-bouncy shots by skipping the mob's default behavior
 	if other.HasColType(CT_BOUNCYSHOT) || !other.HasColType(CT_PLAYERSHOT) {
-		(*Mob)(cat).OnCollision(game, obj, other)
+		cat.Mob.OnCollision(game, obj, other)
 	}
 
 	//Death
 	if cat.health <= 0 && !cat.dead {
 		cat.Move(0.0, 0.0)
 		cat.dead = true
+		PlaySound("cat_die")
 		cat.currAnim = &Anim{
 			frames: sprCatDie,
 			speed:  0.5,
