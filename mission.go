@@ -1,12 +1,12 @@
 package main
 
 type Mission struct {
-	loveQuota           int
-	maxKnights          int
-	maxBlarghs          int
-	maxGopniks          int
-	maxBarrels          int
-	mapWidth, mapHeight int
+	loveQuota               int
+	maxKnights, knightCount int
+	maxBlarghs, blarghCount int
+	maxGopniks, gopnikCount int
+	maxBarrels, barrelCount int
+	mapWidth, mapHeight     int
 }
 
 var missions []Mission
@@ -19,8 +19,8 @@ func init() {
 			maxBlarghs: 0,
 			maxGopniks: 0,
 			maxBarrels: 0,
-			mapWidth:   20,
-			mapHeight:  15,
+			mapWidth:   32,
+			mapHeight:  32,
 		},
 		Mission{
 			loveQuota:  50,

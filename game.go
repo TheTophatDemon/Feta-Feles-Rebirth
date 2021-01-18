@@ -15,23 +15,22 @@ import (
 )
 
 type Game struct {
-	objects       *list.List
-	level         *Level
-	deltaTime     float64
-	lastTime      time.Time
-	camPos        *Vec2f
-	camMin        *Vec2f
-	camMax        *Vec2f
-	winTimer      float64
-	hud           GameHUD
-	mission       *Mission
-	missionNumber int
-	playerObj     *Object
-	love          int
-	fade          FadeMode
-	fadeTimer     float64
-	fadeStage     int
-	renderTarget  *ebiten.Image
+	objects                *list.List
+	level                  *Level
+	deltaTime              float64
+	lastTime               time.Time
+	camPos, camMin, camMax *Vec2f
+	winTimer               float64
+	hud                    GameHUD
+	mission                Mission
+	missionNumber          int
+	playerObj              *Object
+	love                   int
+	respawnTimer           float64
+	fade                   FadeMode
+	fadeTimer              float64
+	fadeStage              int
+	renderTarget           *ebiten.Image
 }
 
 type GameHUD struct {
@@ -59,7 +58,7 @@ func NewGame(mission int) *Game {
 	}
 	game := &Game{
 		objects:  list.New(),
-		level:    GenerateLevel(48, 48),
+		level:    GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight),
 		lastTime: time.Now(),
 		camPos:   ZeroVec(),
 		camMin:   ZeroVec(),
@@ -71,7 +70,7 @@ func NewGame(mission int) *Game {
 			winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
 			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
 		},
-		mission:       &missions[mission],
+		mission:       missions[mission],
 		missionNumber: mission,
 		fade:          FM_FADE_IN,
 		renderTarget:  ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT),
@@ -82,45 +81,33 @@ func NewGame(mission int) *Game {
 	//Spawn entities
 	playerSpawn := game.level.FindSpawnPoint()
 	game.playerObj = AddPlayer(game, playerSpawn.centerX, playerSpawn.centerY)
+	game.CenterCameraOn(game.playerObj) //Neccessary for FindOffscreenSpawnPoint
 
-	//TODO: Replace this with a dynamic enemy spawn director
-	const (
-		ENM_KNIGHT = iota
-		ENM_BLARGH
-		ENM_GOPNIK
-		ENM_MAX
-	)
-	for i := 0; i < 30; i++ {
-		spawn := game.level.FindSpawnPoint()
-		switch rand.Intn(ENM_MAX) {
-		case ENM_KNIGHT:
-			AddKnight(game, spawn.centerX, spawn.centerY)
-		case ENM_BLARGH:
-			AddBlargh(game, spawn.centerX, spawn.centerY)
-		case ENM_GOPNIK:
-			AddGopnik(game, spawn.centerX, spawn.centerY)
-		}
+	for i := 0; i < missions[mission].maxKnights; i++ {
+		spawn := game.level.FindOffscreenSpawnPoint(game)
+		AddKnight(game, spawn.centerX, spawn.centerY)
+	}
+	for i := 0; i < missions[mission].maxBlarghs; i++ {
+		spawn := game.level.FindOffscreenSpawnPoint(game)
+		AddBlargh(game, spawn.centerX, spawn.centerY)
+	}
+	for i := 0; i < missions[mission].maxGopniks; i++ {
+		spawn := game.level.FindOffscreenSpawnPoint(game)
+		AddGopnik(game, spawn.centerX, spawn.centerY)
 	}
 
-	for i := 0; i < 10; i++ {
-		spawn := game.level.FindSpawnPoint()
+	for i := 0; i < missions[mission].maxBarrels; i++ {
+		spawn := game.level.FindOffscreenSpawnPoint(game)
 		AddBarrel(game, spawn.centerX, spawn.centerY)
 	}
 
 	PlaySound("intro_chime")
 
-	runtime.GC()
-
 	return game
 }
 
-func (g *Game) Enter() {
-
-}
-
-func (g *Game) Leave() {
-
-}
+func (g *Game) Enter() {}
+func (g *Game) Leave() {}
 
 var cheatText string = ""
 var debugDraw bool
@@ -170,6 +157,48 @@ func (g *Game) Update(deltaTime float64) {
 			return
 		}
 
+		//Respawn monsters/barrels offscreen to maintain gameplay intensity
+		g.respawnTimer += g.deltaTime
+		if g.respawnTimer > 4.0 {
+			g.respawnTimer = 0.0
+
+			const (
+				S_KNIGHT = iota
+				S_BLARGH
+				S_GOPNIK
+				S_BARREL
+			)
+
+			pool := make([]int, 0, 4)
+			if g.mission.knightCount < g.mission.maxKnights {
+				pool = append(pool, S_KNIGHT)
+			}
+			if g.mission.blarghCount < g.mission.maxBlarghs {
+				pool = append(pool, S_BLARGH)
+			}
+			if g.mission.gopnikCount < g.mission.maxGopniks {
+				pool = append(pool, S_GOPNIK)
+			}
+			if g.mission.barrelCount < g.mission.maxBarrels {
+				pool = append(pool, S_BARREL)
+			}
+
+			if len(pool) > 0 {
+				spawn := g.level.FindOffscreenSpawnPoint(g)
+				c := pool[rand.Intn(len(pool))]
+				switch c {
+				case S_KNIGHT:
+					AddKnight(g, spawn.centerX, spawn.centerY)
+				case S_BLARGH:
+					AddBlargh(g, spawn.centerX, spawn.centerY)
+				case S_GOPNIK:
+					AddGopnik(g, spawn.centerX, spawn.centerY)
+				case S_BARREL:
+					AddBarrel(g, spawn.centerX, spawn.centerY)
+				}
+			}
+		}
+
 		//Update objects
 		toRemove := make([]*list.Element, 0, 4)
 		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
@@ -183,6 +212,17 @@ func (g *Game) Update(deltaTime float64) {
 			//Objects are removed later so that they doesn't interfere with collision events
 			if obj.removeMe {
 				toRemove = append(toRemove, objE)
+				//Update relevant mission counters
+				switch obj.components[0].(type) {
+				case *Knight:
+					g.mission.knightCount--
+				case *Blargh:
+					g.mission.blarghCount--
+				case *Gopnik:
+					g.mission.gopnikCount--
+				case *Barrel:
+					g.mission.barrelCount--
+				}
 			}
 			//Wrap objects around the map if they exit its boundaries
 			obj.pos.x, obj.pos.y = g.level.WrapPixelCoords(obj.pos.x, obj.pos.y)
@@ -225,17 +265,16 @@ func (g *Game) Update(deltaTime float64) {
 				if g.fade == FM_FADE_OUT {
 					ChangeAppState(NewGame(g.missionNumber + 1))
 					return
+				} else {
+					runtime.GC() //Get rid of all that level generation memory
 				}
 				g.fade = FM_NO_FADE
 			}
 		}
 	}
 
-	//Set camera to player position
-	g.camPos = VecMax(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}, VecMin(&Vec2f{g.level.pixelWidth - SCR_WIDTH_H, g.level.pixelHeight - SCR_HEIGHT_H}, g.playerObj.pos))
-	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
-	g.camMin = g.camPos.Clone().Sub(hscr)
-	g.camMax = g.camPos.Clone().Add(hscr)
+	//Center camera on player
+	g.CenterCameraOn(g.playerObj)
 
 	//Animate UI
 	if g.hud.winTextTimer > 0.0 {
@@ -248,6 +287,13 @@ func (g *Game) Update(deltaTime float64) {
 	barRect := image.Rect(lbbRect.Min.X+3, lbbRect.Min.Y+3, lbbRect.Max.X-3, lbbRect.Max.Y-3)
 	barRect.Max.X = barRect.Min.X + int(float64(barRect.Dx())*float64(g.love)/float64(g.mission.loveQuota))
 	g.hud.loveBar = SpriteFromScaledImg(g.hud.loveBar.subImg, barRect, 0)
+}
+
+func (g *Game) CenterCameraOn(obj *Object) {
+	g.camPos = VecMax(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}, VecMin(&Vec2f{g.level.pixelWidth - SCR_WIDTH_H, g.level.pixelHeight - SCR_HEIGHT_H}, obj.pos))
+	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
+	g.camMin = g.camPos.Clone().Sub(hscr)
+	g.camMax = g.camPos.Clone().Add(hscr)
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -304,6 +350,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 //Adds the object to the game, sorted by its draw priority, and returns the object
 func (g *Game) AddObject(newObj *Object) *Object {
+	//Update relevant mission counters
+	switch newObj.components[0].(type) {
+	case *Knight:
+		g.mission.knightCount++
+	case *Blargh:
+		g.mission.blarghCount++
+	case *Gopnik:
+		g.mission.gopnikCount++
+	case *Barrel:
+		g.mission.barrelCount++
+	}
 	for e := g.objects.Front(); e != nil; e = e.Next() {
 		obj := e.Value.(*Object)
 		if obj.drawPriority > newObj.drawPriority {

@@ -100,27 +100,32 @@ func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 
 //Randomly chooses an empty tile.
 func (level *Level) FindSpawnPoint() *Tile {
-	totalEmptyTiles := 0
+	emptyTiles := make([]*Tile, 0, 1024)
 	for _, sp := range level.spaces {
-		totalEmptyTiles += len(sp.tiles)
-	}
-	rando := rand.Intn(totalEmptyTiles)
-	//Choose a space based on a probability weighted by the space's number of tiles
-	var chosenSpace *Space
-	for _, sp := range level.spaces {
-		if rando-len(sp.tiles) <= 0 {
-			chosenSpace = sp
-			break
+		for _, t := range sp.tiles {
+			if t.tt == TT_EMPTY {
+				//Check is neccesary because pylon placement is done after space mapping
+				emptyTiles = append(emptyTiles, t)
+			}
 		}
-		rando -= len(sp.tiles)
 	}
-	var tile *Tile
-	tt := TT_BLOCK
-	for tt != TT_EMPTY { //Because sometimes things like pylons will be placed within a space after it is generated
-		tile = chosenSpace.tiles[rand.Intn(len(chosenSpace.tiles))]
-		tt = tile.tt
+	return emptyTiles[rand.Intn(len(emptyTiles))]
+}
+
+//Randomly chooses an empty tile that is off screen
+func (level *Level) FindOffscreenSpawnPoint(game *Game) *Tile {
+	emptyTiles := make([]*Tile, 0, 1024)
+	for _, sp := range level.spaces {
+		for _, t := range sp.tiles {
+			if t.tt == TT_EMPTY && !game.SquareOnScreen(t.centerX, t.centerY, TILE_SIZE_H) {
+				emptyTiles = append(emptyTiles, t)
+			}
+		}
 	}
-	return tile
+	if len(emptyTiles) == 0 {
+		return nil
+	}
+	return emptyTiles[rand.Intn(len(emptyTiles))]
 }
 
 //Like FindEmptySpace except for finding places inside of the walls

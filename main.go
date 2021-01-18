@@ -2,12 +2,12 @@ package main
 
 /*
 TODO:
--Fix level transition & app states
 -Mob Director
 -Powerups in little caverns?
 -Worm
 -Cat sounds
 -Bullet fx
+-Title Screen
 -Mission 0: Show basics of game
 -Feles
 -Music

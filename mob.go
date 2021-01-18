@@ -48,7 +48,7 @@ func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
 	if mb.hurtTimer <= 0.0 && other.HasColType(CT_PLAYERSHOT|CT_EXPLOSION) {
 		mb.health--
 		if other.HasColType(CT_EXPLOSION) {
-			mb.health -= 2
+			mb.health -= 10
 		}
 		if mb.health > 0 {
 			mb.hurtTimer = 0.5
