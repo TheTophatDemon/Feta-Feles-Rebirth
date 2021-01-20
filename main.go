@@ -2,9 +2,7 @@ package main
 
 /*
 TODO:
--Powerups in little caverns?
 -Worm
--Bullet fx
 -Title Screen
 -Mission 0: Show basics of game
 -Feles
@@ -13,6 +11,10 @@ TODO:
 -Fix jitter at beginning
 -Fix cats getting stuck in walls...?
 */
+
+//I want you to make me...real
+//What a dark world you live in...Surely I can make things better.
+//The voices tell me that I'm here to bring a great misfortune to the world. I can't believe that. Can you?
 
 import (
 	"bytes"

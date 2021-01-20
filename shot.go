@@ -92,6 +92,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 			shot.bounces--
 		} else {
 			obj.removeMe = true
+			AddPoof(game, obj.pos.x, obj.pos.y)
 		}
 	}
 

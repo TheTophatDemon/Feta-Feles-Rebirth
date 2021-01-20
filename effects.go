@@ -63,3 +63,32 @@ func AddExplosion(game *Game, x, y float64) *Object {
 	PlaySound("explode")
 	return obj
 }
+
+var sprPoof []*Sprite
+
+func init() {
+	sprPoof = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(152, 0, 160, 8), image.Rect(152, 32, 152+8, 32+8))
+}
+
+func AddPoof(game *Game, x, y float64) *Object {
+	obj := &Object{
+		pos:          &Vec2f{x, y},
+		radius:       0.0,
+		colType:      CT_NONE,
+		sprites:      []*Sprite{sprPoof[0]},
+		drawPriority: 5,
+	}
+	effect := new(Effect)
+	effect.anim = Anim{
+		frames: sprPoof,
+		speed:  0.1,
+		callback: func(anm *Anim) {
+			if anm.finished {
+				obj.removeMe = true
+			}
+		},
+	}
+	obj.components = []Component{effect}
+	game.AddObject(obj)
+	return obj
+}

@@ -19,9 +19,6 @@ func (anim *Anim) Update(deltaTime float64) {
 	if anim.timer > anim.speed {
 		anim.timer = 0.0
 		anim.frame += 1
-		if anim.callback != nil {
-			anim.callback(anim)
-		}
 		if anim.frame >= len(anim.frames) {
 			if anim.loop {
 				anim.frame = 0
@@ -29,6 +26,9 @@ func (anim *Anim) Update(deltaTime float64) {
 				anim.frame -= 1
 				anim.finished = true
 			}
+		}
+		if anim.callback != nil {
+			anim.callback(anim)
 		}
 	}
 }
