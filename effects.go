@@ -67,7 +67,7 @@ func AddExplosion(game *Game, x, y float64) *Object {
 var sprPoof []*Sprite
 
 func init() {
-	sprPoof = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(152, 0, 160, 8), image.Rect(152, 32, 152+8, 32+8))
+	sprPoof = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(80, 48, 88, 56), image.Rect(88, 48, 96, 56))
 }
 
 func AddPoof(game *Game, x, y float64) *Object {
