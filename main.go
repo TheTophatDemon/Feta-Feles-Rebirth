@@ -7,6 +7,7 @@ TODO:
 -Level background strobing
 -Polish ascention
 -Spawn player in center of screen
+-Different voice sounds
 -Return/disable continuous level wrapping
 -Worm
 -Music

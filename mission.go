@@ -20,7 +20,7 @@ func init() {
 		},
 		Mission{ //1
 			loveQuota:  50,
-			maxKnights: 5, maxBlarghs: 5, maxBarrels: 3,
+			maxKnights: 3, maxBlarghs: 3, maxBarrels: 3,
 			mapWidth: 32, mapHeight: 32,
 		},
 		Mission{ //2
