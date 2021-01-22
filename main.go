@@ -2,13 +2,15 @@ package main
 
 /*
 TODO:
--Worm
 -Title Screen
 -Mission 0: Show basics of game
--Feles
+-Cutscenes
+-Level background strobing
+-Worm
 -Music
 -Store assets as embedded zip file...?
 -Fix jitter at beginning
+-Preload level chimes
 -Fix cats getting stuck in walls...?
 */
 
@@ -100,7 +102,7 @@ func main() {
 	ebiten.SetWindowTitle("Feta Feles Remake")
 	ebiten.SetRunnableOnUnfocused(true)
 
-	ChangeAppState(NewGame(0))
+	ChangeAppState(new(TitleScreen))
 
 	if err := ebiten.RunGame(new(App)); err != nil {
 		log.Fatal(err)

@@ -1,5 +1,9 @@
 package main
 
+import (
+	"github.com/hajimehoshi/ebiten"
+)
+
 type ColType int32
 
 const (
@@ -42,4 +46,15 @@ func (obj *Object) Intersects(other *Object) bool {
 
 func (obj *Object) HasColType(target ColType) bool {
 	return (obj.colType & target) > 0
+}
+
+func (obj *Object) DrawAllSprites(screen *ebiten.Image, pt *ebiten.GeoM) {
+	var objT ebiten.GeoM
+	if pt != nil {
+		objT = *pt
+	}
+	objT.Translate(obj.pos.x, obj.pos.y)
+	for _, sp := range obj.sprites {
+		sp.Draw(screen, &objT)
+	}
 }
