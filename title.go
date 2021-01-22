@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/inpututil"
 )
 
 type TitleScreen struct {
@@ -27,8 +28,8 @@ func (ts *TitleScreen) Enter() {
 		pos: ZeroVec(),
 	}
 	ts.link = GenerateText("tophatdemon.com", image.Rect(SCR_WIDTH_H-60, SCR_HEIGHT-16, SCR_WIDTH_H+64, SCR_HEIGHT))
-	ts.feles = MakeFeles(FACE_WINK, BODY_CAT, &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H})
-	ts.enterText = GenerateText("PRESS ENTER TO BEGIN", image.Rect(SCR_WIDTH_H-10*8, SCR_HEIGHT_H+40.0, SCR_WIDTH_H+10*8, SCR_HEIGHT_H+56.0))
+	ts.feles = MakeFeles(FACE_WINK, BODY_CAT, &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H - 32.0})
+	ts.enterText = GenerateText("CLICK OR SPACE TO BEGIN", image.Rect(SCR_WIDTH_H-10*8-12, SCR_HEIGHT_H+40.0, SCR_WIDTH_H+10*8+12, SCR_HEIGHT_H+56.0))
 }
 
 func (ts *TitleScreen) Leave() {
@@ -54,8 +55,8 @@ func (ts *TitleScreen) Update(deltaTime float64) {
 		}
 	}
 
-	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-		ChangeAppState(NewGame(0))
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+		ChangeAppState(NewCutsceneState(0))
 	}
 }
 

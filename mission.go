@@ -13,41 +13,40 @@ var missions []Mission
 
 func init() {
 	missions = []Mission{
-		Mission{
+		Mission{ //Tutorial
 			loveQuota:  5,
 			maxKnights: 2,
-			maxBlarghs: 0,
-			maxGopniks: 0,
-			maxBarrels: 0,
-			mapWidth:   32,
-			mapHeight:  32,
+			mapWidth:   32, mapHeight: 32,
 		},
-		Mission{
+		Mission{ //1
 			loveQuota:  50,
-			maxKnights: 5,
-			maxBlarghs: 5,
-			maxGopniks: 0,
-			maxBarrels: 3,
-			mapWidth:   32,
-			mapHeight:  32,
+			maxKnights: 5, maxBlarghs: 5, maxBarrels: 3,
+			mapWidth: 32, mapHeight: 32,
 		},
-		Mission{
+		Mission{ //2
 			loveQuota:  100,
-			maxKnights: 15,
-			maxBlarghs: 10,
-			maxGopniks: 3,
-			maxBarrels: 5,
-			mapWidth:   64,
-			mapHeight:  64,
+			maxKnights: 15, maxBlarghs: 10, maxGopniks: 3, maxBarrels: 5,
+			mapWidth: 64, mapHeight: 64,
 		},
-		Mission{
+		Mission{ //3
 			loveQuota:  100,
-			maxKnights: 15,
-			maxBlarghs: 15,
-			maxGopniks: 7,
-			maxBarrels: 10,
-			mapWidth:   64,
-			mapHeight:  64,
+			maxKnights: 15, maxBlarghs: 15, maxGopniks: 7, maxBarrels: 10,
+			mapWidth: 48, mapHeight: 48,
+		},
+		Mission{ //4
+			loveQuota:  150,
+			maxKnights: 20, maxBlarghs: 20, maxGopniks: 20, maxBarrels: 15,
+			mapWidth: 64, mapHeight: 64,
+		},
+		Mission{ //5
+			loveQuota:  150,
+			maxKnights: 30, maxBlarghs: 30, maxGopniks: 25, maxBarrels: 25,
+			mapWidth: 72, mapHeight: 72,
+		},
+		Mission{ //6
+			loveQuota:  200,
+			maxKnights: 35, maxBlarghs: 35, maxGopniks: 25, maxBarrels: 30,
+			mapWidth: 48, mapHeight: 72,
 		},
 	}
 }

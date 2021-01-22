@@ -14,6 +14,7 @@ const (
 	FACE_SCAR_TALK
 	FACE_EMPTY
 	FACE_EMPTY_TALK
+	FACE_EMPTY_SAD
 	FACE_MELTED
 	FACE_NONE
 )
@@ -21,7 +22,8 @@ const (
 type BodyType int
 
 const (
-	BODY_CAT BodyType = iota
+	BODY_NONE BodyType = iota
+	BODY_CAT
 	BODY_HUMAN
 	BODY_ANGEL
 	BODY_ANGEL2
@@ -34,8 +36,14 @@ const (
 func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 	const (
 		FACE_OFS_X = -24.0
-		FACE_OFS_Y = -32.0
 	)
+
+	var FACE_OFS_Y float64
+	if bt == BODY_CAT {
+		FACE_OFS_Y = 0.0
+	} else {
+		FACE_OFS_Y = -32.0
+	}
 
 	sprites := make([]*Sprite, 0, 8)
 
@@ -122,6 +130,8 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 			faceRect = image.Rect(208, 160, 256, 192)
 		case FACE_EMPTY_TALK:
 			faceRect = image.Rect(208, 192, 256, 224)
+		case FACE_EMPTY_SAD:
+			faceRect = image.Rect(80, 80, 128, 112)
 		case FACE_MELTED:
 			faceRect = image.Rect(208, 224, 256, 256)
 		}

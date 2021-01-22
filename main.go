@@ -2,21 +2,20 @@ package main
 
 /*
 TODO:
--Title Screen
 -Mission 0: Show basics of game
 -Cutscenes
 -Level background strobing
+-Polish ascention
+-Spawn player in center of screen
+-Return/disable continuous level wrapping
 -Worm
 -Music
+-Tail animation
 -Store assets as embedded zip file...?
 -Fix jitter at beginning
 -Preload level chimes
 -Fix cats getting stuck in walls...?
 */
-
-//I want you to make me...real
-//What a dark world you live in...Surely I can make things better.
-//The voices tell me that I'm here to bring a great misfortune to the world. I can't believe that. Can you?
 
 import (
 	"bytes"

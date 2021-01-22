@@ -274,7 +274,7 @@ func (g *Game) Update(deltaTime float64) {
 				g.fadeStage = 0
 				//If the level is ending, start a new game
 				if g.fade == FM_FADE_OUT {
-					ChangeAppState(NewGame(g.missionNumber + 1))
+					ChangeAppState(NewCutsceneState(g.missionNumber + 1))
 					return
 				} else {
 					runtime.GC() //Get rid of all that level generation memory
