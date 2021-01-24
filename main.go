@@ -3,19 +3,20 @@ package main
 /*
 TODO:
 -Mission 0: Show basics of game
--Cutscenes
 -Level background strobing
 -Polish ascention
+-Polish cat spawning
 -Spawn player in center of screen
+-Fix cats/enemies getting stuck in walls...?
+-Spawn enemies away from edges
 -Different voice sounds
 -Return/disable continuous level wrapping
 -Worm
 -Music
--Tail animation
+-Tail animation?
 -Store assets as embedded zip file...?
 -Fix jitter at beginning
 -Preload level chimes
--Fix cats getting stuck in walls...?
 */
 
 import (

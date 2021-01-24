@@ -12,10 +12,11 @@ const (
 
 type Player struct {
 	*Actor
-	hurt, ascended bool
-	shootTimer     float64
-	hurtTimer      float64
-	lastShootDir   *Vec2f
+	hurt, ascended   bool
+	shootTimer       float64
+	hurtTimer        float64
+	lastShootDir     *Vec2f
+	moveAmt, shotAmt int
 }
 
 var plSpriteNormal *Sprite
@@ -79,6 +80,7 @@ func (player *Player) Update(game *Game, obj *Object) {
 				player.shootTimer = PL_SHOOT_FREQ
 			}
 			PlaySound("player_shot")
+			player.shotAmt++
 		}
 	} else {
 		player.shootTimer -= game.deltaTime
@@ -124,6 +126,10 @@ func (player *Player) Update(game *Game, obj *Object) {
 		dx = 1.0
 	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
 		dx = -1.0
+	}
+
+	if dx != 0.0 || dy != 0.0 {
+		player.moveAmt++
 	}
 
 	player.Actor.Move(dx, dy)
