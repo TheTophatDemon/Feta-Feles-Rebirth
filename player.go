@@ -81,6 +81,9 @@ func (player *Player) Update(game *Game, obj *Object) {
 			}
 			PlaySound("player_shot")
 			player.shotAmt++
+			if player.shotAmt == 3 {
+				Emit_Signal(SIGNAL_PLAYER_SHOT, obj, nil)
+			}
 		}
 	} else {
 		player.shootTimer -= game.deltaTime
@@ -130,17 +133,27 @@ func (player *Player) Update(game *Game, obj *Object) {
 
 	if dx != 0.0 || dy != 0.0 {
 		player.moveAmt++
+		if player.moveAmt == 100 {
+			Emit_Signal(SIGNAL_PLAYER_MOVED, obj, nil)
+		}
 	}
 
 	player.Actor.Move(dx, dy)
 	player.Actor.Update(game, obj)
 }
 
+/*func (player *Player) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
+
+}*/
+
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
 	switch {
 	case other.HasColType(CT_ITEM):
 		ascend := game.IncLoveCounter(1)
 		if ascend {
+			if !player.ascended {
+				Emit_Signal(SIGNAL_PLAYER_ASCEND, obj, nil)
+			}
 			player.ascended = true
 		}
 	case other.HasColType(CT_ENEMY | CT_ENEMYSHOT | CT_EXPLOSION):

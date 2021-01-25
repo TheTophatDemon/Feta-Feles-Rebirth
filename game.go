@@ -103,6 +103,12 @@ func NewGame(mission int) *Game {
 
 	PlaySound("intro_chime")
 
+	if mission == 0 {
+		Listen_Signal(SIGNAL_PLAYER_MOVED, game)
+		Listen_Signal(SIGNAL_PLAYER_SHOT, game)
+	}
+	Listen_Signal(SIGNAL_PLAYER_ASCEND, game)
+
 	return game
 }
 
@@ -359,6 +365,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
+	if g.missionNumber == 0 {
+		switch kind {
+		case SIGNAL_PLAYER_MOVED:
+
+		case SIGNAL_PLAYER_SHOT:
+		}
+	}
+	switch kind {
+	case SIGNAL_PLAYER_ASCEND:
+		AddCat(g)
+	}
+}
+
 //Adds the object to the game, sorted by its draw priority, and returns the object
 func (g *Game) AddObject(newObj *Object) *Object {
 	//Update relevant mission counters
@@ -395,14 +415,6 @@ func (g *Game) IncLoveCounter(amt int) bool {
 	g.love += amt
 	if g.love >= g.mission.loveQuota {
 		g.love = g.mission.loveQuota
-		if g.hud.winTextTimer <= 0.0 {
-			if (g.playerObj.components[0].(*Player)).ascended == false {
-				//Quota has been met. Trigger the endgame sequence
-				g.hud.winTextTimer = 8.0
-				g.hud.winText.fillPos = 0
-				AddCat(g)
-			}
-		}
 		return true
 	}
 	return false

@@ -7,7 +7,7 @@ type Signal int
 const (
 	SIGNAL_PLAYER_MOVED  Signal = iota //Fires once after the player has moved around a bit. For the tutorial mission.
 	SIGNAL_PLAYER_SHOT                 //Fires once after the player has shot a few times. For the tutorial mission.
-	SIGNAL_PLAYER_ASCEND               //Fires to indicate when the player should ascend
+	SIGNAL_PLAYER_ASCEND               //Fires to indicate when the player ascends
 )
 
 type Observer interface {
