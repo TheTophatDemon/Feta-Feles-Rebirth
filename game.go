@@ -36,9 +36,9 @@ type Game struct {
 type GameHUD struct {
 	loveBarBorder UIBox
 	loveBar       *Sprite
-	winText       *Text
-	winBox        UIBox
-	winTextTimer  float64
+	msgText       *Text
+	msgBox        UIBox
+	msgTimer      float64
 	mapBorder     UIBox
 }
 
@@ -66,8 +66,7 @@ func NewGame(mission int) *Game {
 		hud: GameHUD{
 			loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
-			winText:       GenerateText("  EXCELLENT. NOW...     GO GET THE CAT!", image.Rect(SCR_WIDTH_H-84, SCR_HEIGHT_H-56, SCR_WIDTH_H+84, SCR_HEIGHT_H-36)),
-			winBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
+			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
 			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
 		},
 		mission:       missions[mission],
@@ -108,6 +107,7 @@ func NewGame(mission int) *Game {
 		Listen_Signal(SIGNAL_PLAYER_SHOT, game)
 	}
 	Listen_Signal(SIGNAL_PLAYER_ASCEND, game)
+	Listen_Signal(SIGNAL_CAT_RULE, game)
 
 	return game
 }
@@ -294,9 +294,9 @@ func (g *Game) Update(deltaTime float64) {
 	g.CenterCameraOn(g.playerObj)
 
 	//Animate UI
-	if g.hud.winTextTimer > 0.0 {
-		g.hud.winText.Update(g.deltaTime)
-		g.hud.winTextTimer -= g.deltaTime
+	if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
+		g.hud.msgText.Update(g.deltaTime)
+		g.hud.msgTimer -= g.deltaTime
 	}
 
 	//Update UI with love amount
@@ -332,9 +332,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.hud.loveBarBorder.Draw(screen, nil)
 	g.hud.loveBar.Draw(screen, nil)
-	if g.hud.winTextTimer > 0.0 {
-		g.hud.winBox.Draw(screen, nil)
-		g.hud.winText.Draw(screen)
+	if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
+		g.hud.msgBox.Draw(screen, nil)
+		g.hud.msgText.Draw(screen)
 	}
 
 	for _, spot := range __debugSpots {
@@ -365,6 +365,13 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+func (g *Game) DisplayMessage(msg string, time float64) {
+	g.hud.msgTimer = time
+	pr := g.hud.msgBox.rect
+	g.hud.msgText = GenerateText(msg, image.Rect(pr.Min.X+8, pr.Min.Y+8, pr.Max.X-8, pr.Max.Y-8))
+	g.hud.msgText.fillPos = 0
+}
+
 func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
 	if g.missionNumber == 0 {
 		switch kind {
@@ -376,6 +383,8 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	switch kind {
 	case SIGNAL_PLAYER_ASCEND:
 		AddCat(g)
+	case SIGNAL_CAT_RULE:
+		g.DisplayMessage("YOU MUST ASCEND TO  KILL THE CAT", 4.0)
 	}
 }
 

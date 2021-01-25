@@ -56,8 +56,8 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 		pMov := cat.movement.Clone()
 		hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
 		if hit {
-			normal.Lerp(RandomDirection(), 0.25).Normalize()
-			cat.Move(normal.x, normal.y)
+			reflect := cat.velocity.Clone().Add(normal.Clone().Scale(2.0)).Normalize()
+			cat.Move(reflect.x, reflect.y)
 		}
 
 		cat.meowTimer += game.deltaTime
@@ -78,10 +78,17 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 	cat.Mob.Update(game, obj)
 }
 
+var __dudShots int
+
 func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 	//Make the cat immune to non-bouncy shots by skipping the mob's default behavior
 	if other.HasColType(CT_BOUNCYSHOT) || !other.HasColType(CT_PLAYERSHOT) {
 		cat.Mob.OnCollision(game, obj, other)
+	} else if other.HasColType(CT_PLAYERSHOT) {
+		__dudShots++
+		if __dudShots%16 == 0 {
+			Emit_Signal(SIGNAL_CAT_RULE, obj, nil)
+		}
 	}
 
 	//Death
