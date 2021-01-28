@@ -81,5 +81,5 @@ func (g *Game) PlaySoundAttenuated(name string, x, y, factor float64) {
 	point := &Vec2f{x, y}
 	closestCamPoint := VecMin(g.camMax, VecMax(g.camMin, point))
 	dist := closestCamPoint.Clone().Sub(point).Length()
-	PlaySoundVolume(name, math.Max(0.0, 0.5-(dist/factor)))
+	PlaySoundVolume(name, math.Max(0.0, math.Max(0.0, math.Min(1.0, 0.5-(dist/factor)))))
 }

@@ -135,6 +135,14 @@ func (g *Game) Update(deltaTime float64) {
 			catObj.pos.x = g.playerObj.pos.x
 			catObj.pos.y = g.playerObj.pos.y
 		}
+		if strings.Contains(cheatText, "tdnyaaaah") {
+			cheatText = ""
+			for i := 0; i < 32; i++ {
+				_, catObj := AddCat(g)
+				catObj.pos.x = g.playerObj.pos.x
+				catObj.pos.y = g.playerObj.pos.y
+			}
+		}
 		if strings.Contains(cheatText, "tdsanic") {
 			cheatText = ""
 			ply := g.playerObj.components[0].(*Player)
@@ -241,8 +249,6 @@ func (g *Game) Update(deltaTime float64) {
 					g.mission.barrelCount--
 				}
 			}
-			//Wrap objects around the map if they exit its boundaries
-			obj.pos.x, obj.pos.y = g.level.WrapPixelCoords(obj.pos.x, obj.pos.y)
 		}
 		//Resolve inter-object collisions
 		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
@@ -307,7 +313,9 @@ func (g *Game) Update(deltaTime float64) {
 }
 
 func (g *Game) CenterCameraOn(obj *Object) {
-	g.camPos = VecMax(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}, VecMin(&Vec2f{g.level.pixelWidth - SCR_WIDTH_H, g.level.pixelHeight - SCR_HEIGHT_H}, obj.pos))
+	topLeft := &Vec2f{SCR_WIDTH_H + 16.0, SCR_HEIGHT_H + 16.0} //Camera will not scroll to reveal the tiles on the level border
+	bottomRight := &Vec2f{g.level.pixelWidth - SCR_WIDTH_H - 16.0, g.level.pixelHeight - SCR_HEIGHT_H - 16.0}
+	g.camPos = VecMax(topLeft, VecMin(bottomRight, obj.pos))
 	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
 	g.camMin = g.camPos.Clone().Sub(hscr)
 	g.camMax = g.camPos.Clone().Add(hscr)

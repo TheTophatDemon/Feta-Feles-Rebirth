@@ -59,7 +59,8 @@ func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
 		diff := obj.pos.Clone().Sub(other.pos)
 		diffL := diff.Length()
 		if diffL != 0.0 {
-			mb.velocity.Add(diff.Scale((obj.radius + other.radius - diffL) / diffL / game.deltaTime))
+			diff.Normalize()
+			mb.velocity.Add(diff.Scale(obj.radius + other.radius/game.deltaTime))
 		}
 	}
 }

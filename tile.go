@@ -114,9 +114,9 @@ func init() {
 	}
 	//45 & 225 are backwards
 	slopeNormals = map[TileType]*Vec2f{
-		TT_SLOPE_45:  &Vec2f{-math.Cos(3.0 * math.Pi / 4.0), -math.Sin(3.0 * math.Pi / 4.0)},
-		TT_SLOPE_135: &Vec2f{math.Cos(5.0 * math.Pi / 4.0), math.Sin(5.0 * math.Pi / 4.0)},
-		TT_SLOPE_225: &Vec2f{-math.Cos(7.0 * math.Pi / 4.0), -math.Sin(7.0 * math.Pi / 4.0)},
-		TT_SLOPE_315: &Vec2f{math.Cos(9.0 * math.Pi / 4.0), math.Sin(9.0 * math.Pi / 4.0)},
+		TT_SLOPE_45:  {-math.Cos(3.0 * math.Pi / 4.0), -math.Sin(3.0 * math.Pi / 4.0)},
+		TT_SLOPE_135: {math.Cos(5.0 * math.Pi / 4.0), math.Sin(5.0 * math.Pi / 4.0)},
+		TT_SLOPE_225: {-math.Cos(7.0 * math.Pi / 4.0), -math.Sin(7.0 * math.Pi / 4.0)},
+		TT_SLOPE_315: {math.Cos(9.0 * math.Pi / 4.0), math.Sin(9.0 * math.Pi / 4.0)},
 	}
 }

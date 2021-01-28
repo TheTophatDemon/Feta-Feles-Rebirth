@@ -19,7 +19,8 @@ func init() {
 func AddBarrel(game *Game, x, y float64) *Object {
 	return game.AddObject(&Object{
 		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_BARREL,
-		sprites: []*Sprite{sprBarrel},
+		sprites:      []*Sprite{sprBarrel},
+		drawPriority: -1,
 		components: []Component{&Barrel{
 			health: 40,
 		}},

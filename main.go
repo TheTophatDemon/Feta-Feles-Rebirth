@@ -2,11 +2,11 @@ package main
 
 /*
 TODO:
--Fix cat spawning and movement
+-Polish cat spawning and movement
 -Mission 0: Show basics of game
 -Level background strobing
 -Polish ascention
-
+-Teleporters?
 -Spawn player in center of screen
 -Fix cats/enemies getting stuck in walls...?
 -Spawn enemies away from edges

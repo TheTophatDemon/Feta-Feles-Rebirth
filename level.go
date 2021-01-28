@@ -292,14 +292,14 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 	}
 }
 
-//Pos is the position. I and J are the tile indices.
+//If t is nil, then position is projected onto level boundaries
 func (level *Level) ProjectPosOntoTile(pos *Vec2f, t *Tile) *Vec2f {
 	tileMin := &Vec2f{x: t.left, y: t.top}
 	tileMax := &Vec2f{x: t.right, y: t.bottom}
 
 	//Project onto a box by clamping the destination to the box boundaries
 	proj := VecMax(tileMin, VecMin(tileMax, pos))
-	if t.IsSlope() {
+	if t != nil && t.IsSlope() {
 		//Project onto a diagonal plane using the dot product if positing is coming from the right direction
 		cDiff := pos.Clone().Sub(&Vec2f{x: t.centerX, y: t.centerY})
 		planeDist := VecDot(t.GetSlopeNormal(), cDiff)
@@ -321,7 +321,7 @@ func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64, c
 	if clamp {
 		gridMax = VecMin(&Vec2f{x: float64(level.cols), y: float64(level.rows)}, gridMax)
 	}
-	return
+	return gridMin, gridMax
 }
 
 func (level *Level) GetTilesWithinRadius(pos *Vec2f, radius float64) []*Tile {
@@ -343,24 +343,12 @@ func (level *Level) GetTilesWithinRadius(pos *Vec2f, radius float64) []*Tile {
 
 //Determines if sphere intersects a solid tile. If so, the normal is returned.
 func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, *Tile) {
-	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius, false)
-
+	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius, true)
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {
 			t := level.GetTile(i, j, true)
 			if t.IsSolid() {
 				diff := pos.Clone().Sub(level.ProjectPosOntoTile(pos, t))
-				//Consider coordinates from other side of map if need be
-				if i < 0 {
-					diff.x += level.pixelWidth
-				} else if i >= level.cols {
-					diff.x -= level.pixelWidth
-				}
-				if j < 0 {
-					diff.y += level.pixelHeight
-				} else if j >= level.rows {
-					diff.y -= level.pixelHeight
-				}
 				dLen := diff.Length()
 				if dLen < radius {
 					if dLen != 0.0 {

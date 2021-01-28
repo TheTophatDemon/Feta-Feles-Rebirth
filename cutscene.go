@@ -20,7 +20,7 @@ var cutscenes []Cutscene
 
 func init() {
 	cutscenes = []Cutscene{
-		Cutscene{
+		{
 			bodyType: BODY_NONE,
 			faces:    []FaceType{FACE_NONE},
 			dialog: []string{ //26 chars per line
@@ -32,7 +32,7 @@ func init() {
 			},
 			music: "mystery",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_CAT,
 			faces:    []FaceType{FACE_TALK, FACE_SMILE, FACE_TALK, FACE_SMILE, FACE_WINK, FACE_TALK},
 			dialog: []string{
@@ -45,7 +45,7 @@ func init() {
 			},
 			music: "mystery",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_HUMAN,
 			faces:    []FaceType{FACE_TALK, FACE_WINK, FACE_SMILE, FACE_SMILE, FACE_TALK},
 			dialog: []string{
@@ -57,7 +57,7 @@ func init() {
 			},
 			music: "maiden",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_ANGEL2,
 			faces:    []FaceType{FACE_SCAR_TALK, FACE_SCAR, FACE_SCAR, FACE_SCAR_TALK, FACE_SCAR},
 			dialog: []string{
@@ -69,7 +69,7 @@ func init() {
 			},
 			music: "maiden",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_CORRUPTED,
 			faces:    []FaceType{FACE_EMPTY_TALK, FACE_EMPTY, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY, FACE_EMPTY, FACE_EMPTY_TALK},
 			dialog: []string{
@@ -84,7 +84,7 @@ func init() {
 			},
 			music: "malform",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_MELTED,
 			faces:    []FaceType{FACE_MELTED},
 			dialog: []string{
@@ -99,7 +99,7 @@ func init() {
 			},
 			music: "malform",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_HORROR,
 			faces:    []FaceType{FACE_NONE},
 			dialog: []string{
@@ -110,7 +110,7 @@ func init() {
 			},
 			music: "monster",
 		},
-		Cutscene{
+		{
 			bodyType: BODY_NONE,
 			faces:    []FaceType{FACE_NONE},
 			dialog: []string{

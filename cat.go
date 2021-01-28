@@ -2,7 +2,6 @@ package main
 
 import (
 	"image"
-	"math"
 	"math/rand"
 )
 
@@ -11,23 +10,26 @@ type Cat struct {
 	meowTimer float64
 }
 
-var sprCatRun []*Sprite
+var sprCatRunLeft []*Sprite
+var sprCatRunRight []*Sprite
 var sprCatDie []*Sprite
 
 func init() {
-	sprCatRun = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(0, 16, 16, 32), image.Rect(16, 16, 32, 32))
+	sprCatRunLeft = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(0, 16, 16, 32), image.Rect(16, 16, 32, 32))
+	sprCatRunRight = CloneSprites(sprCatRunLeft)
+	for _, spr := range sprCatRunRight {
+		spr.Flip(true, false)
+	}
 	sprCatDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 16, 48, 32), image.Rect(48, 16, 64, 32))
 }
 
 func AddCat(game *Game) (*Cat, *Object) {
-	//Cats are the only mobs that can change their sprites' directions, so they much each have a unique copy of their sprite
-	runFrames := CloneSprites(sprCatRun)
 	cat := &Cat{
 		Mob: Mob{
 			Actor:  NewActor(120.0, 100_000.0, 75_000.0),
 			health: 3,
 			currAnim: &Anim{
-				frames: runFrames,
+				frames: sprCatRunLeft,
 				speed:  0.1,
 				loop:   true,
 			},
@@ -37,26 +39,22 @@ func AddCat(game *Game) (*Cat, *Object) {
 	t := game.level.FindSpawnPoint()
 	obj := &Object{
 		pos: &Vec2f{t.centerX, t.centerY}, radius: 6.0, colType: CT_CAT,
-		sprites:    []*Sprite{runFrames[0]},
+		sprites:    []*Sprite{sprCatRunLeft[0]},
 		components: []Component{cat},
 	}
 	game.AddObject(obj)
 	d := RandomDirection()
-	if d.x > 0 {
-		for _, spr := range runFrames {
-			spr.Flip(true, false)
-		}
-	}
 	cat.Move(d.x, d.y)
 	return cat, obj
 }
 
 func (cat *Cat) Update(game *Game, obj *Object) {
 	if !cat.dead {
-		pMov := cat.movement.Clone()
 		hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
 		if hit {
-			reflect := cat.velocity.Clone().Add(normal.Clone().Scale(2.0)).Normalize()
+			reflect := normal.Clone()
+			reflect.Add((&Vec2f{normal.y, -normal.x}).Scale((rand.Float64() * 2.0) - 1.0))
+			reflect.Normalize()
 			cat.Move(reflect.x, reflect.y)
 		}
 
@@ -67,15 +65,19 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 		}
 
 		//Flip the sprites in the animation to match movement direction
-		if math.Signbit(cat.movement.x) != math.Signbit(pMov.x) {
-			for _, spr := range cat.currAnim.frames {
-				spr.Flip(true, false)
+		if cat.currAnim != nil {
+			if cat.movement.x > 0 {
+				cat.currAnim.frames = sprCatRunRight
+			} else {
+				cat.currAnim.frames = sprCatRunLeft
 			}
 		}
+	} else {
+		cat.Move(0.0, 0.0)
 	}
 
-	cat.Actor.Update(game, obj)
 	cat.Mob.Update(game, obj)
+	cat.Actor.Update(game, obj)
 }
 
 var __dudShots int
@@ -84,6 +86,12 @@ func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 	//Make the cat immune to non-bouncy shots by skipping the mob's default behavior
 	if other.HasColType(CT_BOUNCYSHOT) || !other.HasColType(CT_PLAYERSHOT) {
 		cat.Mob.OnCollision(game, obj, other)
+		if other.HasColType(CT_CAT) {
+			reflect := obj.pos.Clone().Sub(other.pos)
+			reflect.Add((&Vec2f{reflect.y, -reflect.x}).Scale((rand.Float64() * 2.0) - 1.0))
+			reflect.Normalize()
+			cat.Move(reflect.x, reflect.y)
+		}
 	} else if other.HasColType(CT_PLAYERSHOT) {
 		__dudShots++
 		if __dudShots%16 == 0 {

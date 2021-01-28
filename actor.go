@@ -48,24 +48,13 @@ func (actor *Actor) ApplyMovement(game *Game, obj *Object, vel *Vec2f) {
 	newPos := obj.pos.Clone().Add(vel)
 
 	//Iterate over portion of the level grid that roughly covers the area between the object and its destination
-	gridMin, gridMax := game.level.GetGridAreaOverCapsule(obj.pos, newPos, obj.radius, false)
+	gridMin, gridMax := game.level.GetGridAreaOverCapsule(obj.pos, newPos, obj.radius, true)
 
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {
-			t := game.level.GetTile(i, j, true)
-			if t.IsSolid() {
+			t := game.level.GetTile(i, j, false)
+			if t != nil && t.IsSolid() {
 				dest := obj.pos.Clone().Add(vel)
-				//For tiles on the other side of the map, the player's apparent position must be adjusted relative to them
-				if i < 0 {
-					dest.x += game.level.pixelWidth
-				} else if i >= game.level.cols {
-					dest.x -= game.level.pixelWidth
-				}
-				if j < 0 {
-					dest.y += game.level.pixelHeight
-				} else if j >= game.level.rows {
-					dest.y -= game.level.pixelHeight
-				}
 				proj := game.level.ProjectPosOntoTile(dest, t)
 				diff := dest.Clone().Sub(proj)
 				push := obj.radius - diff.Length()
