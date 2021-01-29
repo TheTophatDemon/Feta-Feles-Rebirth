@@ -2,6 +2,7 @@ package main
 
 import (
 	"image"
+	"math"
 	"math/rand"
 )
 
@@ -23,7 +24,7 @@ func init() {
 	sprCatDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 16, 48, 32), image.Rect(48, 16, 64, 32))
 }
 
-func AddCat(game *Game) (*Cat, *Object) {
+func AddCat(game *Game, x, y float64) (*Cat, *Object) {
 	cat := &Cat{
 		Mob: Mob{
 			Actor:  NewActor(120.0, 100_000.0, 75_000.0),
@@ -36,15 +37,22 @@ func AddCat(game *Game) (*Cat, *Object) {
 		},
 		meowTimer: rand.Float64() * 5.0,
 	}
-	t := game.level.FindSpawnPoint()
 	obj := &Object{
-		pos: &Vec2f{t.centerX, t.centerY}, radius: 6.0, colType: CT_CAT,
+		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_CAT,
 		sprites:    []*Sprite{sprCatRunLeft[0]},
 		components: []Component{cat},
 	}
 	game.AddObject(obj)
+	//Move in random direction
 	d := RandomDirection()
 	cat.Move(d.x, d.y)
+	//Spawn poofs
+	ang := rand.Float64() * math.Pi * 2.0
+	for i := 0.0; i < math.Pi*2.0; i += math.Pi / 4.0 {
+		ox := math.Cos(ang+i) * 12.0
+		oy := math.Sin(ang+i) * 12.0
+		AddPoof(game, x+ox, y+oy)
+	}
 	return cat, obj
 }
 

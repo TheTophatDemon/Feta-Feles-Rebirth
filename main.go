@@ -2,7 +2,7 @@ package main
 
 /*
 TODO:
--Polish cat spawning and movement
+-Big jitter is the cause of wall stuckings?
 -Mission 0: Show basics of game
 -Level background strobing
 -Polish ascention

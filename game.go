@@ -131,16 +131,12 @@ func (g *Game) Update(deltaTime float64) {
 		}
 		if strings.Contains(cheatText, "tdnyaah") {
 			cheatText = ""
-			_, catObj := AddCat(g)
-			catObj.pos.x = g.playerObj.pos.x
-			catObj.pos.y = g.playerObj.pos.y
+			AddCat(g, g.playerObj.pos.x, g.playerObj.pos.y)
 		}
 		if strings.Contains(cheatText, "tdnyaaaah") {
 			cheatText = ""
 			for i := 0; i < 32; i++ {
-				_, catObj := AddCat(g)
-				catObj.pos.x = g.playerObj.pos.x
-				catObj.pos.y = g.playerObj.pos.y
+				AddCat(g, g.playerObj.pos.x, g.playerObj.pos.y)
 			}
 		}
 		if strings.Contains(cheatText, "tdsanic") {
@@ -390,7 +386,8 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	}
 	switch kind {
 	case SIGNAL_PLAYER_ASCEND:
-		AddCat(g)
+		spawn := g.level.FindOffscreenSpawnPoint(g)
+		AddCat(g, spawn.centerX, spawn.centerY)
 	case SIGNAL_CAT_RULE:
 		g.DisplayMessage("YOU MUST ASCEND TO  KILL THE CAT", 4.0)
 	}
