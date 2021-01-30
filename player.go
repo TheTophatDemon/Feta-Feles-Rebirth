@@ -81,7 +81,7 @@ func (player *Player) Update(game *Game, obj *Object) {
 			}
 			PlaySound("player_shot")
 			player.shotAmt++
-			if player.shotAmt == 3 {
+			if player.shotAmt == 8 {
 				Emit_Signal(SIGNAL_PLAYER_SHOT, obj, nil)
 			}
 		}

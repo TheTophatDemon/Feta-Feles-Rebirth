@@ -108,6 +108,7 @@ func NewGame(mission int) *Game {
 	}
 	Listen_Signal(SIGNAL_PLAYER_ASCEND, game)
 	Listen_Signal(SIGNAL_CAT_RULE, game)
+	Listen_Signal(SIGNAL_GAME_START, game)
 
 	return game
 }
@@ -286,6 +287,7 @@ func (g *Game) Update(deltaTime float64) {
 					return
 				} else {
 					runtime.GC() //Get rid of all that level generation memory
+					Emit_Signal(SIGNAL_GAME_START, g, nil)
 				}
 				g.fade = FM_NO_FADE
 			}
@@ -380,16 +382,22 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	if g.missionNumber == 0 {
 		switch kind {
 		case SIGNAL_PLAYER_MOVED:
-
+			g.DisplayMessage("HOLDING CLICK OR    SPACE WILL SHOOT", 3.0)
 		case SIGNAL_PLAYER_SHOT:
+			g.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION", 3.0)
+		case SIGNAL_GAME_START:
+			g.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS", 4.0)
 		}
 	}
 	switch kind {
 	case SIGNAL_PLAYER_ASCEND:
 		spawn := g.level.FindOffscreenSpawnPoint(g)
 		AddCat(g, spawn.centerX, spawn.centerY)
+		if g.missionNumber == 0 {
+			g.DisplayMessage("  EXCELLENT. NOW...     GO GET THE CAT!", 4.0)
+		}
 	case SIGNAL_CAT_RULE:
-		g.DisplayMessage("YOU MUST ASCEND TO  KILL THE CAT", 4.0)
+		g.DisplayMessage("YOU MUST ASCEND TO  SLAY THE CAT", 4.0)
 	}
 }
 

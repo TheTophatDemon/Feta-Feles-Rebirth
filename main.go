@@ -2,22 +2,19 @@ package main
 
 /*
 TODO:
--Big jitter is the cause of wall stuckings?
 -Mission 0: Show basics of game
+-Make level bounds better
 -Level background strobing
 -Polish ascention
 -Teleporters?
 -Spawn player in center of screen
--Fix cats/enemies getting stuck in walls...?
--Spawn enemies away from edges
 -Different voice sounds
--Return/disable continuous level wrapping
 -Worm
 -Music
 -Tail animation?
+-Big jitter in debug causes mobs to get stuck
 -Store assets as embedded zip file...?
--Fix jitter at beginning
--Preload level chimes
+-Preload audio
 */
 
 import (
@@ -29,6 +26,9 @@ import (
 	"math/rand"
 
 	"time"
+
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
@@ -98,6 +98,11 @@ func GetGraphics() *ebiten.Image {
 }
 
 func main() {
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
 	rand.Seed(time.Now().UnixNano())
 
 	ebiten.SetWindowSize(640, 480)

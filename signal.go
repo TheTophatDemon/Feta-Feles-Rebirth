@@ -9,6 +9,7 @@ const (
 	SIGNAL_PLAYER_SHOT                 //Fires once after the player has shot a few times. For the tutorial mission.
 	SIGNAL_PLAYER_ASCEND               //Fires to indicate when the player ascends
 	SIGNAL_CAT_RULE                    //Fires when the player tries to shoot the cat without being ascended
+	SIGNAL_GAME_START                  //Fires at the start of the game after the intro transition
 )
 
 type Observer interface {
