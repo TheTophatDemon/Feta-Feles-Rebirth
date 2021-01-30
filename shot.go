@@ -81,7 +81,7 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 	//Wall bounce
 	hit, normal, hitTile := game.level.SphereIntersects(obj.pos.Clone().Add(shot.vel.Clone().Scale(game.deltaTime)), obj.radius)
 	if hit {
-		if hitTile.tt == TT_RUNE && obj.HasColType(CT_BOUNCYSHOT) {
+		if hitTile != nil && hitTile.tt == TT_RUNE && obj.HasColType(CT_BOUNCYSHOT) {
 			hitTile.SetType(TT_EMPTY)
 			AddExplosion(game, hitTile.centerX, hitTile.centerY)
 		}

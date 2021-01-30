@@ -78,7 +78,7 @@ func NewGame(mission int) *Game {
 	__debugSpots = make([]*DebugSpot, 0, 10)
 
 	//Spawn entities
-	playerSpawn := game.level.FindSpawnPoint()
+	playerSpawn := game.level.FindCenterSpawnPoint(game)
 	game.playerObj = AddPlayer(game, playerSpawn.centerX, playerSpawn.centerY)
 	game.CenterCameraOn(game.playerObj) //Neccessary for FindOffscreenSpawnPoint
 
@@ -312,8 +312,8 @@ func (g *Game) Update(deltaTime float64) {
 }
 
 func (g *Game) CenterCameraOn(obj *Object) {
-	topLeft := &Vec2f{SCR_WIDTH_H + 16.0, SCR_HEIGHT_H + 16.0} //Camera will not scroll to reveal the tiles on the level border
-	bottomRight := &Vec2f{g.level.pixelWidth - SCR_WIDTH_H - 16.0, g.level.pixelHeight - SCR_HEIGHT_H - 16.0}
+	topLeft := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
+	bottomRight := &Vec2f{g.level.pixelWidth - SCR_WIDTH_H, g.level.pixelHeight - SCR_HEIGHT_H}
 	g.camPos = VecMax(topLeft, VecMin(bottomRight, obj.pos))
 	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
 	g.camMin = g.camPos.Clone().Sub(hscr)

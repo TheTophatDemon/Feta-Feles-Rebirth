@@ -198,7 +198,7 @@ func GenerateLevel(w, h int) *Level {
 	level := NewLevel(w, h)
 
 	//Generate borders
-	for x := 0; x < w; x++ {
+	/*for x := 0; x < w; x++ {
 		for y := 0; y < h; y++ {
 			if x != 0 && y != 0 && x != w-1 && y != h-1 {
 				continue
@@ -206,7 +206,7 @@ func GenerateLevel(w, h int) *Level {
 				level.SetTile(x, y, TT_BLOCK, false)
 			}
 		}
-	}
+	}*/
 
 	//Generate blobs
 	for k := 0; k < w*h/32; k++ {

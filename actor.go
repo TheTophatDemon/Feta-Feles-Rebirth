@@ -67,6 +67,14 @@ func (actor *Actor) ApplyMovement(game *Game, obj *Object, vel *Vec2f) {
 		}
 	}
 
+	//Collide against level boundaries
+	if obj.pos.x+vel.x-obj.radius < 0 || obj.pos.x+vel.x+obj.radius > game.level.pixelWidth {
+		vel.x = 0.0
+	}
+	if obj.pos.y+vel.y-obj.radius < 0 || obj.pos.y+vel.y+obj.radius > game.level.pixelHeight {
+		vel.y = 0.0
+	}
+
 	obj.pos.Add(vel)
 }
 

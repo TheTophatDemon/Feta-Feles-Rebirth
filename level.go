@@ -128,6 +128,23 @@ func (level *Level) FindOffscreenSpawnPoint(game *Game) *Tile {
 	return emptyTiles[rand.Intn(len(emptyTiles))]
 }
 
+//Randomly chooses an empty tile that is somewhat near the center
+func (level *Level) FindCenterSpawnPoint(game *Game) *Tile {
+	emptyTiles := make([]*Tile, 0, 1024)
+	for _, sp := range level.spaces {
+		for _, t := range sp.tiles {
+			if t.tt == TT_EMPTY && t.centerX > SCR_WIDTH_H &&
+				t.centerY > SCR_WIDTH_H && t.centerX < level.pixelWidth-SCR_WIDTH_H && t.centerY < level.pixelHeight-SCR_HEIGHT_H {
+				emptyTiles = append(emptyTiles, t)
+			}
+		}
+	}
+	if len(emptyTiles) == 0 {
+		return nil
+	}
+	return emptyTiles[rand.Intn(len(emptyTiles))]
+}
+
 //Like FindEmptySpace except for finding places inside of the walls
 func (level *Level) FindFullSpace(r int) *Tile {
 	for {
@@ -341,8 +358,20 @@ func (level *Level) GetTilesWithinRadius(pos *Vec2f, radius float64) []*Tile {
 	return result
 }
 
-//Determines if sphere intersects a solid tile. If so, the normal is returned.
+//Determines if sphere intersects a solid tile. If so, the normal and the collided tile is returned
 func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, *Tile) {
+	//Check against level borders
+	if pos.x-radius < 0 {
+		return true, &Vec2f{1.0, 0.0}, nil
+	} else if pos.x+radius > level.pixelWidth {
+		return true, &Vec2f{-1.0, 0.0}, nil
+	}
+	if pos.y-radius < 0 {
+		return true, &Vec2f{0.0, 1.0}, nil
+	} else if pos.y+radius > level.pixelHeight {
+		return true, &Vec2f{0.0, -1.0}, nil
+	}
+
 	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius, true)
 	for j := int(gridMin.y); j < int(gridMax.y); j++ {
 		for i := int(gridMin.x); i < int(gridMax.x); i++ {

@@ -2,16 +2,13 @@ package main
 
 /*
 TODO:
--Reintroduce screen wrapping but with a buffer
 -Level background strobing
 -Secret teleporter / Powerup
--Spawn player in center of screen
 -Ending screen
 -Worm
 -Music
 -Big jitter in debug causes mobs to get stuck
 -Store assets as embedded zip file...?
--Preload audio
 */
 
 import (
@@ -23,9 +20,6 @@ import (
 	"math/rand"
 
 	"time"
-
-	"net/http"
-	_ "net/http/pprof"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
@@ -95,11 +89,6 @@ func GetGraphics() *ebiten.Image {
 }
 
 func main() {
-
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
-
 	rand.Seed(time.Now().UnixNano())
 
 	ebiten.SetWindowSize(640, 480)
