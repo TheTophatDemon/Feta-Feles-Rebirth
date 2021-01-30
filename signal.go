@@ -47,7 +47,7 @@ func Emit_Signal(kind Signal, src interface{}, params map[string]interface{}) {
 	if !ok {
 		return
 	}
-	//Make empty map if passeed nil
+	//Make empty map if passed nil
 	if params == nil {
 		params = make(map[string]interface{})
 	}
