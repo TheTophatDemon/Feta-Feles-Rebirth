@@ -66,7 +66,7 @@ func NewGame(mission int) *Game {
 		hud: GameHUD{
 			loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
-			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT_H-64, SCR_WIDTH_H+88, SCR_HEIGHT_H-32)),
+			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-16)),
 			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
 		},
 		mission:       missions[mission],
@@ -167,6 +167,7 @@ func (g *Game) Update(deltaTime float64) {
 			g.love = g.mission.loveQuota
 			ply := g.playerObj.components[0].(*Player)
 			ply.ascended = true
+			Emit_Signal(SIGNAL_PLAYER_ASCEND, g.playerObj, nil)
 		}
 		if strings.Contains(cheatText, "tdgottam") {
 			cheatText = ""
@@ -382,9 +383,9 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	if g.missionNumber == 0 {
 		switch kind {
 		case SIGNAL_PLAYER_MOVED:
-			g.DisplayMessage("HOLDING CLICK OR    SPACE WILL SHOOT", 3.0)
+			g.DisplayMessage("HOLDING CLICK OR    SPACE WILL SHOOT", 5.0)
 		case SIGNAL_PLAYER_SHOT:
-			g.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION", 3.0)
+			g.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION", 5.0)
 		case SIGNAL_GAME_START:
 			g.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS", 4.0)
 		}
@@ -393,6 +394,8 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	case SIGNAL_PLAYER_ASCEND:
 		spawn := g.level.FindOffscreenSpawnPoint(g)
 		AddCat(g, spawn.centerX, spawn.centerY)
+		AddStarBurst(g, g.playerObj.pos.x, g.playerObj.pos.y)
+		PlaySound("ascend")
 		if g.missionNumber == 0 {
 			g.DisplayMessage("  EXCELLENT. NOW...     GO GET THE CAT!", 4.0)
 		}

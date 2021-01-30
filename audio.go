@@ -31,6 +31,8 @@ func init() {
 		"explode":     assets.WAV_EXPLODE,
 		"cat_die":     assets.WAV_CAT_DIE,
 		"cat_meow":    assets.WAV_CAT_MEOW,
+		"evil_voice":  assets.WAV_EVIL_VOICE,
+		"ascend":      assets.WAV_ASCEND,
 	}
 }
 

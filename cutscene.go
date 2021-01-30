@@ -14,6 +14,7 @@ type Cutscene struct {
 	faces    []FaceType
 	dialog   []string
 	music    string
+	voice    string
 }
 
 var cutscenes []Cutscene
@@ -31,6 +32,7 @@ func init() {
 				"LET ME TELL YOU HOW.",
 			},
 			music: "mystery",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_CAT,
@@ -44,6 +46,7 @@ func init() {
 				"BUT FIRST WE HAVE TO GROW STRONGER.",
 			},
 			music: "mystery",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_HUMAN,
@@ -56,6 +59,7 @@ func init() {
 				"LET'S CLIMB EVEN HIGHER!",
 			},
 			music: "maiden",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_ANGEL2,
@@ -68,6 +72,7 @@ func init() {
 				"DON'T WORRY. THIS IS ALL A NATURAL PART OF THE      PROCESS.",
 			},
 			music: "maiden",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_CORRUPTED,
@@ -83,6 +88,7 @@ func init() {
 				"KEEP GOING!",
 			},
 			music: "malform",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_MELTED,
@@ -98,6 +104,7 @@ func init() {
 				"...YOU'RE DOING F..FINE...",
 			},
 			music: "malform",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_HORROR,
@@ -109,6 +116,7 @@ func init() {
 				"...HE'S...C...COMING...!!",
 			},
 			music: "monster",
+			voice: "voice",
 		},
 		{
 			bodyType: BODY_NONE,
@@ -124,6 +132,7 @@ func init() {
 				"IT IS YOUR FATE TO BE     DESTROYED. EMBRACE IT!    BASK IN THE GLORY.",
 			},
 			music: "monster",
+			voice: "evil_voice",
 		},
 	}
 }
@@ -156,6 +165,7 @@ func NewCutsceneState(sceneNum int) *CutsceneState {
 	for i, s := range ctscn.cutscene.dialog {
 		ctscn.dialog[i] = GenerateText(s, image.Rect(56, 184, 264, 208))
 		ctscn.dialog[i].fillPos = 0
+		ctscn.dialog[i].fillSound = ctscn.cutscene.voice
 	}
 	ctscn.dialogBox = CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(48, 176, 272, 216))
 	ctscn.dialogIndex = 0
@@ -173,7 +183,7 @@ const CUTSCENE_FADE_SPEED = 1.0
 
 func (ct *CutsceneState) Update(deltaTime float64) {
 	if ct.transition == FM_NO_FADE {
-		//Dialog advancement
+		//Dialog advancements
 		dlg := ct.dialog[ct.dialogIndex]
 		dlg.Update(deltaTime)
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {

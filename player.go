@@ -142,10 +142,6 @@ func (player *Player) Update(game *Game, obj *Object) {
 	player.Actor.Update(game, obj)
 }
 
-/*func (player *Player) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
-
-}*/
-
 func (player *Player) OnCollision(game *Game, obj, other *Object) {
 	switch {
 	case other.HasColType(CT_ITEM):

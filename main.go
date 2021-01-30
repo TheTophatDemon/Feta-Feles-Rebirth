@@ -2,16 +2,13 @@ package main
 
 /*
 TODO:
--Mission 0: Show basics of game
--Make level bounds better
+-Reintroduce screen wrapping but with a buffer
 -Level background strobing
--Polish ascention
--Teleporters?
+-Secret teleporter / Powerup
 -Spawn player in center of screen
--Different voice sounds
+-Ending screen
 -Worm
 -Music
--Tail animation?
 -Big jitter in debug causes mobs to get stuck
 -Store assets as embedded zip file...?
 -Preload audio

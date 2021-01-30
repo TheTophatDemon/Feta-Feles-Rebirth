@@ -157,6 +157,7 @@ type Text struct {
 	fillPos   int //The character before which to stop rendering. Used for 'typing in' effect
 	fillTimer float64
 	fillSpeed float64
+	fillSound string
 }
 
 func GenerateText(text string, dest image.Rectangle) *Text {
@@ -179,6 +180,7 @@ func GenerateText(text string, dest image.Rectangle) *Text {
 		fillPos:   len(text),
 		fillTimer: 0.0,
 		fillSpeed: 0.05,
+		fillSound: "voice",
 	}
 }
 
@@ -187,7 +189,9 @@ func (text *Text) Update(deltaTime float64) {
 	if text.fillTimer > text.fillSpeed {
 		text.fillTimer = 0.0
 		if text.fillPos < len(text.text) {
-			PlaySound("voice")
+			if text.text[text.fillPos] > 'A' && text.text[text.fillPos] < 'z' {
+				PlaySound(text.fillSound)
+			}
 			text.fillPos++
 		}
 	}

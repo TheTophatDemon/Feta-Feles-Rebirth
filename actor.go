@@ -28,6 +28,7 @@ func NewActor(maxSpeed, acceleration, friction float64) *Actor {
 func (actor *Actor) Update(game *Game, obj *Object) {
 	//Accelerate in direction of desired movement
 	actor.velocity.Add(actor.movement.Clone().Scale(game.deltaTime * game.deltaTime * actor.acceleration))
+	//Should actually only be multiplying by game.deltaTime once. It's too late to go back and tweak all the accelerations, though.
 
 	//Cap out at maximum speed
 	speed := actor.velocity.Length()

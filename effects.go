@@ -2,13 +2,24 @@ package main
 
 import (
 	"image"
+	"math"
+	"math/rand"
 )
 
 type Effect struct {
-	anim Anim
+	anim         Anim
+	velocity     *Vec2f
+	acceleration *Vec2f
 }
 
 func (fx *Effect) Update(game *Game, obj *Object) {
+	if fx.acceleration != nil {
+		fx.velocity.Add(fx.acceleration.Clone().Scale(game.deltaTime))
+	}
+	if fx.velocity != nil {
+		obj.pos.Add(fx.velocity.Clone().Scale(game.deltaTime))
+	}
+
 	fx.anim.Update(game.deltaTime)
 	obj.sprites[0] = fx.anim.GetSprite()
 }
@@ -91,4 +102,38 @@ func AddPoof(game *Game, x, y float64) *Object {
 	obj.components = []Component{effect}
 	game.AddObject(obj)
 	return obj
+}
+
+var sprStars []*Sprite
+
+func init() {
+	sprStars = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(80, 48, 88, 56), image.Rect(80, 56, 88, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 48, 96, 56))
+}
+
+func AddStarBurst(game *Game, x, y float64) {
+	angle := rand.Float64() * math.Pi * 2.0
+	for a := 0.0; a < math.Pi*2.0; a += (rand.Float64() * math.Pi / 4.0) + math.Pi/8.0 {
+		obj := &Object{
+			pos:          &Vec2f{x, y},
+			radius:       0.0,
+			colType:      CT_NONE,
+			sprites:      []*Sprite{sprStars[0]},
+			drawPriority: 25,
+		}
+		effect := new(Effect)
+		effect.anim = Anim{
+			frames: sprStars,
+			speed:  0.1,
+			callback: func(anm *Anim) {
+				if anm.finished {
+					obj.removeMe = true
+				}
+			},
+		}
+		const SPEED = 50.0
+		effect.velocity = &Vec2f{math.Cos(angle+a) * SPEED, math.Sin(angle+a) * SPEED}
+		effect.acceleration = effect.velocity.Clone().Scale(-0.5)
+		obj.components = []Component{effect}
+		game.AddObject(obj)
+	}
 }
