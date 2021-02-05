@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Add failsafe for when cat gets stuck in a wall
 -Enemies still getting stuck in eachother
 -Loud explosions bug
 -Secret teleporter / Powerup

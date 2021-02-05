@@ -8,7 +8,9 @@ import (
 
 type Cat struct {
 	Mob
-	meowTimer float64
+	meowTimer    float64
+	stuckTimer   float64
+	walkDistance float64
 }
 
 var sprCatRunLeft []*Sprite
@@ -59,11 +61,13 @@ func AddCat(game *Game, x, y float64) (*Cat, *Object) {
 func (cat *Cat) Update(game *Game, obj *Object) {
 	if !cat.dead {
 		hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
-		if hit {
-			reflect := normal.Clone()
-			reflect.Add((&Vec2f{normal.y, -normal.x}).Scale((rand.Float64() * 2.0) - 1.0))
-			reflect.Normalize()
-			cat.Move(reflect.x, reflect.y)
+		if hit && normal != nil {
+			if normal.x != 0.0 || normal.y != 0.0 {
+				reflect := normal.Clone()
+				reflect.Add((&Vec2f{normal.y, -normal.x}).Scale((rand.Float64() * 2.0) - 1.0))
+				reflect.Normalize()
+				cat.Move(reflect.x, reflect.y)
+			}
 		}
 
 		cat.meowTimer += game.deltaTime
@@ -100,8 +104,34 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 		}
 	}
 
+	walkDiff := obj.pos.Clone()
+
 	cat.Mob.Update(game, obj)
 	cat.Actor.Update(game, obj)
+
+	walkDiff.Sub(obj.pos.Clone())
+	walkDelta := walkDiff.Length()
+	cat.walkDistance += walkDelta //Keep track of how much the cat moves
+
+	//Respawns the cat when it spends 10 seconds without moving much
+	//A failsafe in case I haven't actually fixed that elusive bug
+	if walkDelta < 8.0/60.0 {
+		cat.stuckTimer += game.deltaTime
+		if cat.stuckTimer > 5.0 {
+			//Spawn poofs
+			ang := rand.Float64() * math.Pi * 2.0
+			for i := 0.0; i < math.Pi*2.0; i += math.Pi / 4.0 {
+				ox := math.Cos(ang+i) * 12.0
+				oy := math.Sin(ang+i) * 12.0
+				AddPoof(game, obj.pos.x+ox, obj.pos.y+oy)
+			}
+			obj.removeMe = true
+			spawn := game.level.FindOffscreenSpawnPoint(game)
+			AddCat(game, spawn.centerX, spawn.centerY)
+		}
+	} else {
+		cat.stuckTimer = 0.0
+	}
 }
 
 var __dudShots int
