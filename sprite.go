@@ -179,7 +179,7 @@ func GenerateText(text string, dest image.Rectangle) *Text {
 		text:      text,
 		fillPos:   len(text),
 		fillTimer: 0.0,
-		fillSpeed: 0.05,
+		fillSpeed: 0.04,
 		fillSound: "voice",
 	}
 }
