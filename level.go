@@ -117,8 +117,17 @@ func (level *Level) FindOffscreenSpawnPoint(game *Game) *Tile {
 	emptyTiles := make([]*Tile, 0, 1024)
 	for _, sp := range level.spaces {
 		for _, t := range sp.tiles {
+			//Find empty and off-screen tiles
 			if t.tt == TT_EMPTY && !game.SquareOnScreen(t.centerX, t.centerY, TILE_SIZE_H) {
+				//Skip tile if something's already there
+				for e := game.objects.Front(); e != nil; e = e.Next() {
+					obj := e.Value.(*Object)
+					if obj.pos.Clone().Sub(&Vec2f{t.centerX, t.centerY}).Length() < obj.radius*2.0 {
+						goto skip
+					}
+				}
 				emptyTiles = append(emptyTiles, t)
+			skip:
 			}
 		}
 	}

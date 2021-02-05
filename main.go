@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Enemies still getting stuck in eachother
 -Loud explosions bug
 -Secret teleporter / Powerup
 -Ending screen
