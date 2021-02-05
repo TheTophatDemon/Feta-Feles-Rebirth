@@ -3,18 +3,16 @@ package main
 /*
 TODO:
 -Add failsafe for when cat gets stuck in a wall
--Timer feature?
+-Enemies still getting stuck in eachother
+-Loud explosions bug
 -Secret teleporter / Powerup
 -Ending screen
+-Some sort of end-game skill assessment
 -Worm
 -Music
--Big jitter in debug causes mobs to get stuck
-	-Consider stepping the game multiple times in a frame
--Store assets as embedded zip file...?
 */
 
 import (
-	"bytes"
 	"image"
 	_ "image/color"
 	_ "image/png"
@@ -88,7 +86,7 @@ var __graphics *ebiten.Image
 //Returns the graphics page and loads it if it isn't there
 func GetGraphics() *ebiten.Image {
 	if __graphics == nil {
-		img, _, err := image.Decode(bytes.NewReader(assets.Parse(assets.PNG_GRAPHICS)))
+		img, _, err := image.Decode(assets.ReadCompressedString(assets.PNG_GRAPHICS))
 		if err != nil {
 			log.Fatal(err)
 		}

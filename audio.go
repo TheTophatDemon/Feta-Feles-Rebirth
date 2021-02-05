@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"container/ring"
 	"io/ioutil"
 	"log"
@@ -45,7 +44,7 @@ func PlaySound(name string) {
 func PlaySoundVolume(name string, volume float64) {
 	buffer, loaded := players[name]
 	if !loaded {
-		stream, err := wav.Decode(audioContext, bytes.NewReader(assets.Parse(audioFiles[name])))
+		stream, err := wav.Decode(audioContext, assets.ReadCompressedString(audioFiles[name]))
 		if err != nil {
 			log.Fatal(err)
 			return
