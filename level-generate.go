@@ -100,6 +100,23 @@ func (level *Level) SmoothEdges() {
 					level.SetTile(i, j, TT_EMPTY, false)
 				}
 			}
+			//Set outline if the tile is square
+			t = level.GetTile(i, j, false)
+			t.outline = OUTLINE_NONE
+			if t.tt == TT_BLOCK || t.tt == TT_RUNE {
+				if !tns {
+					t.outline |= OUTLINE_TOP
+				}
+				if !bns {
+					t.outline |= OUTLINE_BOTTOM
+				}
+				if !lns {
+					t.outline |= OUTLINE_LEFT
+				}
+				if !rns {
+					t.outline |= OUTLINE_RIGHT
+				}
+			}
 		}
 	}
 }

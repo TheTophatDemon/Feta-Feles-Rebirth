@@ -8,6 +8,7 @@ import (
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 type Level struct {
@@ -15,6 +16,7 @@ type Level struct {
 	spaces                  []*Space
 	rows, cols              int
 	pixelWidth, pixelHeight float64
+	recalcEdges             bool //Flag for when edges need to be recalculated
 }
 
 func NewLevel(cols, rows int) *Level {
@@ -40,7 +42,7 @@ func NewLevel(cols, rows int) *Level {
 	pixelWidth := float64(cols * TILE_SIZE)
 	pixelHeight := float64(rows * TILE_SIZE)
 
-	return &Level{tiles, make([]*Space, 0, 10), rows, cols, pixelWidth, pixelHeight}
+	return &Level{tiles, make([]*Space, 0, 10), rows, cols, pixelWidth, pixelHeight, false}
 }
 
 func (level *Level) WrapGridCoords(x, y int) (int, int) {
@@ -83,7 +85,7 @@ func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 //Removes a solid tile and reshapes the surrounding terrain to make the deformation smooth
 func (level *Level) DestroyTile(t *Tile) {
 	if t.IsSolid() {
-		defer level.SmoothEdges()
+		level.recalcEdges = true
 	}
 	t.SetType(TT_EMPTY)
 }
@@ -282,6 +284,12 @@ func (level *Level) PropagateSpace(tile *Tile, space *Space) {
 }
 
 func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
+	//Reorient tiles if some have been deleted
+	if level.recalcEdges {
+		level.SmoothEdges()
+		level.recalcEdges = false
+	}
+
 	//Determine the area of the grid that is on screen
 	gridMin := game.camPos.Clone().Sub(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Floor()
 	gridMax := game.camPos.Clone().Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Ceil()
@@ -306,6 +314,24 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 					mat.Translate(0.0, level.pixelHeight)
 				}
 				t.spr.Draw(screen, &mat)
+				//Draw outlines for square tiles
+				if t.outline != OUTLINE_NONE {
+					ofsx := mat.Element(0, 2)
+					ofsy := mat.Element(1, 2)
+					col := color.Black
+					if t.outline&OUTLINE_TOP > 0 {
+						ebitenutil.DrawLine(screen, ofsx+t.left, ofsy+t.top, ofsx+t.right, ofsy+t.top, col)
+					}
+					if t.outline&OUTLINE_BOTTOM > 0 {
+						ebitenutil.DrawLine(screen, ofsx+t.left, ofsy+t.bottom, ofsx+t.right, ofsy+t.bottom, col)
+					}
+					if t.outline&OUTLINE_LEFT > 0 {
+						ebitenutil.DrawLine(screen, ofsx+t.left, ofsy+t.top, ofsx+t.left, ofsy+t.bottom, col)
+					}
+					if t.outline&OUTLINE_RIGHT > 0 {
+						ebitenutil.DrawLine(screen, ofsx+t.right, ofsy+t.top, ofsx+t.right, ofsy+t.bottom, col)
+					}
+				}
 			}
 		}
 	}

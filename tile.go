@@ -11,9 +11,20 @@ const (
 	TILE_SIZE_H = TILE_SIZE / 2.0
 )
 
+type Outline int
+
+const (
+	OUTLINE_NONE   Outline = 0
+	OUTLINE_TOP    Outline = 1 << 0
+	OUTLINE_BOTTOM Outline = 1 << 1
+	OUTLINE_LEFT   Outline = 1 << 2
+	OUTLINE_RIGHT  Outline = 1 << 3
+)
+
 type Tile struct {
 	tt                       TileType
 	spr                      *Sprite
+	outline                  Outline //Bitmask for drawing outlines on edges. Set by level generator.
 	gridX, gridY             int
 	left, right, top, bottom float64 //Coordinates of tile boundaries in world space / pixels
 	centerX, centerY         float64 //In world space/pixels
@@ -89,7 +100,7 @@ const (
 	TT_RUNE           TileType = 1 << 9
 	TT_PYLON          TileType = 1 << 10
 
-	TT_SOLIDS    TileType = TT_BLOCK | TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315 | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_UP | TT_TENTACLE_RIGHT | TT_PYLON | TT_RUNE
+	TT_SOLIDS    TileType = TT_BLOCK | TT_SLOPES | TT_TENTACLES | TT_PYLON | TT_RUNE
 	TT_SLOPES    TileType = TT_SLOPE_45 | TT_SLOPE_135 | TT_SLOPE_225 | TT_SLOPE_315
 	TT_TERRAIN   TileType = TT_SLOPES | TT_BLOCK | TT_TENTACLES | TT_RUNE
 	TT_TENTACLES TileType = TT_TENTACLE_UP | TT_TENTACLE_DOWN | TT_TENTACLE_LEFT | TT_TENTACLE_RIGHT
