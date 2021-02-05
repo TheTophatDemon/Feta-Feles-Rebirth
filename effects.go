@@ -71,7 +71,7 @@ func AddExplosion(game *Game, x, y float64) *Object {
 	}
 	obj.components = []Component{effect}
 	game.AddObject(obj)
-	PlaySound("explode")
+	game.PlaySoundAttenuated("explode", x, y, 256.0)
 	return obj
 }
 

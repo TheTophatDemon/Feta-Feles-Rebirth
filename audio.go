@@ -43,6 +43,7 @@ func PlaySound(name string) {
 
 func PlaySoundVolume(name string, volume float64) {
 	buffer, loaded := players[name]
+	//Load the sound in if it hasn't been already
 	if !loaded {
 		stream, err := wav.Decode(audioContext, assets.ReadCompressedString(audioFiles[name]))
 		if err != nil {
@@ -65,6 +66,7 @@ func PlaySoundVolume(name string, volume float64) {
 		}
 		players[name] = buffer
 	}
+	//Play the sound in the first buffer that isn't already playing
 	for i := 0; i < PLAYERS_PER_SOUND; i++ {
 		player := buffer.Value.(*audio.Player)
 		if !player.IsPlaying() {
@@ -72,6 +74,10 @@ func PlaySoundVolume(name string, volume float64) {
 			player.SetVolume(volume)
 			player.Play()
 			break
+		} else if player.Current().Seconds() < 0.1 {
+			//Abort if sound has already been triggered around the same time
+			//Prevents earrape
+			return
 		}
 		buffer = buffer.Next()
 	}

@@ -2,10 +2,10 @@ package main
 
 /*
 TODO:
--Loud explosions bug
 -Secret teleporter / Powerup
 -Ending screen
 -Some sort of end-game skill assessment
+-Make tiles look better...
 -Worm
 -Music
 */
