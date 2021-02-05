@@ -2,12 +2,14 @@ package main
 
 /*
 TODO:
--Level background strobing
+-Add failsafe for when cat gets stuck in a wall
+-Timer feature?
 -Secret teleporter / Powerup
 -Ending screen
 -Worm
 -Music
 -Big jitter in debug causes mobs to get stuck
+	-Consider stepping the game multiple times in a frame
 -Store assets as embedded zip file...?
 */
 
@@ -17,6 +19,7 @@ import (
 	_ "image/color"
 	_ "image/png"
 	"log"
+	"math"
 	"math/rand"
 
 	"time"
@@ -48,12 +51,18 @@ func (a *App) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight
 var __lastTime time.Time
 var __appState AppState
 
+func init() {
+	__lastTime = time.Now()
+}
+
+const FRAMERATE = 1.0 / 60.0
+
 func (a *App) Update() error {
 	now := time.Now()
 	deltaTime := now.Sub(__lastTime).Seconds()
 	__lastTime = now
 
-	__appState.Update(deltaTime)
+	__appState.Update(math.Min(FRAMERATE, deltaTime))
 
 	return nil
 }
@@ -99,5 +108,38 @@ func main() {
 
 	if err := ebiten.RunGame(new(App)); err != nil {
 		log.Fatal(err)
+	}
+}
+
+var whiteFadeShader *ebiten.Shader
+var noiseImg *ebiten.Image
+
+func init() {
+	noiseImg = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
+	noisePixels := make([]byte, SCR_WIDTH*SCR_HEIGHT*4)
+	for i := 0; i < SCR_HEIGHT*SCR_WIDTH; i++ {
+		noisePixels[i*4+0] = byte(rand.Intn(255))
+		noisePixels[i*4+1] = byte(rand.Intn(255))
+		noisePixels[i*4+2] = byte(rand.Intn(255))
+		noisePixels[i*4+3] = 255
+	}
+	noiseImg.ReplacePixels(noisePixels)
+
+	var err error
+	whiteFadeShader, err = ebiten.NewShader([]byte(`
+		package main
+
+		var Coverage float
+
+		func Fragment(position vec4, texCoord vec2, color vec4) vec4 {
+			diffuse := imageSrc0UnsafeAt(texCoord)
+			noise := imageSrc1UnsafeAt(texCoord)
+			mask := step(1.0 - Coverage, noise.r)
+			return min(diffuse + mask, vec4(0.9, 0.9, 0.9, 1.0))
+		}
+	`))
+	if err != nil {
+		println(err)
+		panic(err)
 	}
 }

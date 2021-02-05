@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 	"math"
 	"math/rand"
@@ -31,6 +32,11 @@ type Game struct {
 	fadeTimer              float64
 	fadeStage              int
 	renderTarget           *ebiten.Image
+	strobeTimer            float64
+	strobeForward          bool
+	strobeSpeed            float64
+	bgColor                color.RGBA
+	elapsedTime            float64
 }
 
 type GameHUD struct {
@@ -73,6 +79,10 @@ func NewGame(mission int) *Game {
 		missionNumber: mission,
 		fade:          FM_FADE_IN,
 		renderTarget:  ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT),
+		strobeSpeed:   6.0,
+		strobeTimer:   0.0,
+		strobeForward: true,
+		bgColor:       missions[mission].bgColor1,
 	}
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
@@ -121,6 +131,7 @@ var debugDraw bool
 
 func (g *Game) Update(deltaTime float64) {
 	g.deltaTime = deltaTime
+	g.elapsedTime += deltaTime
 	if g.fade == FM_NO_FADE {
 
 		cheatText += strings.ToLower(string(ebiten.InputChars()))
@@ -274,6 +285,34 @@ func (g *Game) Update(deltaTime float64) {
 			g.objects.Remove(objE)
 		}
 
+		//Strobe background color by incrementing the timer in a "ping pong" motion.
+		if g.strobeForward {
+			g.strobeTimer += g.deltaTime
+			if g.strobeTimer > g.strobeSpeed {
+				g.strobeTimer = g.strobeSpeed
+				g.strobeForward = false
+			}
+		} else {
+			g.strobeTimer -= g.deltaTime
+			if g.strobeTimer < 0.0 {
+				g.strobeTimer = 0.0
+				g.strobeForward = true
+			}
+		}
+
+		{
+			//Linearly interpolate between the two background colors using the timer variable
+			r1, g1, b1 := float64(g.mission.bgColor1.R), float64(g.mission.bgColor1.G), float64(g.mission.bgColor1.B)
+			r2, g2, b2 := float64(g.mission.bgColor2.R), float64(g.mission.bgColor2.G), float64(g.mission.bgColor2.B)
+			t := (g.strobeTimer / g.strobeSpeed)
+			g.bgColor = color.RGBA{
+				uint8(r1 + (r2-r1)*t),
+				uint8(g1 + (g2-g1)*t),
+				uint8(b1 + (b2-b1)*t),
+				255,
+			}
+		}
+
 	} else { //Handle level transition FX
 		g.fadeTimer += g.deltaTime
 		if g.fadeTimer > 0.25 {
@@ -321,6 +360,9 @@ func (g *Game) CenterCameraOn(obj *Object) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	//Background
+	screen.Fill(g.bgColor)
+
 	camMat := &ebiten.GeoM{}
 	camMat.Translate(-g.camPos.x+SCR_WIDTH_H, -g.camPos.y+SCR_HEIGHT_H)
 

@@ -84,6 +84,22 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 		cat.Move(0.0, 0.0)
 	}
 
+	//Death
+	if cat.health <= 0 && !cat.dead {
+		cat.Move(0.0, 0.0)
+		cat.dead = true
+		PlaySound("cat_die")
+		cat.currAnim = &Anim{
+			frames: sprCatDie,
+			speed:  0.5,
+			callback: func(anm *Anim) {
+				if anm.finished {
+					game.BeginEndTransition()
+				}
+			},
+		}
+	}
+
 	cat.Mob.Update(game, obj)
 	cat.Actor.Update(game, obj)
 }
@@ -104,22 +120,6 @@ func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 		__dudShots++
 		if __dudShots%16 == 0 {
 			Emit_Signal(SIGNAL_CAT_RULE, obj, nil)
-		}
-	}
-
-	//Death
-	if cat.health <= 0 && !cat.dead {
-		cat.Move(0.0, 0.0)
-		cat.dead = true
-		PlaySound("cat_die")
-		cat.currAnim = &Anim{
-			frames: sprCatDie,
-			speed:  0.5,
-			callback: func(anm *Anim) {
-				if anm.finished {
-					game.BeginEndTransition()
-				}
-			},
 		}
 	}
 }
