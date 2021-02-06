@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/inpututil"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
 )
 
@@ -59,6 +60,11 @@ func (a *App) Update() error {
 
 	__appState.Update(math.Min(FRAMERATE, deltaTime))
 
+	//Toggle fullscreen with alt + enter
+	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && ebiten.IsKeyPressed(ebiten.KeyAlt) {
+		ebiten.SetFullscreen(!ebiten.IsFullscreen())
+	}
+
 	return nil
 }
 
@@ -96,6 +102,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowResizable(true)
 	ebiten.SetWindowTitle("Feta Feles Remake")
 	ebiten.SetRunnableOnUnfocused(true)
 
