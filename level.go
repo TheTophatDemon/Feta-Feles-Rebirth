@@ -326,7 +326,7 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 						ebitenutil.DrawLine(screen, ofsx+t.left, ofsy+t.bottom, ofsx+t.right, ofsy+t.bottom, col)
 					}
 					if t.outline&OUTLINE_LEFT > 0 {
-						ebitenutil.DrawLine(screen, ofsx+t.left, ofsy+t.top, ofsx+t.left, ofsy+t.bottom, col)
+						ebitenutil.DrawLine(screen, ofsx+t.left+1, ofsy+t.top+1, ofsx+t.left+1, ofsy+t.bottom, col)
 					}
 					if t.outline&OUTLINE_RIGHT > 0 {
 						ebitenutil.DrawLine(screen, ofsx+t.right, ofsy+t.top, ofsx+t.right, ofsy+t.bottom, col)
