@@ -3,19 +3,21 @@ package main
 import (
 	"image"
 	"math/rand"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
 )
 
 type TitleScreen struct {
-	title       *Object
-	logo        *Object
-	feles       *Object
-	link        *Text
-	enterText   *Text
-	flinchTimer float64
-	blinkTimer  float64
+	title         *Object
+	logo          *Object
+	feles         *Object
+	link          *Text
+	enterText     *Text
+	flinchTimer   float64
+	blinkTimer    float64
+	missionSelect bool
 }
 
 func (ts *TitleScreen) Enter() {
@@ -37,26 +39,54 @@ func (ts *TitleScreen) Leave() {
 }
 
 func (ts *TitleScreen) Update(deltaTime float64) {
-	ts.flinchTimer += deltaTime
-	if ts.flinchTimer > 0.25 {
-		ts.title = ts.GenerateTitle()
-		ts.flinchTimer = 0.0
-	}
-	ts.blinkTimer += deltaTime
-	if ts.enterText.fillPos > 0 {
-		if ts.blinkTimer > 0.75 {
-			ts.blinkTimer = 0.0
-			ts.enterText.fillPos = 0
-		}
-	} else {
-		if ts.blinkTimer > 0.25 {
-			ts.blinkTimer = 0.0
+	if !ts.missionSelect {
+		//Mission select cheat
+		cheatText += strings.ToLower(string(ebiten.InputChars()))
+		if strings.Contains(cheatText, "tdyeehaw") {
+			cheatText = ""
+			ts.missionSelect = true
+			ts.enterText = GenerateText("PRESS MISSION NUMBER", ts.enterText.rect)
 			ts.enterText.fillPos = len(ts.enterText.text)
 		}
-	}
 
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
-		ChangeAppState(NewCutsceneState(0))
+		ts.flinchTimer += deltaTime
+		if ts.flinchTimer > 0.25 {
+			ts.title = ts.GenerateTitle()
+			ts.flinchTimer = 0.0
+		}
+		ts.blinkTimer += deltaTime
+		if ts.enterText.fillPos > 0 {
+			if ts.blinkTimer > 0.75 {
+				ts.blinkTimer = 0.0
+				ts.enterText.fillPos = 0
+			}
+		} else {
+			if ts.blinkTimer > 0.25 {
+				ts.blinkTimer = 0.0
+				ts.enterText.fillPos = len(ts.enterText.text)
+			}
+		}
+
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) || inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			ChangeAppState(NewCutsceneState(0))
+		}
+	} else {
+		switch {
+		case inpututil.IsKeyJustPressed(ebiten.Key0):
+			ChangeAppState(NewGame(0))
+		case inpututil.IsKeyJustPressed(ebiten.Key1):
+			ChangeAppState(NewGame(1))
+		case inpututil.IsKeyJustPressed(ebiten.Key2):
+			ChangeAppState(NewGame(2))
+		case inpututil.IsKeyJustPressed(ebiten.Key3):
+			ChangeAppState(NewGame(3))
+		case inpututil.IsKeyJustPressed(ebiten.Key4):
+			ChangeAppState(NewGame(4))
+		case inpututil.IsKeyJustPressed(ebiten.Key5):
+			ChangeAppState(NewGame(5))
+		case inpututil.IsKeyJustPressed(ebiten.Key6):
+			ChangeAppState(NewGame(6))
+		}
 	}
 }
 
