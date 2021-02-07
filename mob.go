@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 type Mob struct {
 	*Actor
 	health            int
@@ -10,7 +12,7 @@ type Mob struct {
 	vecToPlayer       *Vec2f
 	distToPlayer      float64
 	seesPlayer        bool
-	hunting           bool
+	hunting           bool //Switched on after monster sees player for the first time
 }
 
 func (mb *Mob) Update(game *Game, obj *Object) {
@@ -62,5 +64,25 @@ func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
 			diff.Normalize()
 			mb.velocity.Add(diff.Scale(obj.radius + other.radius/game.deltaTime))
 		}
+	}
+}
+
+func (mb *Mob) Wander(game *Game, obj *Object, rayDist, turnSpeed float64) {
+	//Cast a ray in front of the mob's trajectory
+	res := game.level.Raycast(obj.pos.Clone(), mb.movement.Clone(), rayDist)
+	if res.hit {
+		//Rotate movement direction when approaching wall
+
+		/*
+			[cos -sin] [x] = [xcos-ysin]
+			[sin  cos] [y]   [xsin+ycos]
+		*/
+		angle := turnSpeed * game.deltaTime
+		ca := math.Cos(angle)
+		sa := math.Sin(angle)
+		mx := mb.movement.x
+		my := mb.movement.y
+
+		mb.Move((mx*ca)-(my*sa), (mx*sa)+(my*ca))
 	}
 }

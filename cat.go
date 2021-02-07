@@ -60,15 +60,7 @@ func AddCat(game *Game, x, y float64) (*Cat, *Object) {
 
 func (cat *Cat) Update(game *Game, obj *Object) {
 	if !cat.dead {
-		hit, normal, _ := game.level.SphereIntersects(obj.pos.Clone().Add(cat.velocity.Clone().Scale(game.deltaTime*4.0)), obj.radius)
-		if hit && normal != nil {
-			if normal.x != 0.0 || normal.y != 0.0 {
-				reflect := normal.Clone()
-				reflect.Add((&Vec2f{normal.y, -normal.x}).Scale((rand.Float64() * 2.0) - 1.0))
-				reflect.Normalize()
-				cat.Move(reflect.x, reflect.y)
-			}
-		}
+		cat.Wander(game, obj, 64.0, math.Pi)
 
 		cat.meowTimer += game.deltaTime
 		if cat.meowTimer > 5.0 {
