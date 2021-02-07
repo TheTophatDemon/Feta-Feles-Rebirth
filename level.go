@@ -529,14 +529,14 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastRes
 	hDist := math.Pow(horzX-pos.x, 2.0) + math.Pow(horzY-pos.y, 2.0)
 	if hDist < vDist {
 		return &RaycastResult{
-			hit:      hTile != nil,
+			hit:      hTile != nil || horzX <= 0.0 || horzY <= 0.0 || horzX >= level.pixelWidth || horzY >= level.pixelHeight,
 			pos:      &Vec2f{horzX, horzY},
 			distance: math.Sqrt(hDist),
 			tile:     hTile,
 		}
 	} else {
 		return &RaycastResult{
-			hit:      vTile != nil,
+			hit:      vTile != nil || horzX <= 0.0 || horzY <= 0.0 || horzX >= level.pixelWidth || horzY >= level.pixelHeight,
 			pos:      &Vec2f{vertX, vertY},
 			distance: math.Sqrt(vDist),
 			tile:     vTile,
