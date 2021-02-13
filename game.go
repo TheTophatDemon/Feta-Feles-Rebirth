@@ -64,7 +64,6 @@ func NewGame(mission int) *Game {
 	}
 	game := &Game{
 		objects:  list.New(),
-		level:    GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight),
 		lastTime: time.Now(),
 		camPos:   ZeroVec(),
 		camMin:   ZeroVec(),
@@ -84,6 +83,8 @@ func NewGame(mission int) *Game {
 		strobeForward: true,
 		bgColor:       missions[mission].bgColor1,
 	}
+	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
+	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight)
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
 
@@ -185,6 +186,10 @@ func (g *Game) Update(deltaTime float64) {
 			ChangeAppState(NewGame(g.missionNumber + 1))
 			return
 		}
+		if strings.Contains(cheatText, "tdspicy") {
+			cheatText = ""
+			AddWorm(g, g.playerObj.pos.x, g.playerObj.pos.y)
+		}
 
 		//Prevent the game from going AWOL when the window is moved
 		if g.deltaTime > 0.25 {
@@ -204,16 +209,16 @@ func (g *Game) Update(deltaTime float64) {
 			)
 
 			pool := make([]int, 0, 4)
-			if g.mission.knightCount < g.mission.maxKnights {
+			if knightCtr.count < g.mission.maxKnights {
 				pool = append(pool, S_KNIGHT)
 			}
-			if g.mission.blarghCount < g.mission.maxBlarghs {
+			if blarghCtr.count < g.mission.maxBlarghs {
 				pool = append(pool, S_BLARGH)
 			}
-			if g.mission.gopnikCount < g.mission.maxGopniks {
+			if gopnikCtr.count < g.mission.maxGopniks {
 				pool = append(pool, S_GOPNIK)
 			}
-			if g.mission.barrelCount < g.mission.maxBarrels {
+			if barrelCtr.count < g.mission.maxBarrels {
 				pool = append(pool, S_BARREL)
 			}
 
@@ -246,17 +251,6 @@ func (g *Game) Update(deltaTime float64) {
 			//Objects are removed later so that they doesn't interfere with collision events
 			if obj.removeMe {
 				toRemove = append(toRemove, objE)
-				//Update relevant mission counters
-				switch obj.components[0].(type) {
-				case *Knight:
-					g.mission.knightCount--
-				case *Blargh:
-					g.mission.blarghCount--
-				case *Gopnik:
-					g.mission.gopnikCount--
-				case *Barrel:
-					g.mission.barrelCount--
-				}
 			}
 		}
 		//Resolve inter-object collisions
@@ -448,17 +442,6 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 
 //Adds the object to the game, sorted by its draw priority, and returns the object
 func (g *Game) AddObject(newObj *Object) *Object {
-	//Update relevant mission counters
-	switch newObj.components[0].(type) {
-	case *Knight:
-		g.mission.knightCount++
-	case *Blargh:
-		g.mission.blarghCount++
-	case *Gopnik:
-		g.mission.gopnikCount++
-	case *Barrel:
-		g.mission.barrelCount++
-	}
 	for e := g.objects.Front(); e != nil; e = e.Next() {
 		obj := e.Value.(*Object)
 		if obj.drawPriority > newObj.drawPriority {
