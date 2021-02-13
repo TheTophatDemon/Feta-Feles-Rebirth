@@ -4,12 +4,10 @@ package main
 TODO:
 -Worm
 	-Tail?
-	-Spawning
-	-Gopnik interaction
--Secret teleporter / Powerup
+	-Spawning inconsistency
+-Music
 -Global timer
 -Ending screens
--Music
 */
 
 import (

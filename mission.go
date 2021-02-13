@@ -9,6 +9,7 @@ type Mission struct {
 	maxKnights          int
 	maxBlarghs          int
 	maxGopniks          int
+	maxWorms            int
 	maxBarrels          int
 	mapWidth, mapHeight int
 	bgColor1, bgColor2  color.RGBA
@@ -34,7 +35,7 @@ func init() {
 		},
 		{ //2 (Human)
 			loveQuota:  100,
-			maxKnights: 15, maxBlarghs: 10, maxGopniks: 3, maxBarrels: 5,
+			maxKnights: 15, maxBlarghs: 10, maxGopniks: 2, maxBarrels: 5,
 			mapWidth: 64, mapHeight: 64,
 			bgColor1: color.RGBA{48, 96, 130, 255},
 			bgColor2: color.RGBA{48, 96, 130, 255},
@@ -48,21 +49,21 @@ func init() {
 		},
 		{ //4 (Corrupt)
 			loveQuota:  150,
-			maxKnights: 20, maxBlarghs: 20, maxGopniks: 20, maxBarrels: 15,
+			maxKnights: 20, maxBlarghs: 20, maxGopniks: 16, maxBarrels: 15, maxWorms: 1,
 			mapWidth: 64, mapHeight: 64,
 			bgColor1: color.RGBA{34, 32, 32, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
 		},
 		{ //5 (Melting)
 			loveQuota:  150,
-			maxKnights: 30, maxBlarghs: 30, maxGopniks: 25, maxBarrels: 25,
+			maxKnights: 30, maxBlarghs: 30, maxGopniks: 25, maxBarrels: 25, maxWorms: 5,
 			mapWidth: 72, mapHeight: 72,
 			bgColor1: color.RGBA{0, 0, 0, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
 		},
 		{ //6 (Monster)
 			loveQuota:  200,
-			maxKnights: 35, maxBlarghs: 35, maxGopniks: 25, maxBarrels: 30,
+			maxKnights: 35, maxBlarghs: 35, maxGopniks: 25, maxBarrels: 30, maxWorms: 10,
 			mapWidth: 48, mapHeight: 72,
 			bgColor1: color.RGBA{0, 0, 0, 255},
 			bgColor2: color.RGBA{186, 32, 32, 255},

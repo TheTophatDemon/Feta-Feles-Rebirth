@@ -67,6 +67,7 @@ func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
 	}
 }
 
+//Makes the monster travel around aimlessly
 func (mb *Mob) Wander(game *Game, obj *Object, rayDist, turnSpeed float64) {
 	//Cast a ray in front of the mob's trajectory
 	res := game.level.Raycast(obj.pos.Clone(), mb.movement.Clone(), rayDist)

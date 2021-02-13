@@ -30,7 +30,7 @@ func init() {
 func AddGopnik(game *Game, x, y float64) *Object {
 	gopnik := &Gopnik{
 		Mob: Mob{
-			Actor:  NewActor(0.0, 0.0, 0.0),
+			Actor:  NewActor(50.0, 10_000.0, 100_000.0),
 			health: 7,
 			currAnim: &Anim{
 				frames: sprGopnikNormal,
@@ -53,6 +53,7 @@ func AddGopnik(game *Game, x, y float64) *Object {
 
 func (gp *Gopnik) Update(game *Game, obj *Object) {
 	gp.Mob.Update(game, obj)
+	gp.Actor.Update(game, obj)
 
 	if gp.hurtTimer > 0.0 {
 		obj.sprites[0] = sprGopnikHurt

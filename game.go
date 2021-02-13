@@ -105,6 +105,10 @@ func NewGame(mission int) *Game {
 		spawn := game.level.FindOffscreenSpawnPoint(game)
 		AddGopnik(game, spawn.centerX, spawn.centerY)
 	}
+	for i := 0; i < missions[mission].maxWorms; i++ {
+		spawn := game.level.FindOffscreenSpawnPoint(game)
+		AddWorm(game, spawn.centerX, spawn.centerY)
+	}
 
 	for i := 0; i < missions[mission].maxBarrels; i++ {
 		spawn := game.level.FindOffscreenSpawnPoint(game)
@@ -119,6 +123,7 @@ func NewGame(mission int) *Game {
 	}
 	Listen_Signal(SIGNAL_PLAYER_ASCEND, game)
 	Listen_Signal(SIGNAL_CAT_RULE, game)
+	Listen_Signal(SIGNAL_CAT_DIE, game)
 	Listen_Signal(SIGNAL_GAME_START, game)
 
 	return game
@@ -206,6 +211,7 @@ func (g *Game) Update(deltaTime float64) {
 				S_BLARGH
 				S_GOPNIK
 				S_BARREL
+				S_WORM
 			)
 
 			pool := make([]int, 0, 4)
@@ -221,6 +227,9 @@ func (g *Game) Update(deltaTime float64) {
 			if barrelCtr.count < g.mission.maxBarrels {
 				pool = append(pool, S_BARREL)
 			}
+			if wormCtr.count < g.mission.maxWorms {
+				pool = append(pool, S_WORM)
+			}
 
 			if len(pool) > 0 {
 				spawn := g.level.FindOffscreenSpawnPoint(g)
@@ -234,6 +243,8 @@ func (g *Game) Update(deltaTime float64) {
 					AddGopnik(g, spawn.centerX, spawn.centerY)
 				case S_BARREL:
 					AddBarrel(g, spawn.centerX, spawn.centerY)
+				case S_WORM:
+					AddWorm(g, spawn.centerX, spawn.centerY)
 				}
 			}
 		}
@@ -437,6 +448,9 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 		}
 	case SIGNAL_CAT_RULE:
 		g.DisplayMessage("YOU MUST ASCEND TO  SLAY THE CAT", 4.0)
+	case SIGNAL_CAT_DIE:
+		g.fade = FM_FADE_OUT
+		PlaySound("outro_chime")
 	}
 }
 
@@ -485,11 +499,6 @@ func (g *Game) DecLoveCounter(amt int) bool {
 		return true
 	}
 	return false
-}
-
-func (g *Game) BeginEndTransition() {
-	g.fade = FM_FADE_OUT
-	PlaySound("outro_chime")
 }
 
 func (g *Game) SquareOnScreen(x, y, radius float64) bool {

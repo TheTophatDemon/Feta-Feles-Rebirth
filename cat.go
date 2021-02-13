@@ -90,7 +90,7 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 			speed:  0.5,
 			callback: func(anm *Anim) {
 				if anm.finished {
-					game.BeginEndTransition()
+					Emit_Signal(SIGNAL_CAT_DIE, obj, nil)
 				}
 			},
 		}

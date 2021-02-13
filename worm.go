@@ -36,15 +36,16 @@ func init() {
 	wormCtr = *NewObjCtr()
 }
 
-const WORM_NSEGS = 6
-const WORM_QDIST = 12.0
+const WORM_NSEGS = 6    //Number of body segments
+const WORM_QDIST = 12.0 //Distance between queue updates
 
 type Worm struct {
 	Mob
-	segs          [WORM_NSEGS]*Object //Body segments, including tail
-	segTargets    [WORM_NSEGS]*Vec2f  //Queue of previous head positions that the segments move towards
-	enqDistCtr    float64             //Measures distance traveled since last enqueue, up to WORM_QDIST
-	segDeathTimer float64             //Timer for destroying segments in the death animation
+	segs                 [WORM_NSEGS]*Object //Body segments, including tail
+	segTargets           [WORM_NSEGS]*Vec2f  //Queue of previous head positions that the segments move towards
+	enqDistCtr           float64             //Measures distance traveled since last enqueue, up to WORM_QDIST
+	segDeathTimer        float64             //Timer for destroying segments in the death animation
+	turnSpeed, turnTimer float64
 }
 
 func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
@@ -56,6 +57,8 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 			lastSeenPlayerPos: ZeroVec(),
 			vecToPlayer:       ZeroVec(),
 		},
+		turnSpeed: math.Pi,
+		turnTimer: rand.Float64() * 5.0,
 	}
 	dir := RandomDirection()
 	worm.Move(dir.x, dir.y)
@@ -99,7 +102,13 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 	}
 
 	if !worm.dead {
-		worm.Wander(game, obj, 64.0, math.Pi)
+		//Occasionally reverse the direction of turning to ensure it doesn't get stuck in circles
+		worm.turnTimer -= game.deltaTime
+		if worm.turnTimer < 0.0 {
+			worm.turnTimer = rand.Float64() * 5.0
+			worm.turnSpeed = -worm.turnSpeed
+		}
+		worm.Wander(game, obj, 64.0, worm.turnSpeed)
 		if worm.enqDistCtr > WORM_QDIST {
 			worm.enqDistCtr = 0.0
 			//Add to front of position queue and shift the rest backward
