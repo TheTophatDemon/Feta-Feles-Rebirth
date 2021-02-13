@@ -22,6 +22,12 @@ func init() {
 	sprKnightDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 32, 48, 48), image.Rect(48, 32, 64, 48))
 }
 
+var knightCtr ObjCtr
+
+func init() {
+	knightCtr = *NewObjCtr()
+}
+
 func AddKnight(game *Game, x, y float64) *Knight {
 	knight := &Knight{
 		Mob: Mob{
@@ -38,6 +44,7 @@ func AddKnight(game *Game, x, y float64) *Knight {
 		sprites:    []*Sprite{sprKnightNormal},
 		components: []Component{knight},
 	})
+	knightCtr.Inc()
 	return knight
 }
 
@@ -79,6 +86,7 @@ func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
 			callback: func(anm *Anim) {
 				if anm.finished {
 					obj.removeMe = true
+					knightCtr.Dec()
 					AddLove(game, 3, obj.pos.x, obj.pos.y)
 				}
 			},

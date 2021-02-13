@@ -74,7 +74,7 @@ func NewSprites(ofs *Vec2f, rects ...image.Rectangle) []*Sprite {
 	return sprites
 }
 
-func (spr *Sprite) Flip(horz, vert bool) {
+func (spr *Sprite) Flip(horz, vert bool) *Sprite {
 	matrix := new(ebiten.GeoM)
 
 	//Perform rotation and scaling with respect to the center
@@ -93,6 +93,7 @@ func (spr *Sprite) Flip(horz, vert bool) {
 
 	matrix.Concat(*spr.matrix)
 	spr.matrix = matrix
+	return spr
 }
 
 //Creates a sprite that fills a given rectangle on the screen

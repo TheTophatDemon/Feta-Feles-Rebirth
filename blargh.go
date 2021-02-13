@@ -22,6 +22,12 @@ func init() {
 	sprBlarghDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 48, 48, 64), image.Rect(48, 48, 64, 64))
 }
 
+var blarghCtr ObjCtr
+
+func init() {
+	blarghCtr = *NewObjCtr()
+}
+
 func AddBlargh(game *Game, x, y float64) *Object {
 	blargh := &Blargh{
 		Mob: Mob{
@@ -33,6 +39,7 @@ func AddBlargh(game *Game, x, y float64) *Object {
 		},
 		shootTimer: rand.Float64()/2.0 + 0.5,
 	}
+	blarghCtr.Inc()
 	return game.AddObject(&Object{
 		pos: &Vec2f{x, y}, radius: 7.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprBlarghNormal},
@@ -94,6 +101,7 @@ func (bl *Blargh) OnCollision(game *Game, obj, other *Object) {
 			callback: func(anm *Anim) {
 				if anm.finished {
 					obj.removeMe = true
+					blarghCtr.Dec()
 					AddLove(game, 4, obj.pos.x, obj.pos.y)
 				}
 			},

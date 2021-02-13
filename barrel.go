@@ -16,7 +16,14 @@ func init() {
 	sprBarrelDamaged = NewSprite(image.Rect(0, 144, 16, 160), &Vec2f{-8.0, -8.0}, false, false, 0)
 }
 
+var barrelCtr ObjCtr
+
+func init() {
+	barrelCtr = *NewObjCtr()
+}
+
 func AddBarrel(game *Game, x, y float64) *Object {
+	barrelCtr.Inc()
 	return game.AddObject(&Object{
 		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_BARREL,
 		sprites:      []*Sprite{sprBarrel},
@@ -46,6 +53,7 @@ func (brl *Barrel) OnCollision(game *Game, obj, other *Object) {
 	}
 	if brl.health <= 0 && !obj.removeMe {
 		obj.removeMe = true
+		barrelCtr.Dec()
 		AddExplosion(game, obj.pos.x, obj.pos.y)
 	}
 }

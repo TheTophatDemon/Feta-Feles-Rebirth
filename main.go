@@ -2,10 +2,13 @@ package main
 
 /*
 TODO:
--Secret teleporter / Powerup
--Ending screen
--Some sort of end-game skill assessment
 -Worm
+	-Tail?
+	-Spawning
+	-Gopnik interaction
+-Secret teleporter / Powerup
+-Global timer
+-Ending screens
 -Music
 */
 

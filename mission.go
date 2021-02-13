@@ -5,13 +5,13 @@ import (
 )
 
 type Mission struct {
-	loveQuota               int
-	maxKnights, knightCount int
-	maxBlarghs, blarghCount int
-	maxGopniks, gopnikCount int
-	maxBarrels, barrelCount int
-	mapWidth, mapHeight     int
-	bgColor1, bgColor2      color.RGBA
+	loveQuota           int
+	maxKnights          int
+	maxBlarghs          int
+	maxGopniks          int
+	maxBarrels          int
+	mapWidth, mapHeight int
+	bgColor1, bgColor2  color.RGBA
 }
 
 var missions []Mission

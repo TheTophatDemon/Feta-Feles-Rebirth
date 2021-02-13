@@ -58,3 +58,28 @@ func (obj *Object) DrawAllSprites(screen *ebiten.Image, pt *ebiten.GeoM) {
 		sp.Draw(screen, &objT)
 	}
 }
+
+//Helper for allowing objects to keep track of how many of them are on the playing field
+type ObjCtr struct {
+	count int
+}
+
+func (ctr *ObjCtr) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
+	if kind == SIGNAL_GAME_INIT {
+		ctr.count = 0
+	}
+}
+
+func NewObjCtr() *ObjCtr {
+	ctr := &ObjCtr{}
+	Listen_Signal(SIGNAL_GAME_INIT, ctr)
+	return ctr
+}
+
+func (ctr *ObjCtr) Inc() {
+	ctr.count++
+}
+
+func (ctr *ObjCtr) Dec() {
+	ctr.count--
+}

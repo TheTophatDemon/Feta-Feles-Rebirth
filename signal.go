@@ -10,6 +10,7 @@ const (
 	SIGNAL_PLAYER_ASCEND               //Fires to indicate when the player ascends
 	SIGNAL_CAT_RULE                    //Fires when the player tries to shoot the cat without being ascended
 	SIGNAL_GAME_START                  //Fires at the start of the game after the intro transition
+	SIGNAL_GAME_INIT                   //Fires before the game level is generated
 )
 
 type Observer interface {
@@ -18,16 +19,20 @@ type Observer interface {
 
 var __observers map[Signal]*list.List
 
-func init() {
-	__observers = make(map[Signal]*list.List)
+//Retrieve observer map and initialize if needed
+func observers() map[Signal]*list.List {
+	if __observers == nil {
+		__observers = make(map[Signal]*list.List)
+	}
+	return __observers
 }
 
 func Listen_Signal(kind Signal, obs Observer) {
 	//Initialize list if haven't already
-	lst, ok := __observers[kind]
+	lst, ok := observers()[kind]
 	if !ok {
 		lst = list.New()
-		__observers[kind] = lst
+		observers()[kind] = lst
 	}
 	//Exit if observer is already registered
 	for itr := lst.Front(); itr != nil; itr = itr.Next() {
@@ -43,7 +48,7 @@ func Listen_Signal(kind Signal, obs Observer) {
 
 func Emit_Signal(kind Signal, src interface{}, params map[string]interface{}) {
 	//Exit when no observers
-	lst, ok := __observers[kind]
+	lst, ok := observers()[kind]
 	if !ok {
 		return
 	}

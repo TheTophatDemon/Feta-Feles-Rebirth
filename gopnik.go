@@ -21,11 +21,17 @@ func init() {
 	sprGopnikDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 64, 48, 80), image.Rect(48, 64, 64, 80))
 }
 
+var gopnikCtr ObjCtr
+
+func init() {
+	gopnikCtr = *NewObjCtr()
+}
+
 func AddGopnik(game *Game, x, y float64) *Object {
 	gopnik := &Gopnik{
 		Mob: Mob{
 			Actor:  NewActor(0.0, 0.0, 0.0),
-			health: 6,
+			health: 7,
 			currAnim: &Anim{
 				frames: sprGopnikNormal,
 				speed:  0.5,
@@ -37,6 +43,7 @@ func AddGopnik(game *Game, x, y float64) *Object {
 		shootTimer: rand.Float64()/2.0 + 0.5,
 		shootAngle: rand.Float64() * math.Pi * 2.0,
 	}
+	gopnikCtr.Inc()
 	return game.AddObject(&Object{
 		pos: &Vec2f{x, y}, radius: 7.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprGopnikNormal[0]},
@@ -76,6 +83,7 @@ func (gp *Gopnik) OnCollision(game *Game, obj, other *Object) {
 			callback: func(anm *Anim) {
 				if anm.finished {
 					obj.removeMe = true
+					gopnikCtr.Dec()
 					AddLove(game, 5, obj.pos.x, obj.pos.y)
 				}
 			},
