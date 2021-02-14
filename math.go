@@ -80,6 +80,14 @@ func VecDot(v0, v1 *Vec2f) float64 {
 	return (v0.x * v1.x) + (v0.y * v1.y)
 }
 
+//Returns magnitude of 3d cross product between two vectors (treated as on the XY plane)
+func VecCross(v0, v1 *Vec2f) float64 {
+	//(Axi^ + Ayj^) X (Bxi^ + Byj^)
+	//Axi^ X Bxi^ + Axi^ X Byj^ + Ayj^ X Bxi^ + Ayj^ X Byj^
+	//Axi^ X Byj^ + Ayj^ X Bxi^ = (AxBy)(i^ X j^) + (AyBx)(j^ X i^) = AxByk^ - AyBxk^
+	return (v0.x * v1.y) - (v0.y * v1.x)
+}
+
 func VecMin(v0, v1 *Vec2f) *Vec2f {
 	return &Vec2f{
 		x: math.Min(v0.x, v1.x),

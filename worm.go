@@ -6,17 +6,16 @@ import (
 	"math/rand"
 )
 
-var sprWormHead []*Sprite //First is left facing, second is right facing
-var sprWormHeadHurt []*Sprite
+var sprWormHead [2]*Sprite //First is left facing, second is right facing
+var sprWormHeadHurt [2]*Sprite
 var sprWormHeadDie []*Sprite
 var sprWormBody []*Sprite
 var sprWormBodyDie []*Sprite
+var sprWormTail *Sprite
 
 func init() {
-	sprWormHead = make([]*Sprite, 2)
 	sprWormHead[0] = NewSprite(image.Rect(0, 80, 16, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
 	sprWormHead[1] = CloneSprite(sprWormHead[0]).Flip(true, false)
-	sprWormHeadHurt = make([]*Sprite, 2)
 	sprWormHeadHurt[0] = NewSprite(image.Rect(16, 80, 32, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
 	sprWormHeadHurt[1] = CloneSprite(sprWormHeadHurt[0]).Flip(true, false)
 	sprWormHeadDie = []*Sprite{
@@ -28,6 +27,7 @@ func init() {
 		NewSprite(image.Rect(48, 80, 64, 96), &Vec2f{-8.0, -8.0}, false, false, 2),
 	}
 	sprWormBodyDie = []*Sprite{sprWormBody[0], NewSprite(image.Rect(48, 48, 64, 64), &Vec2f{-8.0, -8.0}, false, false, 0)}
+	sprWormTail = NewSprite(image.Rect(64, 80, 80, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
 }
 
 var wormCtr ObjCtr
@@ -38,6 +38,10 @@ func init() {
 
 const WORM_NSEGS = 6    //Number of body segments
 const WORM_QDIST = 12.0 //Distance between queue updates
+//Range of values for the turn timer to be set to
+const WORM_TURNTIME_MIN = 2.0
+const WORM_TURNTIME_MAX = 6.0
+const WORM_TURNTIME_RANGE = WORM_TURNTIME_MAX - WORM_TURNTIME_MIN
 
 type Worm struct {
 	Mob
@@ -46,25 +50,29 @@ type Worm struct {
 	enqDistCtr           float64             //Measures distance traveled since last enqueue, up to WORM_QDIST
 	segDeathTimer        float64             //Timer for destroying segments in the death animation
 	turnSpeed, turnTimer float64
+	charging             bool
 }
 
 func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 	worm = &Worm{
 		Mob: Mob{
 			Actor:             NewActor(100.0, 100_000.0, 50_000.0),
-			health:            10,
+			health:            13,
 			currAnim:          nil,
 			lastSeenPlayerPos: ZeroVec(),
 			vecToPlayer:       ZeroVec(),
 		},
 		turnSpeed: math.Pi,
-		turnTimer: rand.Float64() * 5.0,
+		turnTimer: rand.Float64()*WORM_TURNTIME_RANGE + WORM_TURNTIME_MIN,
 	}
 	dir := RandomDirection()
 	worm.Move(dir.x, dir.y)
-	for i := 0; i < WORM_NSEGS; i++ {
+	for i := WORM_NSEGS - 1; i >= 0; i-- { //Working backwards to ensure correct sprite order
 		spr := sprWormBody[rand.Intn(len(sprWormBody))] //Select random body segment sprite
-		effect := &Effect{                              //Effect component is added so segments can be animated
+		if i == WORM_NSEGS-1 {
+			spr = sprWormTail
+		}
+		effect := &Effect{ //Effect component is added so segments can be animated
 			anim: Anim{frames: []*Sprite{spr}},
 		}
 		worm.segs[i] = &Object{
@@ -102,13 +110,38 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 	}
 
 	if !worm.dead {
-		//Occasionally reverse the direction of turning to ensure it doesn't get stuck in circles
-		worm.turnTimer -= game.deltaTime
-		if worm.turnTimer < 0.0 {
-			worm.turnTimer = rand.Float64() * 5.0
-			worm.turnSpeed = -worm.turnSpeed
+		if !worm.charging {
+			//Occasionally reverse the direction of turning to ensure it doesn't get stuck in circles
+			worm.turnTimer -= game.deltaTime
+			if worm.turnTimer < 0.0 {
+				worm.turnTimer = rand.Float64()*WORM_TURNTIME_RANGE + WORM_TURNTIME_MIN
+				worm.turnSpeed = -worm.turnSpeed
+				if worm.seesPlayer {
+					worm.charging = true
+					worm.turnTimer = WORM_TURNTIME_MAX
+					game.PlaySoundAttenuated("roar", obj.pos.x, obj.pos.y, 256.0)
+				}
+			}
+			worm.Wander(game, obj, 64.0, worm.turnSpeed)
+		} else {
+			//Turn to charge at player
+			nDiff := worm.vecToPlayer.Clone().Normalize()
+			dp := VecDot(nDiff, worm.movement)
+			if dp < 0.9 {
+				cp := VecCross(nDiff, worm.movement) //Sign of cross product determines which way to turn
+				if cp != 0.0 {
+					cp /= math.Abs(cp) //1.0 if positive, -1.0 if negative
+				}
+				worm.Turn(math.Abs(worm.turnSpeed)*(-cp), game.deltaTime)
+			} else {
+				worm.turnTimer -= game.deltaTime
+				if worm.turnTimer < 0.0 {
+					worm.charging = false
+					worm.turnTimer = rand.Float64()*WORM_TURNTIME_RANGE + WORM_TURNTIME_MIN
+				}
+			}
 		}
-		worm.Wander(game, obj, 64.0, worm.turnSpeed)
+		//Update the queue of body segment target positions
 		if worm.enqDistCtr > WORM_QDIST {
 			worm.enqDistCtr = 0.0
 			//Add to front of position queue and shift the rest backward
@@ -130,7 +163,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 				}
 			}
 		}
-	} else {
+	} else { //Death sequence
 		worm.Move(0.0, 0.0)
 		//Destroy segments one at a time
 		worm.segDeathTimer += game.deltaTime
@@ -153,7 +186,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 						if a.finished {
 							obj.removeMe = true
 							wormCtr.Dec()
-							AddLove(game, 2, obj.pos.x, obj.pos.y)
+							AddLove(game, 5, obj.pos.x, obj.pos.y)
 						}
 					},
 				}
@@ -193,6 +226,10 @@ func (worm *Worm) OnCollision(game *Game, obj, other *Object) {
 		}
 	}
 	worm.Mob.OnCollision(game, obj, other)
+	if other.colType == CT_ENEMY {
+		worm.Turn(worm.turnSpeed, game.deltaTime)
+		worm.turnTimer = WORM_TURNTIME_MAX
+	}
 skip:
 	//Death
 	if worm.health <= 0 && !worm.dead {

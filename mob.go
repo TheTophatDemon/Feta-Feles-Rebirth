@@ -1,7 +1,5 @@
 package main
 
-import "math"
-
 type Mob struct {
 	*Actor
 	health            int
@@ -72,18 +70,6 @@ func (mb *Mob) Wander(game *Game, obj *Object, rayDist, turnSpeed float64) {
 	//Cast a ray in front of the mob's trajectory
 	res := game.level.Raycast(obj.pos.Clone(), mb.movement.Clone(), rayDist)
 	if res.hit {
-		//Rotate movement direction when approaching wall
-
-		/*
-			[cos -sin] [x] = [xcos-ysin]
-			[sin  cos] [y]   [xsin+ycos]
-		*/
-		angle := turnSpeed * game.deltaTime
-		ca := math.Cos(angle)
-		sa := math.Sin(angle)
-		mx := mb.movement.x
-		my := mb.movement.y
-
-		mb.Move((mx*ca)-(my*sa), (mx*sa)+(my*ca))
+		mb.Turn(turnSpeed, game.deltaTime)
 	}
 }

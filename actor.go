@@ -92,3 +92,18 @@ func (actor *Actor) Move(dx, dy float64) {
 		actor.facing = actor.movement.Clone()
 	}
 }
+
+//Rotate movement direction by 'da' in radians
+func (actor *Actor) Turn(da, deltaTime float64) {
+	/*
+		[cos -sin] [x] = [xcos-ysin]
+		[sin  cos] [y]   [xsin+ycos]
+	*/
+	angle := da * deltaTime
+	ca := math.Cos(angle)
+	sa := math.Sin(angle)
+	mx := actor.movement.x
+	my := actor.movement.y
+
+	actor.Move((mx*ca)-(my*sa), (mx*sa)+(my*ca))
+}

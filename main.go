@@ -2,13 +2,10 @@ package main
 
 /*
 TODO:
--Worm
-	-Tail
-	-Roar
-	-Turn when hitting mobs
+-Increase cat health per level...
 -Music
 -Global timer
--Ending screens
+-Endings
 */
 
 import (
