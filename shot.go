@@ -23,8 +23,8 @@ var sprShotEnemyBouncy []*Sprite
 var sprShotPlayerBouncy []*Sprite
 
 func init() {
-	sprShotPlayer = NewSprite(image.Rect(72, 104, 80, 112), &Vec2f{-4.0, -4.0}, false, false, 0)
-	sprShotEnemy = NewSprite(image.Rect(64, 104, 72, 112), &Vec2f{-4.0, -4.0}, false, false, 0)
+	sprShotPlayer = NewSprite(image.Rect(88, 72, 96, 80), &Vec2f{-4.0, -4.0}, false, false, 0)
+	sprShotEnemy = NewSprite(image.Rect(80, 72, 88, 80), &Vec2f{-4.0, -4.0}, false, false, 0)
 	sprShotEnemyBouncy = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(0, 128, 8, 136), image.Rect(8, 128, 16, 136))
 	sprShotPlayerBouncy = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(0, 136, 8, 144), image.Rect(8, 136, 16, 144))
 }

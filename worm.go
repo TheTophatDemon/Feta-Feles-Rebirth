@@ -52,7 +52,7 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 	worm = &Worm{
 		Mob: Mob{
 			Actor:             NewActor(100.0, 100_000.0, 50_000.0),
-			health:            8,
+			health:            10,
 			currAnim:          nil,
 			lastSeenPlayerPos: ZeroVec(),
 			vecToPlayer:       ZeroVec(),
@@ -167,7 +167,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 					callback: func(a *Anim) {
 						if a.finished {
 							segObj.removeMe = true
-							AddLove(game, 1, segObj.pos.x, segObj.pos.y)
+							AddLove(game, 2, segObj.pos.x, segObj.pos.y)
 						}
 					},
 				}

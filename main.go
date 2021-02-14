@@ -3,8 +3,9 @@ package main
 /*
 TODO:
 -Worm
-	-Tail?
-	-Spawning inconsistency
+	-Tail
+	-Roar
+	-Turn when hitting mobs
 -Music
 -Global timer
 -Ending screens

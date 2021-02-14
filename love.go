@@ -20,7 +20,7 @@ type Love struct {
 var sprLoveBlink []*Sprite
 
 func init() {
-	sprLoveBlink = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(64, 96, 64+8, 96+8), image.Rect(64+8, 96, 64+16, 96+8))
+	sprLoveBlink = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(80, 64, 88, 72), image.Rect(88, 64, 96, 72))
 }
 
 func AddLove(game *Game, count int, x, y float64) {

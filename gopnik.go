@@ -31,7 +31,7 @@ func AddGopnik(game *Game, x, y float64) *Object {
 	gopnik := &Gopnik{
 		Mob: Mob{
 			Actor:  NewActor(50.0, 10_000.0, 100_000.0),
-			health: 7,
+			health: 6,
 			currAnim: &Anim{
 				frames: sprGopnikNormal,
 				speed:  0.5,

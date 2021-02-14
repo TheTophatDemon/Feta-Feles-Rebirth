@@ -47,9 +47,9 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 
 	sprites := make([]*Sprite, 0, 8)
 
-	normalTailRect := image.Rect(160, 96, 176, 112)
+	normalTailRect := image.Rect(176, 80, 192, 96)
 	doubleTailRect := image.Rect(176, 96, 208, 112)
-	quadTailRect := image.Rect(128, 80, 160, 112)
+	quadTailRect := image.Rect(128, 176, 160, 208)
 	//====================================
 	//Tail (Sprite farthest behind)
 	//===============================
@@ -74,7 +74,7 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 	//Wings
 	//=================================
 	angelWingRect := image.Rect(160, 64, 192, 80)
-	corruptWingRect := image.Rect(160, 80, 192, 96)
+	corruptWingRect := image.Rect(176, 160, 208, 176)
 	switch bt {
 	case BODY_ANGEL, BODY_ANGEL2:
 		sprites = append(sprites, NewSprite(angelWingRect,
@@ -131,7 +131,7 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 		case FACE_EMPTY_TALK:
 			faceRect = image.Rect(208, 192, 256, 224)
 		case FACE_EMPTY_SAD:
-			faceRect = image.Rect(80, 80, 128, 112)
+			faceRect = image.Rect(160, 176, 208, 208)
 		case FACE_MELTED:
 			faceRect = image.Rect(208, 224, 256, 256)
 		}
