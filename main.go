@@ -2,12 +2,14 @@ package main
 
 /*
 TODO:
--Worm charge face
 -Par times or depleting fuel?
+-Multiply damage/speed in ascended mode
 -Music
 -Bad ending
 -Good ending
 */
+
+//Average playthrough ~25 mins
 
 import (
 	"image"

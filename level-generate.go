@@ -211,7 +211,7 @@ func (level *Level) DigTunnel(start *Tile, end *Tile) {
 	}
 }
 
-func GenerateLevel(w, h int) *Level {
+func GenerateLevel(w, h int, simple bool) *Level {
 	level := NewLevel(w, h)
 
 	//Generate borders
@@ -226,7 +226,11 @@ func GenerateLevel(w, h int) *Level {
 	}*/
 
 	//Generate blobs
-	for k := 0; k < w*h/32; k++ {
+	blobFactor := 32
+	if simple {
+		blobFactor = 64
+	}
+	for k := 0; k < w*h/blobFactor; k++ {
 		x, y := rand.Intn(w), rand.Intn(h)
 		PropagateBlob(level, x, y, 1.0)
 	}

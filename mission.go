@@ -21,8 +21,8 @@ var missions []Mission
 func init() {
 	missions = []Mission{
 		{ //Tutorial
-			loveQuota:  10,
-			maxKnights: 1,
+			loveQuota:  25,
+			maxKnights: 3,
 			catHealth:  3,
 			mapWidth:   32, mapHeight: 32,
 			bgColor1: color.RGBA{91, 110, 225, 255},

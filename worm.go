@@ -6,21 +6,21 @@ import (
 	"math/rand"
 )
 
-var sprWormHead [2]*Sprite //First is left facing, second is right facing
-var sprWormHeadHurt [2]*Sprite
+var sprWormHead *Sprite //First is left facing, second is right facing
+var sprWormHeadHurt *Sprite
 var sprWormHeadDie []*Sprite
+var sprWormHeadCharge *Sprite
 var sprWormBody []*Sprite
 var sprWormBodyDie []*Sprite
 var sprWormTail *Sprite
 
 func init() {
-	sprWormHead[0] = NewSprite(image.Rect(0, 80, 16, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprWormHead[1] = CloneSprite(sprWormHead[0]).Flip(true, false)
-	sprWormHeadHurt[0] = NewSprite(image.Rect(16, 80, 32, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprWormHeadHurt[1] = CloneSprite(sprWormHeadHurt[0]).Flip(true, false)
+	sprWormHead = NewSprite(image.Rect(0, 80, 16, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
+	sprWormHeadHurt = NewSprite(image.Rect(16, 80, 32, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
 	sprWormHeadDie = []*Sprite{
-		sprWormHead[0], sprWormHeadHurt[0], NewSprite(image.Rect(32, 80, 48, 96), &Vec2f{-8.0, -8.0}, false, false, 0),
+		sprWormHead, sprWormHeadHurt, NewSprite(image.Rect(32, 80, 48, 96), &Vec2f{-8.0, -8.0}, false, false, 0),
 	}
+	sprWormHeadCharge = NewSprite(image.Rect(80, 80, 96, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
 	sprWormBody = []*Sprite{
 		NewSprite(image.Rect(48, 80, 64, 96), &Vec2f{-8.0, -8.0}, false, false, 0),
 		NewSprite(image.Rect(48, 80, 64, 96), &Vec2f{-8.0, -8.0}, false, false, 1),
@@ -85,7 +85,7 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 	//Worm code is attached to the head object
 	obj = &Object{
 		pos: &Vec2f{x, y}, radius: 7.0, colType: CT_ENEMY,
-		sprites:    []*Sprite{sprWormHead[0]},
+		sprites:    []*Sprite{sprWormHead},
 		components: []Component{worm},
 	}
 	game.AddObject(obj)
@@ -95,18 +95,12 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 
 func (worm *Worm) Update(game *Game, obj *Object) {
 	//Update sprites
-	if worm.movement.x > 0.0 {
-		if worm.hurtTimer > 0.0 || worm.dead {
-			obj.sprites[0] = sprWormHeadHurt[1]
-		} else {
-			obj.sprites[0] = sprWormHead[1]
-		}
+	if worm.hurtTimer > 0.0 || worm.dead {
+		obj.sprites[0] = sprWormHeadHurt
+	} else if worm.charging && int(game.elapsedTime*4.0)%2 == 0 {
+		obj.sprites[0] = sprWormHeadCharge
 	} else {
-		if worm.hurtTimer > 0.0 || worm.dead {
-			obj.sprites[0] = sprWormHeadHurt[0]
-		} else {
-			obj.sprites[0] = sprWormHead[0]
-		}
+		obj.sprites[0] = sprWormHead
 	}
 
 	if !worm.dead {

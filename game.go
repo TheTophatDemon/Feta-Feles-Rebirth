@@ -91,7 +91,7 @@ func NewGame(mission int) *Game {
 		bgColor:       missions[mission].bgColor1,
 	}
 	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
-	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight)
+	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight, mission <= 1)
 
 	__debugSpots = make([]*DebugSpot, 0, 10)
 
