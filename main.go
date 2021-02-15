@@ -2,9 +2,11 @@ package main
 
 /*
 TODO:
+-Worm charge face
+-Par times or depleting fuel?
 -Music
--Global timer
--Endings
+-Bad ending
+-Good ending
 */
 
 import (

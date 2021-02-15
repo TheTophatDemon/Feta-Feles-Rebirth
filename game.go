@@ -46,6 +46,7 @@ type GameHUD struct {
 	msgBox        UIBox
 	msgTimer      float64
 	mapBorder     UIBox
+	timerBox      UIBox
 }
 
 type FadeMode int
@@ -57,10 +58,15 @@ const (
 	FADE_STAGES int      = 8
 )
 
+var __totalGameTime float64
+
 func NewGame(mission int) *Game {
 	if mission < 0 || mission >= len(missions) {
 		log.Println("Invalid mission number!")
 		mission = int(math.Max(0, math.Min(float64(len(missions)-1), float64(mission))))
+	}
+	if mission == 0 {
+		__totalGameTime = 0.0
 	}
 	game := &Game{
 		objects:  list.New(),
@@ -73,6 +79,7 @@ func NewGame(mission int) *Game {
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
 			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-16)),
 			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
+			timerBox:      CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(4.0, 20.0, 52.0, 36.0)),
 		},
 		mission:       missions[mission],
 		missionNumber: mission,
@@ -138,6 +145,7 @@ var debugDraw bool
 func (g *Game) Update(deltaTime float64) {
 	g.deltaTime = deltaTime
 	g.elapsedTime += deltaTime
+	__totalGameTime += deltaTime
 	if g.fade == FM_NO_FADE {
 
 		cheatText += strings.ToLower(string(ebiten.InputChars()))
@@ -401,6 +409,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	if debugDraw {
 		GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
 	}
+
+	//Draw total gameplay timer
+	g.hud.timerBox.Draw(screen, nil)
+	seconds := int(__totalGameTime) % 60
+	minutes := int(__totalGameTime / 60.0)
+	GenerateText(fmt.Sprintf("%02d:%02d", minutes, seconds), image.Rect(8.0, 24.0, 48.0, 32.0)).Draw(screen)
 
 	if g.fade != FM_NO_FADE {
 		op := &ebiten.DrawImageOptions{}
