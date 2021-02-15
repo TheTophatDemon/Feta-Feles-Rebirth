@@ -2,7 +2,6 @@ package main
 
 /*
 TODO:
--Increase cat health per level...
 -Music
 -Global timer
 -Endings

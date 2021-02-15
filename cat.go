@@ -30,7 +30,7 @@ func AddCat(game *Game, x, y float64) (*Cat, *Object) {
 	cat := &Cat{
 		Mob: Mob{
 			Actor:  NewActor(120.0, 100_000.0, 75_000.0),
-			health: 3,
+			health: game.mission.catHealth,
 			currAnim: &Anim{
 				frames: sprCatRunLeft,
 				speed:  0.1,
