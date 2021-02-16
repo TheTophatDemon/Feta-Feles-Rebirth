@@ -23,7 +23,7 @@ type Game struct {
 	camPos, camMin, camMax *Vec2f
 	winTimer               float64
 	hud                    GameHUD
-	mission                Mission
+	mission                *Mission
 	missionNumber          int
 	playerObj              *Object
 	love                   int
@@ -79,9 +79,9 @@ func NewGame(mission int) *Game {
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
 			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-16)),
 			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
-			timerBox:      CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(4.0, 20.0, 52.0, 36.0)),
+			timerBox:      CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(4.0, 20.0, 100.0, 36.0)),
 		},
-		mission:       missions[mission],
+		mission:       &missions[mission],
 		missionNumber: mission,
 		fade:          FM_FADE_IN,
 		renderTarget:  ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT),
@@ -412,9 +412,11 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	//Draw total gameplay timer
 	g.hud.timerBox.Draw(screen, nil)
-	seconds := int(__totalGameTime) % 60
-	minutes := int(__totalGameTime / 60.0)
-	GenerateText(fmt.Sprintf("%02d:%02d", minutes, seconds), image.Rect(8.0, 24.0, 48.0, 32.0)).Draw(screen)
+	tSeconds := int(g.elapsedTime) % 60
+	tMinutes := int(g.elapsedTime / 60.0)
+	pSeconds := g.mission.parTime % 60
+	pMinutes := g.mission.parTime / 60
+	GenerateText(fmt.Sprintf("%02d:%02d/%02d:%02d", tMinutes, tSeconds, pMinutes, pSeconds), image.Rect(8.0, 24.0, 96.0, 32.0)).Draw(screen)
 
 	if g.fade != FM_NO_FADE {
 		op := &ebiten.DrawImageOptions{}
@@ -465,6 +467,9 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	case SIGNAL_CAT_DIE:
 		g.fade = FM_FADE_OUT
 		PlaySound("outro_chime")
+		if g.elapsedTime < float64(g.mission.parTime) {
+			g.mission.goodEndFlag = true
+		}
 	}
 }
 

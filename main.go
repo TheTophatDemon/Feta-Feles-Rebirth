@@ -2,11 +2,13 @@ package main
 
 /*
 TODO:
--Par times or depleting fuel?
+-Endings
 -Multiply damage/speed in ascended mode
 -Music
--Bad ending
--Good ending
+-Pause screen
+	-Restart game
+	-Mute music/sfx
+	-Controls list
 */
 
 //Average playthrough ~25 mins
