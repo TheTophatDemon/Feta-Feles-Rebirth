@@ -2,7 +2,7 @@ package main
 
 /*
 TODO:
--Music
+-Ambient game music / Fix ghost music
 -Endings
 -Multiply damage/speed in ascended mode
 -Pause screen
@@ -26,6 +26,7 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
 )
 
 const (
@@ -63,6 +64,7 @@ func (a *App) Update() error {
 	__lastTime = now
 
 	__appState.Update(math.Min(FRAMERATE, deltaTime))
+	audio.Update(deltaTime)
 
 	//Toggle fullscreen with alt + enter
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && ebiten.IsKeyPressed(ebiten.KeyAlt) {

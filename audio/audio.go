@@ -7,6 +7,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/audio"
+	"github.com/hajimehoshi/ebiten/audio/vorbis"
 	"github.com/hajimehoshi/ebiten/audio/wav"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
@@ -18,6 +19,20 @@ var sfxFiles map[string]string
 var musFiles map[string]string
 var musPlayer *audio.Player
 var currSong string
+var nextSong string
+
+type FadeType int
+
+const (
+	FADE_NONE FadeType = iota
+	FADE_IN
+	FADE_OUT
+)
+
+const FADE_TIME float64 = 1.0
+
+var musFade FadeType = FADE_NONE
+var musFadeTimer float64 = 0.0
 
 func init() {
 	audioContext = audio.NewContext(44100)
@@ -44,11 +59,14 @@ func init() {
 	}
 }
 
-/*func PlayMusic(name string) {
-	if len(name) == 0 && musPlayer != nil {
-		musPlayer.Close()
+func PlayMusic(name string) {
+	nextSong = name
+	musData, valid := musFiles[name]
+	musFadeTimer = 0.0
+	if len(name) == 0 || !valid {
+		musFade = FADE_OUT
 	} else if currSong != name {
-		stream, err := vorbis.Decode(audioContext, assets.ReadCompressedString(musFiles[name]))
+		stream, err := vorbis.Decode(audioContext, assets.ReadCompressedString(musData))
 		if err != nil {
 			log.Fatal("Cannot decode music file: ", name)
 		}
@@ -56,8 +74,34 @@ func init() {
 		if err != nil {
 			log.Fatal("Failed to create stream for song: ", name)
 		}
+		musPlayer.Play()
+		musPlayer.SetVolume(1.0)
+		musFade = FADE_NONE
 	}
-}*/
+}
+
+func Update(deltaTime float64) {
+	if musFade != FADE_NONE {
+		musFadeTimer += deltaTime
+		if musFadeTimer > FADE_TIME {
+			musFadeTimer = 0.0
+			currSong = nextSong
+			musFade = FADE_NONE
+		}
+		if musPlayer != nil {
+			switch musFade {
+			case FADE_IN:
+				musPlayer.SetVolume(musFadeTimer)
+			case FADE_OUT:
+				musPlayer.SetVolume(FADE_TIME - musFadeTimer)
+			}
+		}
+	}
+	if musPlayer != nil && !musPlayer.IsPlaying() {
+		musPlayer.Rewind()
+		musPlayer.Play()
+	}
+}
 
 const PLAYERS_PER_SOUND = 8
 

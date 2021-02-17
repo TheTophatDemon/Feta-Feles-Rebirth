@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
@@ -58,7 +59,7 @@ func init() {
 				"CAN YOU FEEL THE POWER IN THE AIR? WE CAN DO ALL    SORTS OF GREAT THINGS NOW!",
 				"WHY NOT CLIMB EVEN HIGHER?",
 			},
-			music: "maiden",
+			music: "hope",
 			voice: "voice",
 		},
 		{
@@ -71,7 +72,7 @@ func init() {
 				"IT'S KIND OF UNCOMFORTABLE",
 				"DON'T WORRY. THIS IS ALL A NATURAL PART OF THE      PROCESS.",
 			},
-			music: "maiden",
+			music: "hope",
 			voice: "voice",
 		},
 		{
@@ -196,6 +197,9 @@ func NewCutsceneState(sceneNum int) *CutsceneState {
 	ctscn.transition = FM_FADE_IN
 	ctscn.transTimer = 0.0
 	ctscn.renderTarget = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
+
+	audio.PlayMusic(ctscn.cutscene.music)
+
 	return ctscn
 }
 
@@ -212,6 +216,7 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 				if ct.dialogIndex >= len(ct.dialog) {
 					ct.dialogIndex--
 					ct.transition = FM_FADE_OUT
+					audio.PlayMusic("")
 				} else {
 					faceIdx := int(math.Min(float64(ct.dialogIndex), float64(len(ct.cutscene.faces)-1)))
 					ct.feles = MakeFeles(ct.cutscene.faces[faceIdx], ct.felesBody, ct.feles.pos)
@@ -227,6 +232,7 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 			if ct.skipTimer > 0.5 {
 				ct.skipTimer = 0.0
 				ct.transition = FM_FADE_OUT
+				audio.PlayMusic("")
 			}
 		} else {
 			ct.skipText.fillPos = 0
