@@ -3,6 +3,9 @@ package main
 import (
 	"image"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Blargh struct {
@@ -16,10 +19,10 @@ var sprBlarghHurt *Sprite
 var sprBlarghDie []*Sprite
 
 func init() {
-	sprBlarghNormal = NewSprite(image.Rect(0, 48, 16, 64), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprBlarghShoot = NewSprite(image.Rect(16, 48, 32, 64), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprBlarghHurt = NewSprite(image.Rect(32, 48, 48, 64), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprBlarghDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 48, 48, 64), image.Rect(48, 48, 64, 64))
+	sprBlarghNormal = NewSprite(image.Rect(0, 48, 16, 64), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprBlarghShoot = NewSprite(image.Rect(16, 48, 32, 64), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprBlarghHurt = NewSprite(image.Rect(32, 48, 48, 64), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprBlarghDie = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(32, 48, 48, 64), image.Rect(48, 48, 64, 64))
 }
 
 var blarghCtr ObjCtr
@@ -34,14 +37,14 @@ func AddBlargh(game *Game, x, y float64) *Object {
 			Actor:             NewActor(50.0, 100_000.0, 50_000.0),
 			health:            5,
 			currAnim:          nil,
-			lastSeenPlayerPos: ZeroVec(),
-			vecToPlayer:       ZeroVec(),
+			lastSeenPlayerPos: vmath.ZeroVec(),
+			vecToPlayer:       vmath.ZeroVec(),
 		},
 		shootTimer: rand.Float64()/2.0 + 0.5,
 	}
 	blarghCtr.Inc()
 	return game.AddObject(&Object{
-		pos: &Vec2f{x, y}, radius: 7.0, colType: CT_ENEMY,
+		pos: vmath.NewVec(x, y), radius: 7.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprBlarghNormal},
 		components: []Component{blargh},
 	})
@@ -69,7 +72,7 @@ func (bl *Blargh) Update(game *Game, obj *Object) {
 		}
 		//Move for 0.5 seconds after timer starts
 		if bl.shootTimer < BLARGH_SHOOT_INTERVAL-0.5 {
-			bl.Move(bl.vecToPlayer.x, bl.vecToPlayer.y)
+			bl.Move(bl.vecToPlayer.X, bl.vecToPlayer.Y)
 		} else {
 			bl.Move(0.0, 0.0)
 		}
@@ -94,7 +97,7 @@ func (bl *Blargh) OnCollision(game *Game, obj, other *Object) {
 	//Death
 	if bl.health <= 0 && !bl.dead {
 		bl.dead = true
-		PlaySound("enemy_die")
+		audio.PlaySound("enemy_die")
 		bl.currAnim = &Anim{
 			frames: sprBlarghDie,
 			speed:  0.15,
@@ -102,7 +105,7 @@ func (bl *Blargh) OnCollision(game *Game, obj, other *Object) {
 				if anm.finished {
 					obj.removeMe = true
 					blarghCtr.Dec()
-					AddLove(game, 4, obj.pos.x, obj.pos.y)
+					AddLove(game, 4, obj.pos.X, obj.pos.Y)
 				}
 			},
 		}

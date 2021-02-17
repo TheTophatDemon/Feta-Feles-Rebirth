@@ -7,6 +7,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Sprite struct {
@@ -14,12 +16,12 @@ type Sprite struct {
 	matrix *ebiten.GeoM
 }
 
-func NewSprite(src image.Rectangle, ofs *Vec2f, flipH, flipV bool, orient int) *Sprite {
+func NewSprite(src image.Rectangle, ofs *vmath.Vec2f, flipH, flipV bool, orient int) *Sprite {
 	subImg := GetGraphics().SubImage(src).(*ebiten.Image)
 	return NewSpriteFromSubImg(subImg, ofs, flipH, flipV, orient)
 }
 
-func NewSpriteFromSubImg(subImg *ebiten.Image, ofs *Vec2f, flipH, flipV bool, orient int) *Sprite {
+func NewSpriteFromSubImg(subImg *ebiten.Image, ofs *vmath.Vec2f, flipH, flipV bool, orient int) *Sprite {
 	matrix := new(ebiten.GeoM)
 
 	//Perform rotation and scaling with respect to the center
@@ -37,7 +39,7 @@ func NewSpriteFromSubImg(subImg *ebiten.Image, ofs *Vec2f, flipH, flipV bool, or
 	matrix.Scale(scx, scy)
 	matrix.Rotate(float64(orient) * math.Pi / 2.0)
 	matrix.Translate(hw, hh)
-	matrix.Translate(ofs.x, ofs.y)
+	matrix.Translate(ofs.X, ofs.Y)
 
 	return &Sprite{subImg, matrix}
 }
@@ -66,7 +68,7 @@ func (spr *Sprite) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
 	target.DrawImage(spr.subImg, op)
 }
 
-func NewSprites(ofs *Vec2f, rects ...image.Rectangle) []*Sprite {
+func NewSprites(ofs *vmath.Vec2f, rects ...image.Rectangle) []*Sprite {
 	sprites := make([]*Sprite, len(rects))
 	for i, rect := range rects {
 		sprites[i] = NewSprite(rect, ofs, false, false, 0)
@@ -172,7 +174,7 @@ func GenerateText(text string, dest image.Rectangle) *Text {
 			charDestY := (i/lineLen)*8 + dest.Min.Y
 			charSrcX := (int(r-' ')%12)*8 + 64
 			charSrcY := (int(r-' ') / 12) * 8
-			sprites[i] = NewSprite(image.Rect(charSrcX, charSrcY, charSrcX+8, charSrcY+8), &Vec2f{float64(charDestX), float64(charDestY)}, false, false, 0)
+			sprites[i] = NewSprite(image.Rect(charSrcX, charSrcY, charSrcX+8, charSrcY+8), vmath.NewVec(float64(charDestX), float64(charDestY)), false, false, 0)
 		}
 	}
 	return &Text{
@@ -191,7 +193,7 @@ func (text *Text) Update(deltaTime float64) {
 		text.fillTimer = 0.0
 		if text.fillPos < len(text.text) {
 			if text.text[text.fillPos] > 'A' && text.text[text.fillPos] < 'z' {
-				PlaySound(text.fillSound)
+				audio.PlaySound(text.fillSound)
 			}
 			text.fillPos++
 		}

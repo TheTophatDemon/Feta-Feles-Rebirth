@@ -4,6 +4,8 @@ import (
 	"image"
 	"math"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 const (
@@ -44,7 +46,7 @@ func (t *Tile) IsTerrain() bool {
 	return t.tt&TT_TERRAIN > 0
 }
 
-func (t *Tile) GetSlopeNormal() *Vec2f {
+func (t *Tile) GetSlopeNormal() *vmath.Vec2f {
 	if t.IsSlope() {
 		return slopeNormals[t.tt].Clone()
 	}
@@ -78,7 +80,7 @@ func (t *Tile) RegenSprite() {
 			rect = image.Rect(rect.Min.X+x, rect.Min.Y, rect.Max.X+x, rect.Max.Y)
 		}
 
-		t.spr = NewSprite(rect, &Vec2f{t.left, t.top}, false, false, orient)
+		t.spr = NewSprite(rect, vmath.NewVec(t.left, t.top), false, false, orient)
 	} else {
 		t.spr = nil
 	}
@@ -107,7 +109,7 @@ const (
 )
 
 var tileTypeRects map[TileType]image.Rectangle
-var slopeNormals map[TileType]*Vec2f
+var slopeNormals map[TileType]*vmath.Vec2f
 
 func init() {
 	tileTypeRects = map[TileType]image.Rectangle{
@@ -124,10 +126,10 @@ func init() {
 		TT_PYLON:          image.Rect(48, 96, 64, 112),
 	}
 	//45 & 225 are backwards
-	slopeNormals = map[TileType]*Vec2f{
-		TT_SLOPE_45:  {-math.Cos(3.0 * math.Pi / 4.0), -math.Sin(3.0 * math.Pi / 4.0)},
-		TT_SLOPE_135: {math.Cos(5.0 * math.Pi / 4.0), math.Sin(5.0 * math.Pi / 4.0)},
-		TT_SLOPE_225: {-math.Cos(7.0 * math.Pi / 4.0), -math.Sin(7.0 * math.Pi / 4.0)},
-		TT_SLOPE_315: {math.Cos(9.0 * math.Pi / 4.0), math.Sin(9.0 * math.Pi / 4.0)},
+	slopeNormals = map[TileType]*vmath.Vec2f{
+		TT_SLOPE_45:  vmath.NewVec(-math.Cos(3.0*math.Pi/4.0), -math.Sin(3.0*math.Pi/4.0)),
+		TT_SLOPE_135: vmath.NewVec(math.Cos(5.0*math.Pi/4.0), math.Sin(5.0*math.Pi/4.0)),
+		TT_SLOPE_225: vmath.NewVec(-math.Cos(7.0*math.Pi/4.0), -math.Sin(7.0*math.Pi/4.0)),
+		TT_SLOPE_315: vmath.NewVec(math.Cos(9.0*math.Pi/4.0), math.Sin(9.0*math.Pi/4.0)),
 	}
 }

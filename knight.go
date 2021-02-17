@@ -3,6 +3,9 @@ package main
 import (
 	"image"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Knight struct {
@@ -16,10 +19,10 @@ var sprKnightHurt *Sprite
 var sprKnightDie []*Sprite
 
 func init() {
-	sprKnightNormal = NewSprite(image.Rect(16, 32, 32, 48), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprKnightCharge = NewSprite(image.Rect(0, 32, 16, 48), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprKnightHurt = NewSprite(image.Rect(32, 32, 48, 48), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprKnightDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 32, 48, 48), image.Rect(48, 32, 64, 48))
+	sprKnightNormal = NewSprite(image.Rect(16, 32, 32, 48), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprKnightCharge = NewSprite(image.Rect(0, 32, 16, 48), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprKnightHurt = NewSprite(image.Rect(32, 32, 48, 48), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprKnightDie = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(32, 32, 48, 48), image.Rect(48, 32, 64, 48))
 }
 
 var knightCtr ObjCtr
@@ -34,13 +37,13 @@ func AddKnight(game *Game, x, y float64) *Knight {
 			Actor:             NewActor(200.0, 200_000.0, 25_000.0),
 			health:            3,
 			currAnim:          nil,
-			lastSeenPlayerPos: ZeroVec(),
-			vecToPlayer:       ZeroVec(),
+			lastSeenPlayerPos: vmath.ZeroVec(),
+			vecToPlayer:       vmath.ZeroVec(),
 		},
 		chargeTimer: rand.Float64(),
 	}
 	game.AddObject(&Object{
-		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_ENEMY,
+		pos: vmath.NewVec(x, y), radius: 6.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprKnightNormal},
 		components: []Component{knight},
 	})
@@ -64,7 +67,7 @@ func (kn *Knight) Update(game *Game, obj *Object) {
 		kn.chargeTimer = 0.0
 		if kn.hunting {
 			diff := kn.lastSeenPlayerPos.Clone().Sub(obj.pos)
-			kn.Move(diff.x, diff.y)
+			kn.Move(diff.X, diff.Y)
 		}
 	} else if kn.chargeTimer > 0.25 {
 		kn.Move(0.0, 0.0)
@@ -79,7 +82,7 @@ func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
 	//Death
 	if kn.health <= 0 && !kn.dead {
 		kn.dead = true
-		PlaySound("enemy_die")
+		audio.PlaySound("enemy_die")
 		kn.currAnim = &Anim{
 			frames: sprKnightDie,
 			speed:  0.15,
@@ -87,7 +90,7 @@ func (kn *Knight) OnCollision(game *Game, obj, other *Object) {
 				if anm.finished {
 					obj.removeMe = true
 					knightCtr.Dec()
-					AddLove(game, 3, obj.pos.x, obj.pos.y)
+					AddLove(game, 3, obj.pos.X, obj.pos.Y)
 				}
 			},
 		}

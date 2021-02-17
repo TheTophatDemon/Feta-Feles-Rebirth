@@ -2,9 +2,9 @@ package main
 
 /*
 TODO:
+-Music
 -Endings
 -Multiply damage/speed in ascended mode
--Music
 -Pause screen
 	-Restart game
 	-Mute music/sfx

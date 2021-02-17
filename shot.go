@@ -2,18 +2,20 @@ package main
 
 import (
 	"image"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Shot struct {
-	vel     *Vec2f  //Velocity
-	life    float64 //Time in seconds until it disappears
-	enemy   bool    //Will this shot hurt the player?
-	bounces int     //Number of times shot can hit the wall before dying
+	vel     *vmath.Vec2f //Velocity
+	life    float64      //Time in seconds until it disappears
+	enemy   bool         //Will this shot hurt the player?
+	bounces int          //Number of times shot can hit the wall before dying
 	bouncy  bool
 	anim    *Anim
 }
 
-func AddShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool) *Shot {
+func AddShot(game *Game, pos, dir *vmath.Vec2f, speed float64, enemy bool) *Shot {
 	return AddBouncyShot(game, pos, dir, speed, enemy, 0)
 }
 
@@ -23,13 +25,13 @@ var sprShotEnemyBouncy []*Sprite
 var sprShotPlayerBouncy []*Sprite
 
 func init() {
-	sprShotPlayer = NewSprite(image.Rect(88, 72, 96, 80), &Vec2f{-4.0, -4.0}, false, false, 0)
-	sprShotEnemy = NewSprite(image.Rect(80, 72, 88, 80), &Vec2f{-4.0, -4.0}, false, false, 0)
-	sprShotEnemyBouncy = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(0, 128, 8, 136), image.Rect(8, 128, 16, 136))
-	sprShotPlayerBouncy = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(0, 136, 8, 144), image.Rect(8, 136, 16, 144))
+	sprShotPlayer = NewSprite(image.Rect(88, 72, 96, 80), vmath.NewVec(-4.0, -4.0), false, false, 0)
+	sprShotEnemy = NewSprite(image.Rect(80, 72, 88, 80), vmath.NewVec(-4.0, -4.0), false, false, 0)
+	sprShotEnemyBouncy = NewSprites(vmath.NewVec(-4.0, -4.0), image.Rect(0, 128, 8, 136), image.Rect(8, 128, 16, 136))
+	sprShotPlayerBouncy = NewSprites(vmath.NewVec(-4.0, -4.0), image.Rect(0, 136, 8, 144), image.Rect(8, 136, 16, 144))
 }
 
-func AddBouncyShot(game *Game, pos, dir *Vec2f, speed float64, enemy bool, bounces int) *Shot {
+func AddBouncyShot(game *Game, pos, dir *vmath.Vec2f, speed float64, enemy bool, bounces int) *Shot {
 	shot := &Shot{
 		vel:     dir.Clone().Normalize().Scale(speed),
 		life:    5.0,
@@ -86,13 +88,13 @@ func (shot *Shot) Update(game *Game, obj *Object) {
 			AddExplosion(game, hitTile.centerX, hitTile.centerY)
 		}
 		if shot.bounces > 0 {
-			if normal.x != 0.0 || normal.y != 0.0 {
+			if normal.X != 0.0 || normal.Y != 0.0 {
 				shot.vel = normal.Scale(shot.vel.Length())
 			}
 			shot.bounces--
 		} else {
 			obj.removeMe = true
-			AddPoof(game, obj.pos.x, obj.pos.y)
+			AddPoof(game, obj.pos.X, obj.pos.Y)
 		}
 	}
 

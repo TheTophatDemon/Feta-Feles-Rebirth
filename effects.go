@@ -4,12 +4,15 @@ import (
 	"image"
 	"math"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Effect struct {
 	anim         Anim
-	velocity     *Vec2f
-	acceleration *Vec2f
+	velocity     *vmath.Vec2f
+	acceleration *vmath.Vec2f
 }
 
 func (fx *Effect) Update(game *Game, obj *Object) {
@@ -28,16 +31,16 @@ var sprExplosion []*Sprite
 
 func init() {
 	sprExplosion = make([]*Sprite, 5)
-	sprExplosion[0] = NewSprite(image.Rect(16, 144, 32, 160), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprExplosion[1] = NewSprite(image.Rect(32, 128, 64, 160), &Vec2f{-16.0, -16.0}, false, false, 0)
-	sprExplosion[2] = NewSprite(image.Rect(64, 112, 112, 160), &Vec2f{-24.0, -24.0}, false, false, 0)
-	sprExplosion[3] = NewSprite(image.Rect(112, 112, 160, 160), &Vec2f{-24.0, -24.0}, false, false, 0)
-	sprExplosion[4] = NewSprite(image.Rect(160, 112, 208, 160), &Vec2f{-24.0, -24.0}, false, false, 0)
+	sprExplosion[0] = NewSprite(image.Rect(16, 144, 32, 160), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprExplosion[1] = NewSprite(image.Rect(32, 128, 64, 160), vmath.NewVec(-16.0, -16.0), false, false, 0)
+	sprExplosion[2] = NewSprite(image.Rect(64, 112, 112, 160), vmath.NewVec(-24.0, -24.0), false, false, 0)
+	sprExplosion[3] = NewSprite(image.Rect(112, 112, 160, 160), vmath.NewVec(-24.0, -24.0), false, false, 0)
+	sprExplosion[4] = NewSprite(image.Rect(160, 112, 208, 160), vmath.NewVec(-24.0, -24.0), false, false, 0)
 }
 
 func AddExplosion(game *Game, x, y float64) *Object {
 	obj := &Object{
-		pos:          &Vec2f{x, y},
+		pos:          vmath.NewVec(x, y),
 		radius:       8.0,
 		colType:      CT_EXPLOSION,
 		sprites:      []*Sprite{sprExplosion[0]},
@@ -71,19 +74,19 @@ func AddExplosion(game *Game, x, y float64) *Object {
 	}
 	obj.components = []Component{effect}
 	game.AddObject(obj)
-	game.PlaySoundAttenuated("explode", x, y, 256.0)
+	audio.PlaySoundAttenuated("explode", 256.0, obj.pos, game.camMin, game.camMax)
 	return obj
 }
 
 var sprPoof []*Sprite
 
 func init() {
-	sprPoof = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(80, 48, 88, 56), image.Rect(88, 48, 96, 56))
+	sprPoof = NewSprites(vmath.NewVec(-4.0, -4.0), image.Rect(80, 48, 88, 56), image.Rect(88, 48, 96, 56))
 }
 
 func AddPoof(game *Game, x, y float64) *Object {
 	obj := &Object{
-		pos:          &Vec2f{x, y},
+		pos:          vmath.NewVec(x, y),
 		radius:       0.0,
 		colType:      CT_NONE,
 		sprites:      []*Sprite{sprPoof[0]},
@@ -107,14 +110,14 @@ func AddPoof(game *Game, x, y float64) *Object {
 var sprStars []*Sprite
 
 func init() {
-	sprStars = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(80, 48, 88, 56), image.Rect(80, 56, 88, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 48, 96, 56))
+	sprStars = NewSprites(vmath.NewVec(-4.0, -4.0), image.Rect(80, 48, 88, 56), image.Rect(80, 56, 88, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 56, 96, 64), image.Rect(88, 48, 96, 56))
 }
 
 func AddStarBurst(game *Game, x, y float64) {
 	angle := rand.Float64() * math.Pi * 2.0
 	for a := 0.0; a < math.Pi*2.0; a += (rand.Float64() * math.Pi / 4.0) + math.Pi/8.0 {
 		obj := &Object{
-			pos:          &Vec2f{x, y},
+			pos:          vmath.NewVec(x, y),
 			radius:       0.0,
 			colType:      CT_NONE,
 			sprites:      []*Sprite{sprStars[0]},
@@ -131,7 +134,7 @@ func AddStarBurst(game *Game, x, y float64) {
 			},
 		}
 		const SPEED = 50.0
-		effect.velocity = &Vec2f{math.Cos(angle+a) * SPEED, math.Sin(angle+a) * SPEED}
+		effect.velocity = vmath.NewVec(math.Cos(angle+a)*SPEED, math.Sin(angle+a)*SPEED)
 		effect.acceleration = effect.velocity.Clone().Scale(-0.5)
 		obj.components = []Component{effect}
 		game.AddObject(obj)

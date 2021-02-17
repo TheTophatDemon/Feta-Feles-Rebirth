@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/hajimehoshi/ebiten"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type ColType int32
@@ -30,7 +31,7 @@ type Collidable interface {
 
 //Object ...
 type Object struct {
-	pos          *Vec2f
+	pos          *vmath.Vec2f
 	radius       float64
 	colType      ColType
 	sprites      []*Sprite
@@ -53,7 +54,7 @@ func (obj *Object) DrawAllSprites(screen *ebiten.Image, pt *ebiten.GeoM) {
 	if pt != nil {
 		objT = *pt
 	}
-	objT.Translate(obj.pos.x, obj.pos.y)
+	objT.Translate(obj.pos.X, obj.pos.Y)
 	for _, sp := range obj.sprites {
 		sp.Draw(screen, &objT)
 	}

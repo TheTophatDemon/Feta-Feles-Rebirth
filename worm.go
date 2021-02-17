@@ -4,6 +4,9 @@ import (
 	"image"
 	"math"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 var sprWormHead *Sprite //First is left facing, second is right facing
@@ -15,19 +18,19 @@ var sprWormBodyDie []*Sprite
 var sprWormTail *Sprite
 
 func init() {
-	sprWormHead = NewSprite(image.Rect(0, 80, 16, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
-	sprWormHeadHurt = NewSprite(image.Rect(16, 80, 32, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
+	sprWormHead = NewSprite(image.Rect(0, 80, 16, 96), vmath.NewVec(-8.0, -8.0), false, false, 0)
+	sprWormHeadHurt = NewSprite(image.Rect(16, 80, 32, 96), vmath.NewVec(-8.0, -8.0), false, false, 0)
 	sprWormHeadDie = []*Sprite{
-		sprWormHead, sprWormHeadHurt, NewSprite(image.Rect(32, 80, 48, 96), &Vec2f{-8.0, -8.0}, false, false, 0),
+		sprWormHead, sprWormHeadHurt, NewSprite(image.Rect(32, 80, 48, 96), vmath.NewVec(-8.0, -8.0), false, false, 0),
 	}
-	sprWormHeadCharge = NewSprite(image.Rect(80, 80, 96, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
+	sprWormHeadCharge = NewSprite(image.Rect(80, 80, 96, 96), vmath.NewVec(-8.0, -8.0), false, false, 0)
 	sprWormBody = []*Sprite{
-		NewSprite(image.Rect(48, 80, 64, 96), &Vec2f{-8.0, -8.0}, false, false, 0),
-		NewSprite(image.Rect(48, 80, 64, 96), &Vec2f{-8.0, -8.0}, false, false, 1),
-		NewSprite(image.Rect(48, 80, 64, 96), &Vec2f{-8.0, -8.0}, false, false, 2),
+		NewSprite(image.Rect(48, 80, 64, 96), vmath.NewVec(-8.0, -8.0), false, false, 0),
+		NewSprite(image.Rect(48, 80, 64, 96), vmath.NewVec(-8.0, -8.0), false, false, 1),
+		NewSprite(image.Rect(48, 80, 64, 96), vmath.NewVec(-8.0, -8.0), false, false, 2),
 	}
-	sprWormBodyDie = []*Sprite{sprWormBody[0], NewSprite(image.Rect(48, 48, 64, 64), &Vec2f{-8.0, -8.0}, false, false, 0)}
-	sprWormTail = NewSprite(image.Rect(64, 80, 80, 96), &Vec2f{-8.0, -8.0}, false, false, 0)
+	sprWormBodyDie = []*Sprite{sprWormBody[0], NewSprite(image.Rect(48, 48, 64, 64), vmath.NewVec(-8.0, -8.0), false, false, 0)}
+	sprWormTail = NewSprite(image.Rect(64, 80, 80, 96), vmath.NewVec(-8.0, -8.0), false, false, 0)
 }
 
 var wormCtr ObjCtr
@@ -45,10 +48,10 @@ const WORM_TURNTIME_RANGE = WORM_TURNTIME_MAX - WORM_TURNTIME_MIN
 
 type Worm struct {
 	Mob
-	segs                 [WORM_NSEGS]*Object //Body segments, including tail
-	segTargets           [WORM_NSEGS]*Vec2f  //Queue of previous head positions that the segments move towards
-	enqDistCtr           float64             //Measures distance traveled since last enqueue, up to WORM_QDIST
-	segDeathTimer        float64             //Timer for destroying segments in the death animation
+	segs                 [WORM_NSEGS]*Object      //Body segments, including tail
+	segTargets           [WORM_NSEGS]*vmath.Vec2f //Queue of previous head positions that the segments move towards
+	enqDistCtr           float64                  //Measures distance traveled since last enqueue, up to WORM_QDIST
+	segDeathTimer        float64                  //Timer for destroying segments in the death animation
 	turnSpeed, turnTimer float64
 	charging             bool
 }
@@ -59,14 +62,14 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 			Actor:             NewActor(100.0, 100_000.0, 50_000.0),
 			health:            13,
 			currAnim:          nil,
-			lastSeenPlayerPos: ZeroVec(),
-			vecToPlayer:       ZeroVec(),
+			lastSeenPlayerPos: vmath.ZeroVec(),
+			vecToPlayer:       vmath.ZeroVec(),
 		},
 		turnSpeed: math.Pi,
 		turnTimer: rand.Float64()*WORM_TURNTIME_RANGE + WORM_TURNTIME_MIN,
 	}
-	dir := RandomDirection()
-	worm.Move(dir.x, dir.y)
+	dir := vmath.RandomDirection()
+	worm.Move(dir.X, dir.Y)
 	for i := WORM_NSEGS - 1; i >= 0; i-- { //Working backwards to ensure correct sprite order
 		spr := sprWormBody[rand.Intn(len(sprWormBody))] //Select random body segment sprite
 		if i == WORM_NSEGS-1 {
@@ -76,7 +79,7 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 			anim: Anim{frames: []*Sprite{spr}},
 		}
 		worm.segs[i] = &Object{
-			pos: &Vec2f{x, y}, radius: 6.0, colType: CT_ENEMY,
+			pos: vmath.NewVec(x, y), radius: 6.0, colType: CT_ENEMY,
 			sprites:    []*Sprite{spr},
 			components: []Component{effect},
 		}
@@ -84,7 +87,7 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 	}
 	//Worm code is attached to the head object
 	obj = &Object{
-		pos: &Vec2f{x, y}, radius: 7.0, colType: CT_ENEMY,
+		pos: vmath.NewVec(x, y), radius: 7.0, colType: CT_ENEMY,
 		sprites:    []*Sprite{sprWormHead},
 		components: []Component{worm},
 	}
@@ -113,16 +116,16 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 				if worm.seesPlayer {
 					worm.charging = true
 					worm.turnTimer = WORM_TURNTIME_MAX
-					game.PlaySoundAttenuated("roar", obj.pos.x, obj.pos.y, 256.0)
+					audio.PlaySoundAttenuated("roar", 256.0, obj.pos, game.camMin, game.camMax)
 				}
 			}
 			worm.Wander(game, obj, 64.0, worm.turnSpeed)
 		} else {
 			//Turn to charge at player
 			nDiff := worm.vecToPlayer.Clone().Normalize()
-			dp := VecDot(nDiff, worm.movement)
+			dp := vmath.VecDot(nDiff, worm.movement)
 			if dp < 0.9 {
-				cp := VecCross(nDiff, worm.movement) //Sign of cross product determines which way to turn
+				cp := vmath.VecCross(nDiff, worm.movement) //Sign of cross product determines which way to turn
 				if cp != 0.0 {
 					cp /= math.Abs(cp) //1.0 if positive, -1.0 if negative
 				}
@@ -150,8 +153,8 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 				diff := worm.segTargets[i].Clone().Sub(seg.pos)
 				mvSpd := worm.Actor.velocity.Length() * game.deltaTime
 				if diff.Length() < mvSpd {
-					seg.pos.x = worm.segTargets[i].x
-					seg.pos.y = worm.segTargets[i].y
+					seg.pos.X = worm.segTargets[i].X
+					seg.pos.Y = worm.segTargets[i].Y
 				} else {
 					seg.pos.Add(diff.Normalize().Scale(mvSpd))
 				}
@@ -170,7 +173,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 					break
 				}
 			}
-			PlaySound("enemy_die")
+			audio.PlaySound("enemy_die")
 			//Destroy head when segments are gone
 			if i < 0 {
 				worm.currAnim = &Anim{
@@ -180,7 +183,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 						if a.finished {
 							obj.removeMe = true
 							wormCtr.Dec()
-							AddLove(game, 5, obj.pos.x, obj.pos.y)
+							AddLove(game, 5, obj.pos.X, obj.pos.Y)
 						}
 					},
 				}
@@ -194,7 +197,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 					callback: func(a *Anim) {
 						if a.finished {
 							segObj.removeMe = true
-							AddLove(game, 2, segObj.pos.x, segObj.pos.y)
+							AddLove(game, 2, segObj.pos.X, segObj.pos.Y)
 						}
 					},
 				}

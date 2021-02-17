@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Game struct {
@@ -20,7 +22,7 @@ type Game struct {
 	level                  *Level
 	deltaTime              float64
 	lastTime               time.Time
-	camPos, camMin, camMax *Vec2f
+	camPos, camMin, camMax *vmath.Vec2f
 	winTimer               float64
 	hud                    GameHUD
 	mission                *Mission
@@ -71,9 +73,9 @@ func NewGame(mission int) *Game {
 	game := &Game{
 		objects:  list.New(),
 		lastTime: time.Now(),
-		camPos:   ZeroVec(),
-		camMin:   ZeroVec(),
-		camMax:   ZeroVec(),
+		camPos:   vmath.ZeroVec(),
+		camMin:   vmath.ZeroVec(),
+		camMax:   vmath.ZeroVec(),
 		hud: GameHUD{
 			loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
@@ -122,7 +124,7 @@ func NewGame(mission int) *Game {
 		AddBarrel(game, spawn.centerX, spawn.centerY)
 	}
 
-	PlaySound("intro_chime")
+	audio.PlaySound("intro_chime")
 
 	if mission == 0 {
 		Listen_Signal(SIGNAL_PLAYER_MOVED, game)
@@ -157,12 +159,12 @@ func (g *Game) Update(deltaTime float64) {
 		}
 		if strings.Contains(cheatText, "tdnyaah") {
 			cheatText = ""
-			AddCat(g, g.playerObj.pos.x, g.playerObj.pos.y)
+			AddCat(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 		}
 		if strings.Contains(cheatText, "tdnyaaaah") {
 			cheatText = ""
 			for i := 0; i < 32; i++ {
-				AddCat(g, g.playerObj.pos.x, g.playerObj.pos.y)
+				AddCat(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 			}
 		}
 		if strings.Contains(cheatText, "tdsanic") {
@@ -185,7 +187,7 @@ func (g *Game) Update(deltaTime float64) {
 		}
 		if strings.Contains(cheatText, "tdasplode") {
 			cheatText = ""
-			AddExplosion(g, g.playerObj.pos.x, g.playerObj.pos.y)
+			AddExplosion(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 		}
 		if strings.Contains(cheatText, "tdascend") {
 			cheatText = ""
@@ -201,7 +203,7 @@ func (g *Game) Update(deltaTime float64) {
 		}
 		if strings.Contains(cheatText, "tdspicy") {
 			cheatText = ""
-			AddWorm(g, g.playerObj.pos.x, g.playerObj.pos.y)
+			AddWorm(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 		}
 
 		//Prevent the game from going AWOL when the window is moved
@@ -364,10 +366,10 @@ func (g *Game) Update(deltaTime float64) {
 }
 
 func (g *Game) CenterCameraOn(obj *Object) {
-	topLeft := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
-	bottomRight := &Vec2f{g.level.pixelWidth - SCR_WIDTH_H, g.level.pixelHeight - SCR_HEIGHT_H}
-	g.camPos = VecMax(topLeft, VecMin(bottomRight, obj.pos))
-	hscr := &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}
+	topLeft := vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)
+	bottomRight := vmath.NewVec(g.level.pixelWidth-SCR_WIDTH_H, g.level.pixelHeight-SCR_HEIGHT_H)
+	g.camPos = vmath.VecMax(topLeft, vmath.VecMin(bottomRight, obj.pos))
+	hscr := vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)
 	g.camMin = g.camPos.Clone().Sub(hscr)
 	g.camMax = g.camPos.Clone().Add(hscr)
 }
@@ -377,15 +379,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(g.bgColor)
 
 	camMat := &ebiten.GeoM{}
-	camMat.Translate(-g.camPos.x+SCR_WIDTH_H, -g.camPos.y+SCR_HEIGHT_H)
+	camMat.Translate(-g.camPos.X+SCR_WIDTH_H, -g.camPos.Y+SCR_HEIGHT_H)
 
 	g.level.Draw(g, screen, camMat)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
 		obj := objE.Value.(*Object)
-		if !obj.hidden && g.SquareOnScreen(obj.pos.x, obj.pos.y, obj.radius) {
+		if !obj.hidden && g.SquareOnScreen(obj.pos.X, obj.pos.Y, obj.radius) {
 			objM := &ebiten.DrawImageOptions{}
 			objM.GeoM.Concat(*camMat)
-			objM.GeoM.Translate(obj.pos.x, obj.pos.y)
+			objM.GeoM.Translate(obj.pos.X, obj.pos.Y)
 			for _, spr := range obj.sprites {
 				spr.Draw(screen, &objM.GeoM)
 			}
@@ -402,7 +404,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, spot := range __debugSpots {
 		o := &ebiten.DrawImageOptions{}
 		o.GeoM.Concat(*camMat)
-		o.GeoM.Translate(spot.pos.x, spot.pos.y)
+		o.GeoM.Translate(spot.pos.X, spot.pos.Y)
 		spot.spr.Draw(screen, &o.GeoM)
 	}
 
@@ -457,8 +459,8 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	case SIGNAL_PLAYER_ASCEND:
 		spawn := g.level.FindOffscreenSpawnPoint(g)
 		AddCat(g, spawn.centerX, spawn.centerY)
-		AddStarBurst(g, g.playerObj.pos.x, g.playerObj.pos.y)
-		PlaySound("ascend")
+		AddStarBurst(g, g.playerObj.pos.X, g.playerObj.pos.Y)
+		audio.PlaySound("ascend")
 		if g.missionNumber == 0 {
 			g.DisplayMessage("  EXCELLENT. NOW...     GO GET THE CAT!", 4.0)
 		}
@@ -466,7 +468,7 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 		g.DisplayMessage("YOU MUST ASCEND TO  SLAY THE CAT", 4.0)
 	case SIGNAL_CAT_DIE:
 		g.fade = FM_FADE_OUT
-		PlaySound("outro_chime")
+		audio.PlaySound("outro_chime")
 		if g.elapsedTime < float64(g.mission.parTime) {
 			g.mission.goodEndFlag = true
 		}
@@ -521,5 +523,5 @@ func (g *Game) DecLoveCounter(amt int) bool {
 }
 
 func (g *Game) SquareOnScreen(x, y, radius float64) bool {
-	return x+radius > g.camMin.x && x-radius < g.camMax.x && y+radius > g.camMin.y && y-radius < g.camMax.y
+	return x+radius > g.camMin.X && x-radius < g.camMax.X && y+radius > g.camMin.Y && y-radius < g.camMax.Y
 }

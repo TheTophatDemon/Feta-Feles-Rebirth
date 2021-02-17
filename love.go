@@ -4,6 +4,9 @@ import (
 	"image"
 	"math"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 const (
@@ -20,7 +23,7 @@ type Love struct {
 var sprLoveBlink []*Sprite
 
 func init() {
-	sprLoveBlink = NewSprites(&Vec2f{-4.0, -4.0}, image.Rect(80, 64, 88, 72), image.Rect(88, 64, 96, 72))
+	sprLoveBlink = NewSprites(vmath.NewVec(-4.0, -4.0), image.Rect(80, 64, 88, 72), image.Rect(88, 64, 96, 72))
 }
 
 func AddLove(game *Game, count int, x, y float64) {
@@ -37,10 +40,10 @@ func AddLove(game *Game, count int, x, y float64) {
 			blinkAnim: anim,
 			life:      6.0,
 		}
-		lv.velocity = (&Vec2f{math.Cos(angle), math.Sin(angle)}).Scale(LOVE_SPEED)
+		lv.velocity = (vmath.NewVec(math.Cos(angle), math.Sin(angle))).Scale(LOVE_SPEED)
 		angle += rand.Float64() * math.Pi * 0.666
 		game.AddObject(&Object{
-			pos: &Vec2f{x, y}, radius: 4.0, colType: CT_ITEM,
+			pos: vmath.NewVec(x, y), radius: 4.0, colType: CT_ITEM,
 			drawPriority: -1,
 			sprites: []*Sprite{
 				sprLoveBlink[0],
@@ -67,7 +70,7 @@ func (lv *Love) Update(game *Game, obj *Object) {
 
 func (lv *Love) OnCollision(game *Game, obj, other *Object) {
 	if other.HasColType(CT_PLAYER) {
-		PlaySound("love_get")
+		audio.PlaySound("love_get")
 		obj.removeMe = true
 	}
 }

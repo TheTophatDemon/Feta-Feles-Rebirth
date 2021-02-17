@@ -1,13 +1,18 @@
 package main
 
+import (
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+)
+
 type Mob struct {
 	*Actor
 	health            int
 	hurtTimer         float64
 	currAnim          *Anim
 	dead              bool
-	lastSeenPlayerPos *Vec2f
-	vecToPlayer       *Vec2f
+	lastSeenPlayerPos *vmath.Vec2f
+	vecToPlayer       *vmath.Vec2f
 	distToPlayer      float64
 	seesPlayer        bool
 	hunting           bool //Switched on after monster sees player for the first time
@@ -52,7 +57,7 @@ func (mb *Mob) OnCollision(game *Game, obj *Object, other *Object) {
 		}
 		if mb.health > 0 {
 			mb.hurtTimer = 0.5
-			PlaySound("enemy_hurt")
+			audio.PlaySound("enemy_hurt")
 		}
 	}
 	if other.colType == obj.colType {

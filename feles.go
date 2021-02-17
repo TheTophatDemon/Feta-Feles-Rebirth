@@ -2,6 +2,8 @@ package main
 
 import (
 	"image"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type FaceType int
@@ -33,7 +35,7 @@ const (
 )
 
 //Assembles the sprites for Feles for the appropriate phase of the story
-func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
+func MakeFeles(ft FaceType, bt BodyType, pos *vmath.Vec2f) *Object {
 	const (
 		FACE_OFS_X = -24.0
 	)
@@ -56,18 +58,18 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 	switch bt {
 	case BODY_CAT:
 		sprites = append(sprites, NewSprite(normalTailRect,
-			&Vec2f{FACE_OFS_X + 4.0, FACE_OFS_Y + 32.0}, false, false, 0))
+			vmath.NewVec(FACE_OFS_X+4.0, FACE_OFS_Y+32.0), false, false, 0))
 	case BODY_HUMAN, BODY_ANGEL:
 		sprites = append(sprites, NewSprite(normalTailRect,
-			&Vec2f{FACE_OFS_X + 4.0, FACE_OFS_Y + 52.0}, false, false, 0))
+			vmath.NewVec(FACE_OFS_X+4.0, FACE_OFS_Y+52.0), false, false, 0))
 	case BODY_ANGEL2:
 		sprites = append(sprites, NewSprite(doubleTailRect,
-			&Vec2f{FACE_OFS_X - 16.0, FACE_OFS_Y + 52.0}, false, false, 0))
+			vmath.NewVec(FACE_OFS_X-16.0, FACE_OFS_Y+52.0), false, false, 0))
 	case BODY_CORRUPTED:
 		sprites = append(sprites, NewSprite(quadTailRect,
-			&Vec2f{FACE_OFS_X - 16.0, FACE_OFS_Y + 42.0}, false, false, 0))
+			vmath.NewVec(FACE_OFS_X-16.0, FACE_OFS_Y+42.0), false, false, 0))
 		sprites = append(sprites, NewSprite(quadTailRect,
-			&Vec2f{FACE_OFS_X + 32.0, FACE_OFS_Y + 42.0}, true, false, 0))
+			vmath.NewVec(FACE_OFS_X+32.0, FACE_OFS_Y+42.0), true, false, 0))
 	}
 
 	//==================================
@@ -78,14 +80,14 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 	switch bt {
 	case BODY_ANGEL, BODY_ANGEL2:
 		sprites = append(sprites, NewSprite(angelWingRect,
-			&Vec2f{FACE_OFS_X - 16.0, FACE_OFS_Y + 30.0}, false, false, 0))
+			vmath.NewVec(FACE_OFS_X-16.0, FACE_OFS_Y+30.0), false, false, 0))
 		sprites = append(sprites, NewSprite(angelWingRect,
-			&Vec2f{FACE_OFS_X + 32.0, FACE_OFS_Y + 30.0}, true, false, 0))
+			vmath.NewVec(FACE_OFS_X+32.0, FACE_OFS_Y+30.0), true, false, 0))
 	case BODY_CORRUPTED:
 		sprites = append(sprites, NewSprite(corruptWingRect,
-			&Vec2f{FACE_OFS_X - 16.0, FACE_OFS_Y + 30.0}, false, false, 0))
+			vmath.NewVec(FACE_OFS_X-16.0, FACE_OFS_Y+30.0), false, false, 0))
 		sprites = append(sprites, NewSprite(corruptWingRect,
-			&Vec2f{FACE_OFS_X + 32.0, FACE_OFS_Y + 30.0}, true, false, 0))
+			vmath.NewVec(FACE_OFS_X+32.0, FACE_OFS_Y+30.0), true, false, 0))
 	}
 
 	//=========================
@@ -93,21 +95,21 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 	//=========================
 	switch bt {
 	case BODY_CAT:
-		sprites = append(sprites, NewSprite(image.Rect(192, 64, 208, 96), &Vec2f{FACE_OFS_X + 8.0, FACE_OFS_Y + 27.0}, false, false, 0))       //Left half
-		sprites = append(sprites, NewSprite(image.Rect(192, 64, 208, 96), &Vec2f{FACE_OFS_X + 8.0 + 16.0, FACE_OFS_Y + 27.0}, true, false, 0)) //Right Half
+		sprites = append(sprites, NewSprite(image.Rect(192, 64, 208, 96), vmath.NewVec(FACE_OFS_X+8.0, FACE_OFS_Y+27.0), false, false, 0))     //Left half
+		sprites = append(sprites, NewSprite(image.Rect(192, 64, 208, 96), vmath.NewVec(FACE_OFS_X+8.0+16.0, FACE_OFS_Y+27.0), true, false, 0)) //Right Half
 	case BODY_HUMAN, BODY_ANGEL:
-		sprites = append(sprites, NewSprite(image.Rect(192, 0, 208, 64), &Vec2f{FACE_OFS_X + 8.0, FACE_OFS_Y + 28.0}, false, false, 0))       //Left half
-		sprites = append(sprites, NewSprite(image.Rect(192, 0, 208, 64), &Vec2f{FACE_OFS_X + 8.0 + 16.0, FACE_OFS_Y + 28.0}, true, false, 0)) //Right Half
+		sprites = append(sprites, NewSprite(image.Rect(192, 0, 208, 64), vmath.NewVec(FACE_OFS_X+8.0, FACE_OFS_Y+28.0), false, false, 0))     //Left half
+		sprites = append(sprites, NewSprite(image.Rect(192, 0, 208, 64), vmath.NewVec(FACE_OFS_X+8.0+16.0, FACE_OFS_Y+28.0), true, false, 0)) //Right Half
 	case BODY_ANGEL2:
-		sprites = append(sprites, NewSprite(image.Rect(176, 0, 192, 64), &Vec2f{FACE_OFS_X + 8.0, FACE_OFS_Y + 28.0}, false, false, 0))       //Left half
-		sprites = append(sprites, NewSprite(image.Rect(176, 0, 192, 64), &Vec2f{FACE_OFS_X + 8.0 + 16.0, FACE_OFS_Y + 28.0}, true, false, 0)) //Right Half
+		sprites = append(sprites, NewSprite(image.Rect(176, 0, 192, 64), vmath.NewVec(FACE_OFS_X+8.0, FACE_OFS_Y+28.0), false, false, 0))     //Left half
+		sprites = append(sprites, NewSprite(image.Rect(176, 0, 192, 64), vmath.NewVec(FACE_OFS_X+8.0+16.0, FACE_OFS_Y+28.0), true, false, 0)) //Right Half
 	case BODY_CORRUPTED:
-		sprites = append(sprites, NewSprite(image.Rect(160, 0, 176, 64), &Vec2f{FACE_OFS_X + 8.0, FACE_OFS_Y + 28.0}, false, false, 0))       //Left half
-		sprites = append(sprites, NewSprite(image.Rect(160, 0, 176, 64), &Vec2f{FACE_OFS_X + 8.0 + 16.0, FACE_OFS_Y + 28.0}, true, false, 0)) //Right Half
+		sprites = append(sprites, NewSprite(image.Rect(160, 0, 176, 64), vmath.NewVec(FACE_OFS_X+8.0, FACE_OFS_Y+28.0), false, false, 0))     //Left half
+		sprites = append(sprites, NewSprite(image.Rect(160, 0, 176, 64), vmath.NewVec(FACE_OFS_X+8.0+16.0, FACE_OFS_Y+28.0), true, false, 0)) //Right Half
 	case BODY_MELTED:
-		sprites = append(sprites, NewSprite(image.Rect(128, 208, 208, 256), &Vec2f{FACE_OFS_X - 17.0, FACE_OFS_Y + 28.0}, false, false, 0))
+		sprites = append(sprites, NewSprite(image.Rect(128, 208, 208, 256), vmath.NewVec(FACE_OFS_X-17.0, FACE_OFS_Y+28.0), false, false, 0))
 	case BODY_HORROR:
-		sprites = append(sprites, NewSprite(image.Rect(0, 160, 128, 256), &Vec2f{-60.0, -48.0}, false, false, 0))
+		sprites = append(sprites, NewSprite(image.Rect(0, 160, 128, 256), vmath.NewVec(-60.0, -48.0), false, false, 0))
 	}
 
 	//===================================
@@ -135,7 +137,7 @@ func MakeFeles(ft FaceType, bt BodyType, pos *Vec2f) *Object {
 		case FACE_MELTED:
 			faceRect = image.Rect(208, 224, 256, 256)
 		}
-		sprites = append(sprites, NewSprite(faceRect, &Vec2f{FACE_OFS_X, FACE_OFS_Y}, false, false, 0))
+		sprites = append(sprites, NewSprite(faceRect, vmath.NewVec(FACE_OFS_X, FACE_OFS_Y), false, false, 0))
 	}
 
 	return &Object{

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Cutscene struct {
@@ -134,7 +135,7 @@ func init() {
 			voice: "evil_voice",
 		},
 		{
-			bodyType: BODY_ANGEL,
+			bodyType: BODY_NONE,
 			faces:    []FaceType{FACE_NONE, FACE_EMPTY_SAD, FACE_EMPTY_TALK, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY, FACE_EMPTY_TALK, FACE_EMPTY_TALK, FACE_EMPTY_SAD, FACE_MELTED, FACE_NONE},
 			dialog: []string{
 				"HAHAHAHAHAHA! YOU-",
@@ -178,7 +179,7 @@ func NewCutsceneState(sceneNum int) *CutsceneState {
 	bodies := [8]BodyType{
 		BODY_NONE, BODY_CAT, BODY_HUMAN, BODY_ANGEL2, BODY_CORRUPTED, BODY_MELTED, BODY_HORROR,
 	}
-	ctscn.feles = MakeFeles(ctscn.cutscene.faces[0], bodies[sceneNum], &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H - 24.0})
+	ctscn.feles = MakeFeles(ctscn.cutscene.faces[0], bodies[sceneNum], vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-24.0))
 	ctscn.felesBody = bodies[sceneNum]
 	ctscn.dialog = make([]*Text, len(ctscn.cutscene.dialog))
 	for i, s := range ctscn.cutscene.dialog {

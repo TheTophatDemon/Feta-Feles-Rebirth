@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type TitleScreen struct {
@@ -24,13 +25,13 @@ func (ts *TitleScreen) Enter() {
 	ts.title = ts.GenerateTitle()
 	ts.logo = &Object{
 		sprites: []*Sprite{
-			NewSprite(image.Rect(64, 48, 80, 80), &Vec2f{SCR_WIDTH_H - 16, SCR_HEIGHT - 48}, false, false, 0),
-			NewSprite(image.Rect(64, 48, 80, 80), &Vec2f{SCR_WIDTH_H, SCR_HEIGHT - 48}, true, false, 0),
+			NewSprite(image.Rect(64, 48, 80, 80), vmath.NewVec(SCR_WIDTH_H-16, SCR_HEIGHT-48), false, false, 0),
+			NewSprite(image.Rect(64, 48, 80, 80), vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT-48), true, false, 0),
 		},
-		pos: ZeroVec(),
+		pos: vmath.ZeroVec(),
 	}
 	ts.link = GenerateText("tophatdemon.com", image.Rect(SCR_WIDTH_H-60, SCR_HEIGHT-16, SCR_WIDTH_H+64, SCR_HEIGHT))
-	ts.feles = MakeFeles(FACE_WINK, BODY_CAT, &Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H - 32.0})
+	ts.feles = MakeFeles(FACE_WINK, BODY_CAT, vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-32.0))
 	ts.enterText = GenerateText("CLICK OR SPACE TO BEGIN", image.Rect(SCR_WIDTH_H-10*8-12, SCR_HEIGHT_H+40.0, SCR_WIDTH_H+10*8+12, SCR_HEIGHT_H+56.0))
 }
 
@@ -119,7 +120,7 @@ func (ts *TitleScreen) GenerateTitle() *Object {
 		if rand.Float64() < 0.025 {
 			r = rand.Intn(4)
 		}
-		sprites[i] = NewSprite(l, &Vec2f{ofsX + float64(i)*16.0, ofsY}, false, false, r)
+		sprites[i] = NewSprite(l, vmath.NewVec(ofsX+float64(i)*16.0, ofsY), false, false, r)
 	}
 	subtitleLetters := []image.Rectangle{
 		image.Rect(128, 64, 136, 72), //R
@@ -137,10 +138,10 @@ func (ts *TitleScreen) GenerateTitle() *Object {
 		if rand.Float64() < 0.025 {
 			r = rand.Intn(4)
 		}
-		sprites = append(sprites, NewSprite(l, &Vec2f{ofsX + float64(i)*8.0, ofsY}, false, false, r))
+		sprites = append(sprites, NewSprite(l, vmath.NewVec(ofsX+float64(i)*8.0, ofsY), false, false, r))
 	}
 	return &Object{
 		sprites: sprites,
-		pos:     ZeroVec(),
+		pos:     vmath.ZeroVec(),
 	}
 }

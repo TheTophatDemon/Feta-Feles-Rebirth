@@ -4,6 +4,9 @@ import (
 	"image"
 	"math"
 	"math/rand"
+
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Cat struct {
@@ -18,12 +21,12 @@ var sprCatRunRight []*Sprite
 var sprCatDie []*Sprite
 
 func init() {
-	sprCatRunLeft = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(0, 16, 16, 32), image.Rect(16, 16, 32, 32))
+	sprCatRunLeft = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(0, 16, 16, 32), image.Rect(16, 16, 32, 32))
 	sprCatRunRight = CloneSprites(sprCatRunLeft)
 	for _, spr := range sprCatRunRight {
 		spr.Flip(true, false)
 	}
-	sprCatDie = NewSprites(&Vec2f{-8.0, -8.0}, image.Rect(32, 16, 48, 32), image.Rect(48, 16, 64, 32))
+	sprCatDie = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(32, 16, 48, 32), image.Rect(48, 16, 64, 32))
 }
 
 func AddCat(game *Game, x, y float64) (*Cat, *Object) {
@@ -40,14 +43,14 @@ func AddCat(game *Game, x, y float64) (*Cat, *Object) {
 		meowTimer: rand.Float64() * 5.0,
 	}
 	obj := &Object{
-		pos: &Vec2f{x, y}, radius: 6.0, colType: CT_CAT,
+		pos: vmath.NewVec(x, y), radius: 6.0, colType: CT_CAT,
 		sprites:    []*Sprite{sprCatRunLeft[0]},
 		components: []Component{cat},
 	}
 	game.AddObject(obj)
 	//Move in random direction
-	d := RandomDirection()
-	cat.Move(d.x, d.y)
+	d := vmath.RandomDirection()
+	cat.Move(d.X, d.Y)
 	//Spawn poofs
 	ang := rand.Float64() * math.Pi * 2.0
 	for i := 0.0; i < math.Pi*2.0; i += math.Pi / 4.0 {
@@ -64,13 +67,13 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 
 		cat.meowTimer += game.deltaTime
 		if cat.meowTimer > 5.0 {
-			game.PlaySoundAttenuated("cat_meow", obj.pos.x, obj.pos.y, 256.0)
+			audio.PlaySoundAttenuated("cat_meow", 256.0, obj.pos, game.camMin, game.camMax)
 			cat.meowTimer = 0.0
 		}
 
 		//Flip the sprites in the animation to match movement direction
 		if cat.currAnim != nil {
-			if cat.movement.x > 0 {
+			if cat.movement.X > 0 {
 				cat.currAnim.frames = sprCatRunRight
 			} else {
 				cat.currAnim.frames = sprCatRunLeft
@@ -84,7 +87,7 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 	if cat.health <= 0 && !cat.dead {
 		cat.Move(0.0, 0.0)
 		cat.dead = true
-		PlaySound("cat_die")
+		audio.PlaySound("cat_die")
 		cat.currAnim = &Anim{
 			frames: sprCatDie,
 			speed:  0.5,
@@ -115,7 +118,7 @@ func (cat *Cat) Update(game *Game, obj *Object) {
 			for i := 0.0; i < math.Pi*2.0; i += math.Pi / 4.0 {
 				ox := math.Cos(ang+i) * 12.0
 				oy := math.Sin(ang+i) * 12.0
-				AddPoof(game, obj.pos.x+ox, obj.pos.y+oy)
+				AddPoof(game, obj.pos.X+ox, obj.pos.Y+oy)
 			}
 			obj.removeMe = true
 			spawn := game.level.FindOffscreenSpawnPoint(game)
@@ -134,9 +137,9 @@ func (cat *Cat) OnCollision(game *Game, obj, other *Object) {
 		cat.Mob.OnCollision(game, obj, other)
 		if other.HasColType(CT_CAT) {
 			reflect := obj.pos.Clone().Sub(other.pos)
-			reflect.Add((&Vec2f{reflect.y, -reflect.x}).Scale((rand.Float64() * 2.0) - 1.0))
+			reflect.Add((vmath.NewVec(reflect.Y, -reflect.X)).Scale((rand.Float64() * 2.0) - 1.0))
 			reflect.Normalize()
-			cat.Move(reflect.x, reflect.y)
+			cat.Move(reflect.X, reflect.Y)
 		}
 	} else if other.HasColType(CT_PLAYERSHOT) {
 		__dudShots++

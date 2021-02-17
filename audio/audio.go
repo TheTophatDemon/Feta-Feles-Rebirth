@@ -1,4 +1,4 @@
-package main
+package audio
 
 import (
 	"container/ring"
@@ -9,16 +9,20 @@ import (
 	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hajimehoshi/ebiten/audio/wav"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 var audioContext *audio.Context
-var players map[string]*ring.Ring //Contains ring buffers of audio players for each sound effect that is loaded
-var audioFiles map[string]string
+var sfxPlayers map[string]*ring.Ring //Contains ring buffers of audio players for each sound effect that is loaded
+var sfxFiles map[string]string
+var musFiles map[string]string
+var musPlayer *audio.Player
+var currSong string
 
 func init() {
 	audioContext = audio.NewContext(44100)
-	players = make(map[string]*ring.Ring)
-	audioFiles = map[string]string{
+	sfxPlayers = make(map[string]*ring.Ring)
+	sfxFiles = map[string]string{
 		"enemy_die":   assets.WAV_ENEMY_DIE,
 		"enemy_hurt":  assets.WAV_ENEMY_HURT,
 		"love_get":    assets.WAV_LOVE_GET,
@@ -34,7 +38,26 @@ func init() {
 		"ascend":      assets.WAV_ASCEND,
 		"roar":        assets.WAV_ROAR,
 	}
+	musFiles = map[string]string{
+		"mystery": assets.OGG_MYSTERY,
+		"hope":    assets.OGG_HOPE,
+	}
 }
+
+/*func PlayMusic(name string) {
+	if len(name) == 0 && musPlayer != nil {
+		musPlayer.Close()
+	} else if currSong != name {
+		stream, err := vorbis.Decode(audioContext, assets.ReadCompressedString(musFiles[name]))
+		if err != nil {
+			log.Fatal("Cannot decode music file: ", name)
+		}
+		musPlayer, err = audio.NewPlayer(audioContext, stream)
+		if err != nil {
+			log.Fatal("Failed to create stream for song: ", name)
+		}
+	}
+}*/
 
 const PLAYERS_PER_SOUND = 8
 
@@ -43,10 +66,10 @@ func PlaySound(name string) {
 }
 
 func PlaySoundVolume(name string, volume float64) {
-	buffer, loaded := players[name]
+	buffer, loaded := sfxPlayers[name]
 	//Load the sound in if it hasn't been already
 	if !loaded {
-		stream, err := wav.Decode(audioContext, assets.ReadCompressedString(audioFiles[name]))
+		stream, err := wav.Decode(audioContext, assets.ReadCompressedString(sfxFiles[name]))
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -65,7 +88,7 @@ func PlaySoundVolume(name string, volume float64) {
 			buffer.Value = player
 			buffer = buffer.Next()
 		}
-		players[name] = buffer
+		sfxPlayers[name] = buffer
 	}
 	//Play the sound in the first buffer that isn't already playing
 	for i := 0; i < PLAYERS_PER_SOUND; i++ {
@@ -85,9 +108,8 @@ func PlaySoundVolume(name string, volume float64) {
 }
 
 //Plays a sound that gets quieter the farther it is from the camera
-func (g *Game) PlaySoundAttenuated(name string, x, y, factor float64) {
-	point := &Vec2f{x, y}
-	closestCamPoint := VecMin(g.camMax, VecMax(g.camMin, point))
-	dist := closestCamPoint.Clone().Sub(point).Length()
-	PlaySoundVolume(name, math.Max(0.0, math.Max(0.0, math.Min(1.0, 0.5-(dist/factor)))))
+func PlaySoundAttenuated(name string, factor float64, src *vmath.Vec2f, listenerMin, listenerMax *vmath.Vec2f) {
+	closestCamPoint := vmath.VecMin(listenerMax, vmath.VecMax(listenerMin, src.Clone()))
+	dist := closestCamPoint.Clone().Sub(src).Length()
+	PlaySoundVolume(name, math.Max(0.0, math.Min(1.0, 0.5-(dist/factor))))
 }

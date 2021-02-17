@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
 type Level struct {
@@ -124,7 +125,7 @@ func (level *Level) FindOffscreenSpawnPoint(game *Game) *Tile {
 				//Skip tile if something's already there
 				for e := game.objects.Front(); e != nil; e = e.Next() {
 					obj := e.Value.(*Object)
-					if obj.pos.Clone().Sub(&Vec2f{t.centerX, t.centerY}).Length() < obj.radius*2.0 {
+					if obj.pos.Clone().Sub(vmath.NewVec(t.centerX, t.centerY)).Length() < obj.radius*2.0 {
 						goto skip
 					}
 				}
@@ -291,11 +292,11 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 	}
 
 	//Determine the area of the grid that is on screen
-	gridMin := game.camPos.Clone().Sub(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Floor()
-	gridMax := game.camPos.Clone().Add(&Vec2f{SCR_WIDTH_H, SCR_HEIGHT_H}).Scale(1.0 / TILE_SIZE).Ceil()
+	gridMin := game.camPos.Clone().Sub(vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)).Scale(1.0 / TILE_SIZE).Floor()
+	gridMax := game.camPos.Clone().Add(vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)).Scale(1.0 / TILE_SIZE).Ceil()
 	//Draw only the tiles in that area
-	for j := int(gridMin.y); j < int(gridMax.y); j++ {
-		for i := int(gridMin.x); i < int(gridMax.x); i++ {
+	for j := int(gridMin.Y); j < int(gridMax.Y); j++ {
+		for i := int(gridMin.X); i < int(gridMax.X); i++ {
 			t := level.GetTile(i, j, true)
 			if t.modified {
 				t.RegenSprite()
@@ -345,45 +346,45 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 }
 
 //If t is nil, then position is projected onto level boundaries
-func (level *Level) ProjectPosOntoTile(pos *Vec2f, t *Tile) *Vec2f {
-	tileMin := &Vec2f{x: t.left, y: t.top}
-	tileMax := &Vec2f{x: t.right, y: t.bottom}
+func (level *Level) ProjectPosOntoTile(pos *vmath.Vec2f, t *Tile) *vmath.Vec2f {
+	tileMin := vmath.NewVec(t.left, t.top)
+	tileMax := vmath.NewVec(t.right, t.bottom)
 
 	//Project onto a box by clamping the destination to the box boundaries
-	proj := VecMax(tileMin, VecMin(tileMax, pos))
+	proj := vmath.VecMax(tileMin, vmath.VecMin(tileMax, pos))
 	if t != nil && t.IsSlope() {
 		//Project onto a diagonal plane using the dot product if positing is coming from the right direction
-		cDiff := pos.Clone().Sub(&Vec2f{x: t.centerX, y: t.centerY})
-		planeDist := VecDot(t.GetSlopeNormal(), cDiff)
+		cDiff := pos.Clone().Sub(vmath.NewVec(t.centerX, t.centerY))
+		planeDist := vmath.VecDot(t.GetSlopeNormal(), cDiff)
 		if planeDist > 0.0 {
 			proj = pos.Clone().Sub(t.GetSlopeNormal().Scale(planeDist))
-			proj = VecMax(tileMin, VecMin(tileMax, proj))
+			proj = vmath.VecMax(tileMin, vmath.VecMin(tileMax, proj))
 		}
 	}
 
 	return proj
 }
 
-func (level *Level) GetGridAreaOverCapsule(start, dest *Vec2f, radius float64, clamp bool) (gridMin, gridMax *Vec2f) {
-	gridMin = VecMin(start, dest).SubScalar(radius).Scale(1.0 / TILE_SIZE).Floor()
+func (level *Level) GetGridAreaOverCapsule(start, dest *vmath.Vec2f, radius float64, clamp bool) (gridMin, gridMax *vmath.Vec2f) {
+	gridMin = vmath.VecMin(start, dest).SubScalar(radius).Scale(1.0 / TILE_SIZE).Floor()
 	if clamp {
-		gridMin = VecMax(ZeroVec(), gridMin)
+		gridMin = vmath.VecMax(vmath.ZeroVec(), gridMin)
 	}
-	gridMax = VecMax(start, dest).AddScalar(radius).Scale(1.0 / TILE_SIZE).Ceil()
+	gridMax = vmath.VecMax(start, dest).AddScalar(radius).Scale(1.0 / TILE_SIZE).Ceil()
 	if clamp {
-		gridMax = VecMin(&Vec2f{x: float64(level.cols), y: float64(level.rows)}, gridMax)
+		gridMax = vmath.VecMin(vmath.NewVec(float64(level.cols), float64(level.rows)), gridMax)
 	}
 	return gridMin, gridMax
 }
 
-func (level *Level) GetTilesWithinRadius(pos *Vec2f, radius float64) []*Tile {
+func (level *Level) GetTilesWithinRadius(pos *vmath.Vec2f, radius float64) []*Tile {
 	gridMin := pos.Clone().SubScalar(radius).Scale(1.0 / TILE_SIZE).Floor()
 	gridMax := pos.Clone().AddScalar(radius).Scale(1.0 / TILE_SIZE).Ceil()
 	result := make([]*Tile, 0, int(radius*2.0*radius*2.0))
-	for i := int(gridMin.x); i < int(gridMax.x); i++ {
-		for j := int(gridMin.y); j < int(gridMax.y); j++ {
+	for i := int(gridMin.X); i < int(gridMax.X); i++ {
+		for j := int(gridMin.Y); j < int(gridMax.Y); j++ {
 			if t := level.GetTile(i, j, true); t != nil {
-				diff := (&Vec2f{t.centerX, t.centerY}).Sub(pos)
+				diff := (vmath.NewVec(t.centerX, t.centerY)).Sub(pos)
 				if diff.Length() < radius {
 					result = append(result, t)
 				}
@@ -394,22 +395,22 @@ func (level *Level) GetTilesWithinRadius(pos *Vec2f, radius float64) []*Tile {
 }
 
 //Determines if sphere intersects a solid tile. If so, the normal and the collided tile is returned
-func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, *Tile) {
+func (level *Level) SphereIntersects(pos *vmath.Vec2f, radius float64) (bool, *vmath.Vec2f, *Tile) {
 	//Check against level borders
-	if pos.x-radius < 0 {
-		return true, &Vec2f{1.0, 0.0}, nil
-	} else if pos.x+radius > level.pixelWidth {
-		return true, &Vec2f{-1.0, 0.0}, nil
+	if pos.X-radius < 0 {
+		return true, vmath.NewVec(1.0, 0.0), nil
+	} else if pos.X+radius > level.pixelWidth {
+		return true, vmath.NewVec(-1.0, 0.0), nil
 	}
-	if pos.y-radius < 0 {
-		return true, &Vec2f{0.0, 1.0}, nil
-	} else if pos.y+radius > level.pixelHeight {
-		return true, &Vec2f{0.0, -1.0}, nil
+	if pos.Y-radius < 0 {
+		return true, vmath.NewVec(0.0, 1.0), nil
+	} else if pos.Y+radius > level.pixelHeight {
+		return true, vmath.NewVec(0.0, -1.0), nil
 	}
 
 	gridMin, gridMax := level.GetGridAreaOverCapsule(pos, pos, radius, true)
-	for j := int(gridMin.y); j < int(gridMax.y); j++ {
-		for i := int(gridMin.x); i < int(gridMax.x); i++ {
+	for j := int(gridMin.Y); j < int(gridMax.Y); j++ {
+		for i := int(gridMin.X); i < int(gridMax.X); i++ {
 			t := level.GetTile(i, j, true)
 			if t.IsSolid() {
 				diff := pos.Clone().Sub(level.ProjectPosOntoTile(pos, t))
@@ -429,21 +430,21 @@ func (level *Level) SphereIntersects(pos *Vec2f, radius float64) (bool, *Vec2f, 
 
 type RaycastResult struct {
 	hit      bool
-	pos      *Vec2f
+	pos      *vmath.Vec2f
 	distance float64
 	tile     *Tile
 }
 
-func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastResult {
+func (level *Level) Raycast(pos *vmath.Vec2f, dir *vmath.Vec2f, maxDist float64) *RaycastResult {
 	var rx, ry, rdx, rdy, tan float64
-	if dir.x != 0.0 {
-		tan = dir.y / dir.x
+	if dir.X != 0.0 {
+		tan = dir.Y / dir.X
 	}
 
 	castRay := func(x, y, dx, dy float64, vert bool) (*Tile, float64, float64) {
 		ox, oy := x, y
-		fauxDist := (&Vec2f{pos.x - x, pos.y - y}).Length()
-		fauxStep := (&Vec2f{dx, dy}).Length() //The approximate distance the ray travels each step
+		fauxDist := (vmath.NewVec(pos.X-x, pos.Y-y)).Length()
+		fauxStep := (vmath.NewVec(dx, dy)).Length() //The approximate distance the ray travels each step
 		for ; fauxDist+fauxStep < maxDist; fauxDist += fauxStep {
 			ix := int(x / TILE_SIZE)
 			iy := int(y / TILE_SIZE)
@@ -468,8 +469,8 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastRes
 				slopeNormal := level.tiles[iy][ix].GetSlopeNormal()
 				//Calculate intersection point
 				wx, wy := level.WrapPixelCoords(x, y)
-				t := (slopeNormal.x*(t.centerX-wx) + slopeNormal.y*(t.centerY-wy)) /
-					((slopeNormal.x * dx) + (slopeNormal.y * dy))
+				t := (slopeNormal.X*(t.centerX-wx) + slopeNormal.Y*(t.centerY-wy)) /
+					((slopeNormal.X * dx) + (slopeNormal.Y * dy))
 				px, py := wx+dx*t, wy+dy*t
 				//Test if it is within the tile's boundaries
 				if px >= float64(ix)*TILE_SIZE && px < float64(ix+1)*TILE_SIZE &&
@@ -486,58 +487,58 @@ func (level *Level) Raycast(pos *Vec2f, dir *Vec2f, maxDist float64) *RaycastRes
 	}
 
 	//Vertical line phase (moving x)
-	if dir.x > 0 {
-		rx = math.Ceil(pos.x/TILE_SIZE) * TILE_SIZE
+	if dir.X > 0 {
+		rx = math.Ceil(pos.X/TILE_SIZE) * TILE_SIZE
 		rdx = TILE_SIZE
 	} else {
-		rx = math.Floor(pos.x/TILE_SIZE) * TILE_SIZE
+		rx = math.Floor(pos.X/TILE_SIZE) * TILE_SIZE
 		rdx = -TILE_SIZE
 	}
-	ry = pos.y + (rx-pos.x)*tan
+	ry = pos.Y + (rx-pos.X)*tan
 	rdy = rdx * tan
 	//Raycast loop, etc.
 	var vertX, vertY float64
 	var vTile *Tile
-	if dir.x != 0.0 {
+	if dir.X != 0.0 {
 		vTile, vertX, vertY = castRay(rx, ry, rdx, rdy, true)
 	}
 
 	//Horizontal line phase (moving y)
-	if dir.y > 0 {
-		ry = math.Ceil(pos.y/TILE_SIZE) * TILE_SIZE
+	if dir.Y > 0 {
+		ry = math.Ceil(pos.Y/TILE_SIZE) * TILE_SIZE
 		rdy = TILE_SIZE
 	} else {
-		ry = math.Floor(pos.y/TILE_SIZE) * TILE_SIZE
+		ry = math.Floor(pos.Y/TILE_SIZE) * TILE_SIZE
 		rdy = -TILE_SIZE
 	}
 	if tan == 0.0 {
-		rx = pos.x
+		rx = pos.X
 		rdx = 0.0
 	} else {
-		rx = pos.x + (ry-pos.y)/tan
+		rx = pos.X + (ry-pos.Y)/tan
 		rdx = rdy / tan
 	}
 	//Raycast loop, etc.
 	var horzX, horzY float64
 	var hTile *Tile
-	if dir.y != 0.0 {
+	if dir.Y != 0.0 {
 		hTile, horzX, horzY = castRay(rx, ry, rdx, rdy, false)
 	}
 	//hHit, horzX, horzY := false, 0.0, 0.0
 
-	vDist := math.Pow(vertX-pos.x, 2.0) + math.Pow(vertY-pos.y, 2.0)
-	hDist := math.Pow(horzX-pos.x, 2.0) + math.Pow(horzY-pos.y, 2.0)
+	vDist := math.Pow(vertX-pos.X, 2.0) + math.Pow(vertY-pos.Y, 2.0)
+	hDist := math.Pow(horzX-pos.X, 2.0) + math.Pow(horzY-pos.Y, 2.0)
 	if hDist < vDist {
 		return &RaycastResult{
 			hit:      hTile != nil || horzX <= 0.0 || horzY <= 0.0 || horzX >= level.pixelWidth || horzY >= level.pixelHeight,
-			pos:      &Vec2f{horzX, horzY},
+			pos:      vmath.NewVec(horzX, horzY),
 			distance: math.Sqrt(hDist),
 			tile:     hTile,
 		}
 	} else {
 		return &RaycastResult{
 			hit:      vTile != nil || horzX <= 0.0 || horzY <= 0.0 || horzX >= level.pixelWidth || horzY >= level.pixelHeight,
-			pos:      &Vec2f{vertX, vertY},
+			pos:      vmath.NewVec(vertX, vertY),
 			distance: math.Sqrt(vDist),
 			tile:     vTile,
 		}

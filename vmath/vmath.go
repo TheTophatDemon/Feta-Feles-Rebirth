@@ -1,4 +1,4 @@
-package main
+package vmath
 
 import (
 	"math"
@@ -6,11 +6,17 @@ import (
 )
 
 func RectsIntersect(min0, max0, min1, max1 *Vec2f) bool {
-	return max0.x > min1.x && min0.x < max1.x && max0.y > min1.y && min0.y < max1.y
+	return max0.X > min1.X && min0.X < max1.X && max0.Y > min1.Y && min0.Y < max1.Y
 }
 
 type Vec2f struct {
-	x, y float64
+	X, Y float64
+}
+
+func NewVec(x, y float64) *Vec2f {
+	return &Vec2f{
+		X: x, Y: y,
+	}
 }
 
 func ZeroVec() *Vec2f {
@@ -18,66 +24,66 @@ func ZeroVec() *Vec2f {
 }
 
 func (vec *Vec2f) Clone() *Vec2f {
-	return &Vec2f{x: vec.x, y: vec.y}
+	return &Vec2f{X: vec.X, Y: vec.Y}
 }
 
 func (vec *Vec2f) Add(other *Vec2f) *Vec2f {
-	vec.x += other.x
-	vec.y += other.y
+	vec.X += other.X
+	vec.Y += other.Y
 	return vec
 }
 
 func (vec *Vec2f) AddScalar(scalar float64) *Vec2f {
-	vec.x += scalar
-	vec.y += scalar
+	vec.X += scalar
+	vec.Y += scalar
 	return vec
 }
 
 func (vec *Vec2f) Sub(other *Vec2f) *Vec2f {
-	vec.x -= other.x
-	vec.y -= other.y
+	vec.X -= other.X
+	vec.Y -= other.Y
 	return vec
 }
 
 func (vec *Vec2f) SubScalar(scalar float64) *Vec2f {
-	vec.x -= scalar
-	vec.y -= scalar
+	vec.X -= scalar
+	vec.Y -= scalar
 	return vec
 }
 
 func (vec *Vec2f) Floor() *Vec2f {
-	vec.x = math.Floor(vec.x)
-	vec.y = math.Floor(vec.y)
+	vec.X = math.Floor(vec.X)
+	vec.Y = math.Floor(vec.Y)
 	return vec
 }
 
 func (vec *Vec2f) Ceil() *Vec2f {
-	vec.x = math.Ceil(vec.x)
-	vec.y = math.Ceil(vec.y)
+	vec.X = math.Ceil(vec.X)
+	vec.Y = math.Ceil(vec.Y)
 	return vec
 }
 
 func (vec *Vec2f) Normalize() *Vec2f {
 	len := vec.Length()
 	if len != 0 {
-		vec.x /= len
-		vec.y /= len
+		vec.X /= len
+		vec.Y /= len
 	}
 	return vec
 }
 
 func (vec *Vec2f) Length() float64 {
-	return math.Sqrt(vec.x*vec.x + vec.y*vec.y)
+	return math.Sqrt(vec.X*vec.X + vec.Y*vec.Y)
 }
 
 func (vec *Vec2f) Scale(s float64) *Vec2f {
-	vec.x *= s
-	vec.y *= s
+	vec.X *= s
+	vec.Y *= s
 	return vec
 }
 
 func VecDot(v0, v1 *Vec2f) float64 {
-	return (v0.x * v1.x) + (v0.y * v1.y)
+	return (v0.X * v1.X) + (v0.Y * v1.Y)
 }
 
 //Returns magnitude of 3d cross product between two vectors (treated as on the XY plane)
@@ -85,20 +91,20 @@ func VecCross(v0, v1 *Vec2f) float64 {
 	//(Axi^ + Ayj^) X (Bxi^ + Byj^)
 	//Axi^ X Bxi^ + Axi^ X Byj^ + Ayj^ X Bxi^ + Ayj^ X Byj^
 	//Axi^ X Byj^ + Ayj^ X Bxi^ = (AxBy)(i^ X j^) + (AyBx)(j^ X i^) = AxByk^ - AyBxk^
-	return (v0.x * v1.y) - (v0.y * v1.x)
+	return (v0.X * v1.Y) - (v0.Y * v1.X)
 }
 
 func VecMin(v0, v1 *Vec2f) *Vec2f {
 	return &Vec2f{
-		x: math.Min(v0.x, v1.x),
-		y: math.Min(v0.y, v1.y),
+		X: math.Min(v0.X, v1.X),
+		Y: math.Min(v0.Y, v1.Y),
 	}
 }
 
 func VecMax(v0, v1 *Vec2f) *Vec2f {
 	return &Vec2f{
-		x: math.Max(v0.x, v1.x),
-		y: math.Max(v0.y, v1.y),
+		X: math.Max(v0.X, v1.X),
+		Y: math.Max(v0.Y, v1.Y),
 	}
 }
 
@@ -117,11 +123,11 @@ func VecFromAngle(angle, magnitude float64) *Vec2f {
 }
 
 func (vec *Vec2f) Equals(other *Vec2f) bool {
-	return vec.x == other.x && vec.y == other.y
+	return vec.X == other.X && vec.Y == other.Y
 }
 
 func (vec *Vec2f) Lerp(other *Vec2f, t float64) *Vec2f {
-	vec.x += (other.x - vec.x) * t
-	vec.y += (other.y - vec.y) * t
+	vec.X += (other.X - vec.X) * t
+	vec.Y += (other.Y - vec.Y) * t
 	return vec
 }
