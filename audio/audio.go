@@ -61,11 +61,15 @@ func init() {
 
 func PlayMusic(name string) {
 	nextSong = name
-	musData, valid := musFiles[name]
 	musFadeTimer = 0.0
-	if len(name) == 0 || !valid {
+	if currSong != name {
 		musFade = FADE_OUT
-	} else if currSong != name {
+	}
+}
+
+func switchSongTo(name string) {
+	musData, valid := musFiles[name]
+	if valid {
 		stream, err := vorbis.Decode(audioContext, assets.ReadCompressedString(musData))
 		if err != nil {
 			log.Fatal("Cannot decode music file: ", name)
@@ -75,28 +79,37 @@ func PlayMusic(name string) {
 			log.Fatal("Failed to create stream for song: ", name)
 		}
 		musPlayer.Play()
-		musPlayer.SetVolume(1.0)
+		musFade = FADE_IN
+	} else if musPlayer != nil {
+		musPlayer.Close()
+		musPlayer = nil
 		musFade = FADE_NONE
 	}
 }
 
 func Update(deltaTime float64) {
+	//Handle song transition
 	if musFade != FADE_NONE {
 		musFadeTimer += deltaTime
+		if musPlayer != nil {
+			if musFade == FADE_IN {
+				musPlayer.SetVolume(math.Min(1.0, musFadeTimer))
+			} else if musFade == FADE_OUT {
+				musPlayer.SetVolume(math.Max(0.0, FADE_TIME-musFadeTimer))
+			}
+		}
 		if musFadeTimer > FADE_TIME {
 			musFadeTimer = 0.0
-			currSong = nextSong
-			musFade = FADE_NONE
-		}
-		if musPlayer != nil {
-			switch musFade {
-			case FADE_IN:
-				musPlayer.SetVolume(musFadeTimer)
-			case FADE_OUT:
-				musPlayer.SetVolume(FADE_TIME - musFadeTimer)
+			if musFade == FADE_OUT {
+				currSong = nextSong
+				switchSongTo(currSong)
+			} else if musFade == FADE_IN && musPlayer != nil {
+				musPlayer.SetVolume(1.0)
+				musFade = FADE_NONE
 			}
 		}
 	}
+	//Perform looping
 	if musPlayer != nil && !musPlayer.IsPlaying() {
 		musPlayer.Rewind()
 		musPlayer.Play()
