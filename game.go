@@ -81,7 +81,7 @@ func NewGame(mission int) *Game {
 			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
 			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-16)),
 			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
-			timerBox:      CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(4.0, 20.0, 100.0, 36.0)),
+			timerBox:      CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(4.0, 20.0, 100.0, 36.0)),
 		},
 		mission:       &missions[mission],
 		missionNumber: mission,
@@ -343,6 +343,7 @@ func (g *Game) Update(deltaTime float64) {
 				} else {
 					runtime.GC() //Get rid of all that level generation memory
 					Emit_Signal(SIGNAL_GAME_START, g, nil)
+					audio.PlayMusic(g.mission.music)
 				}
 				g.fade = FM_NO_FADE
 			}

@@ -60,7 +60,7 @@ func AddWorm(game *Game, x, y float64) (obj *Object, worm *Worm) {
 	worm = &Worm{
 		Mob: Mob{
 			Actor:             NewActor(100.0, 100_000.0, 50_000.0),
-			health:            13,
+			health:            11,
 			currAnim:          nil,
 			lastSeenPlayerPos: vmath.ZeroVec(),
 			vecToPlayer:       vmath.ZeroVec(),
@@ -183,7 +183,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 						if a.finished {
 							obj.removeMe = true
 							wormCtr.Dec()
-							AddLove(game, 5, obj.pos.X, obj.pos.Y)
+							AddLove(game, 3, obj.pos.X, obj.pos.Y)
 						}
 					},
 				}

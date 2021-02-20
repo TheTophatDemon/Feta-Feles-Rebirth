@@ -2,9 +2,15 @@ package main
 
 /*
 TODO:
--Ambient game music / Fix ghost music
 -Endings
--Multiply damage/speed in ascended mode
+-Ingame music
+	-Use reverb instead of distortion
+	-Make malform_ingame louder
+	-Song "monster"
+	-Song "rescue"
+-Tutorial adjustments
+	-Message about not losing ascention
+	-Timing messages differently
 -Pause screen
 	-Restart game
 	-Mute music/sfx

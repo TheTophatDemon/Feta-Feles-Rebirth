@@ -54,10 +54,16 @@ func init() {
 		"roar":        assets.WAV_ROAR,
 	}
 	musFiles = map[string]string{
-		"mystery": assets.OGG_MYSTERY,
-		"hope":    assets.OGG_HOPE,
+		"mystery":        assets.OGG_MYSTERY,
+		"mystery_ingame": assets.OGG_MYSTERY_INGAME,
+		"hope":           assets.OGG_HOPE,
+		"hope_ingame":    assets.OGG_HOPE_INGAME,
+		"malform":        assets.OGG_MALFORM,
+		"malform_ingame": assets.OGG_MALFORM_INGAME,
 	}
 }
+
+const MUS_VOL_SCALE = 0.6
 
 func PlayMusic(name string) {
 	nextSong = name
@@ -93,9 +99,9 @@ func Update(deltaTime float64) {
 		musFadeTimer += deltaTime
 		if musPlayer != nil {
 			if musFade == FADE_IN {
-				musPlayer.SetVolume(math.Min(1.0, musFadeTimer))
+				musPlayer.SetVolume(math.Min(MUS_VOL_SCALE, musFadeTimer*MUS_VOL_SCALE))
 			} else if musFade == FADE_OUT {
-				musPlayer.SetVolume(math.Max(0.0, FADE_TIME-musFadeTimer))
+				musPlayer.SetVolume(math.Max(0.0, MUS_VOL_SCALE*(FADE_TIME-musFadeTimer)))
 			}
 		}
 		if musFadeTimer > FADE_TIME {
@@ -104,7 +110,7 @@ func Update(deltaTime float64) {
 				currSong = nextSong
 				switchSongTo(currSong)
 			} else if musFade == FADE_IN && musPlayer != nil {
-				musPlayer.SetVolume(1.0)
+				musPlayer.SetVolume(MUS_VOL_SCALE)
 				musFade = FADE_NONE
 			}
 		}
