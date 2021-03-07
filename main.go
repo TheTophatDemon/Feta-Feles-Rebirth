@@ -3,7 +3,7 @@ package main
 /*
 TODO:
 -Pause screen
-	-Fix UI button clicking
+	-Make pause screen singleton & unlink
 	-Mute music/sfx
 	-Controls list
 -Endings

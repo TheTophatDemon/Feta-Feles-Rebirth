@@ -14,8 +14,9 @@ type TitleScreen struct {
 	title         *Object
 	logo          *Object
 	feles         *Object
-	link          *Text
-	enterText     *Text
+	uiRoot        *UINode
+	link          *UIText
+	enterText     *UIText
 	flinchTimer   float64
 	blinkTimer    float64
 	missionSelect bool
@@ -30,13 +31,16 @@ func (ts *TitleScreen) Enter() {
 		},
 		pos: vmath.ZeroVec(),
 	}
+	ts.uiRoot = EmptyUINode()
 	ts.link = GenerateText("tophatdemon.com", image.Rect(SCR_WIDTH_H-60, SCR_HEIGHT-16, SCR_WIDTH_H+64, SCR_HEIGHT))
-	ts.feles = MakeFeles(FACE_WINK, BODY_CAT, vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-32.0))
+	ts.uiRoot.AddChild(&ts.link.UINode)
 	ts.enterText = GenerateText("CLICK OR SPACE TO BEGIN", image.Rect(SCR_WIDTH_H-10*8-12, SCR_HEIGHT_H+40.0, SCR_WIDTH_H+10*8+12, SCR_HEIGHT_H+56.0))
+	ts.uiRoot.AddChild(&ts.enterText.UINode)
+	ts.feles = MakeFeles(FACE_WINK, BODY_CAT, vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-32.0))
 }
 
 func (ts *TitleScreen) Leave() {
-
+	ts.uiRoot.Unlink()
 }
 
 func (ts *TitleScreen) Update(deltaTime float64) {
@@ -94,9 +98,8 @@ func (ts *TitleScreen) Update(deltaTime float64) {
 func (ts *TitleScreen) Draw(screen *ebiten.Image) {
 	ts.title.DrawAllSprites(screen, nil)
 	ts.logo.DrawAllSprites(screen, nil)
-	ts.link.Draw(screen, nil)
 	ts.feles.DrawAllSprites(screen, nil)
-	ts.enterText.Draw(screen, nil)
+	ts.uiRoot.Draw(screen, nil)
 }
 
 func (ts *TitleScreen) GenerateTitle() *Object {

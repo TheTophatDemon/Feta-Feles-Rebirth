@@ -162,45 +162,58 @@ type CutsceneState struct {
 	feles        *Object
 	felesBody    BodyType
 	cutscene     *Cutscene
-	dialogBox    *UIBox
-	dialog       []*Text
+	dialog       []*UIText
 	dialogIndex  int
 	nextMission  int
-	instructText *Text
 	skipTimer    float64
-	skipText     *Text
+	skipText     *UIText
 	transition   FadeMode
 	transTimer   float64
 	renderTarget *ebiten.Image
+	uiRoot       *UINode
 }
 
 func NewCutsceneState(sceneNum int) *CutsceneState {
-	ctscn := new(CutsceneState)
-	ctscn.cutscene = &cutscenes[sceneNum]
+	state := new(CutsceneState)
+	state.cutscene = &cutscenes[sceneNum]
 	bodies := [8]BodyType{
 		BODY_NONE, BODY_CAT, BODY_HUMAN, BODY_ANGEL2, BODY_CORRUPTED, BODY_MELTED, BODY_HORROR,
 	}
-	ctscn.feles = MakeFeles(ctscn.cutscene.faces[0], bodies[sceneNum], vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-24.0))
-	ctscn.felesBody = bodies[sceneNum]
-	ctscn.dialog = make([]*Text, len(ctscn.cutscene.dialog))
-	for i, s := range ctscn.cutscene.dialog {
-		ctscn.dialog[i] = GenerateText(s, image.Rect(56, 184, 264, 208))
-		ctscn.dialog[i].fillPos = 0
-		ctscn.dialog[i].fillSound = ctscn.cutscene.voice
+	state.feles = MakeFeles(state.cutscene.faces[0], bodies[sceneNum], vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-24.0))
+	state.felesBody = bodies[sceneNum]
+
+	state.uiRoot = EmptyUINode()
+
+	dialogBox := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(48, 176, 272, 216), true)
+	state.uiRoot.AddChild(&dialogBox.UINode)
+
+	state.dialog = make([]*UIText, len(state.cutscene.dialog))
+	for i, s := range state.cutscene.dialog {
+		state.dialog[i] = GenerateText(s, image.Rect(8, 8, dialogBox.Width()-8, dialogBox.Height()-8))
+		state.dialog[i].fillPos = 0
+		state.dialog[i].fillSound = state.cutscene.voice
+		if i > 0 {
+			state.dialog[i].visible = false
+		}
+		dialogBox.AddChild(&state.dialog[i].UINode)
 	}
-	ctscn.dialogBox = CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(48, 176, 272, 216))
-	ctscn.dialogIndex = 0
-	ctscn.nextMission = sceneNum
-	ctscn.instructText = GenerateText("SPACE/CLICK: NEXT ... HOLD ENTER: SKIP", image.Rect(4, 228, SCR_WIDTH-4, SCR_HEIGHT))
-	ctscn.skipTimer = 0.0
-	ctscn.skipText = GenerateText("SKIPPING...", image.Rect(SCR_WIDTH_H-44, 24, SCR_WIDTH_H+44, 32))
-	ctscn.transition = FM_FADE_IN
-	ctscn.transTimer = 0.0
-	ctscn.renderTarget = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
+	state.dialogIndex = 0
+	instructText := GenerateText("SPACE/CLICK: NEXT ... HOLD ENTER: SKIP", image.Rect(4, 228, SCR_WIDTH-4, SCR_HEIGHT))
+	state.uiRoot.AddChild(&instructText.UINode)
 
-	audio.PlayMusic(ctscn.cutscene.music)
+	state.skipText = GenerateText("SKIPPING...", image.Rect(SCR_WIDTH_H-44, 24, SCR_WIDTH_H+44, 32))
+	state.skipText.visible = false
+	state.uiRoot.AddChild(&state.skipText.UINode)
+	state.skipTimer = 0.0
 
-	return ctscn
+	state.nextMission = sceneNum
+	state.transition = FM_FADE_IN
+	state.transTimer = 0.0
+	state.renderTarget = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
+
+	audio.PlayMusic(state.cutscene.music)
+
+	return state
 }
 
 const CUTSCENE_FADE_SPEED = 1.0
@@ -220,6 +233,8 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 				} else {
 					faceIdx := int(math.Min(float64(ct.dialogIndex), float64(len(ct.cutscene.faces)-1)))
 					ct.feles = MakeFeles(ct.cutscene.faces[faceIdx], ct.felesBody, ct.feles.pos)
+					ct.dialog[ct.dialogIndex-1].visible = false
+					ct.dialog[ct.dialogIndex].visible = true
 				}
 			} else {
 				dlg.fillPos = len(dlg.text)
@@ -227,7 +242,7 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 		}
 		//Cutscene skipping
 		if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-			ct.skipText.fillPos = len(ct.skipText.text)
+			ct.skipText.visible = true
 			ct.skipTimer += deltaTime
 			if ct.skipTimer > 0.5 {
 				ct.skipTimer = 0.0
@@ -235,7 +250,8 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 				audio.PlayMusic("")
 			}
 		} else {
-			ct.skipText.fillPos = 0
+			ct.skipText.visible = false
+			ct.skipTimer = 0.0
 		}
 	} else {
 		ct.transTimer += deltaTime
@@ -251,13 +267,10 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 }
 
 func (ct *CutsceneState) Draw(screen *ebiten.Image) {
-	ct.dialogBox.Draw(screen, nil)
-	ct.instructText.Draw(screen, nil)
 	ct.feles.DrawAllSprites(screen, nil)
-	if ct.skipTimer > 0.0 {
-		ct.skipText.Draw(screen, nil)
-	}
-	ct.dialog[ct.dialogIndex].Draw(screen, nil)
+
+	ct.uiRoot.Draw(screen, nil)
+
 	ct.renderTarget.DrawImage(screen, nil)
 	if ct.transition != FM_NO_FADE {
 		op := &ebiten.DrawRectShaderOptions{}
@@ -281,4 +294,5 @@ func (ct *CutsceneState) Enter() {}
 
 func (ct *CutsceneState) Leave() {
 	ct.renderTarget.Dispose()
+	ct.uiRoot.Unlink()
 }

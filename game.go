@@ -2,8 +2,6 @@ package main
 
 import (
 	"container/list"
-	"fmt"
-	"image"
 	"image/color"
 	"log"
 	"math"
@@ -41,17 +39,6 @@ type Game struct {
 	bgColor                color.RGBA
 	elapsedTime            float64
 	pause                  bool
-	pauseScreen            *PauseScreen
-}
-
-type GameHUD struct {
-	loveBarBorder *UIBox
-	loveBar       *Sprite
-	msgText       *Text
-	msgBox        *UIBox
-	msgTimer      float64
-	mapBorder     *UIBox
-	timerBox      *UIBox
 }
 
 type FadeMode int
@@ -74,18 +61,11 @@ func NewGame(mission int) *Game {
 		__totalGameTime = 0.0
 	}
 	game := &Game{
-		objects:  list.New(),
-		lastTime: time.Now(),
-		camPos:   vmath.ZeroVec(),
-		camMin:   vmath.ZeroVec(),
-		camMax:   vmath.ZeroVec(),
-		hud: GameHUD{
-			loveBarBorder: CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16)),
-			loveBar:       SpriteFromScaledImg(GetGraphics().SubImage(image.Rect(104, 40, 112, 48)).(*ebiten.Image), image.Rect(4+8, 4+8, 4+160-8, 4+16-8), 0),
-			msgBox:        CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-16)),
-			mapBorder:     CreateUIBox(image.Rect(64, 40, 80, 48), image.Rect(-1, -1, 64*int(TILE_SIZE)+1, 64*int(TILE_SIZE)+1)),
-			timerBox:      CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(4.0, 20.0, 100.0, 36.0)),
-		},
+		objects:       list.New(),
+		lastTime:      time.Now(),
+		camPos:        vmath.ZeroVec(),
+		camMin:        vmath.ZeroVec(),
+		camMax:        vmath.ZeroVec(),
 		mission:       &missions[mission],
 		missionNumber: mission,
 		fade:          FM_FADE_IN,
@@ -94,12 +74,10 @@ func NewGame(mission int) *Game {
 		strobeTimer:   0.0,
 		strobeForward: true,
 		bgColor:       missions[mission].bgColor1,
-		pauseScreen:   NewPauseScreen(),
+		hud:           *CreateGameHUD(),
 	}
 	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
 	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight, mission <= 1)
-
-	__debugSpots = make([]*DebugSpot, 0, 10)
 
 	//Spawn entities
 	playerSpawn := game.level.FindCenterSpawnPoint(game)
@@ -143,7 +121,10 @@ func NewGame(mission int) *Game {
 }
 
 func (g *Game) Enter() {}
-func (g *Game) Leave() {}
+
+func (g *Game) Leave() {
+	g.hud.root.Unlink()
+}
 
 var cheatText string = ""
 var debugDraw bool
@@ -332,16 +313,9 @@ func (g *Game) Update(deltaTime float64) {
 				}
 			}
 
-			//Animate UI
-			if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
-				g.hud.msgText.Update(g.deltaTime)
-				g.hud.msgTimer -= g.deltaTime
-			}
-
-		} else {
-			g.pauseScreen.Update(deltaTime)
 		}
-		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && !ebiten.IsKeyPressed(ebiten.KeyAlt) {
+		g.hud.Update(g)
+		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 			g.pause = !g.pause
 		}
 	} else { //Handle level transition FX
@@ -368,12 +342,6 @@ func (g *Game) Update(deltaTime float64) {
 
 	//Center camera on player
 	g.CenterCameraOn(g.playerObj)
-
-	//Update UI with love amount
-	lbbRect := g.hud.loveBarBorder.dest
-	barRect := image.Rect(lbbRect.Min.X+3, lbbRect.Min.Y+3, lbbRect.Max.X-3, lbbRect.Max.Y-3)
-	barRect.Max.X = barRect.Min.X + int(float64(barRect.Dx())*float64(g.love)/float64(g.mission.loveQuota))
-	g.hud.loveBar = SpriteFromScaledImg(g.hud.loveBar.subImg, barRect, 0)
 }
 
 func (g *Game) CenterCameraOn(obj *Object) {
@@ -405,32 +373,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		}
 	}
 
-	g.hud.loveBarBorder.Draw(screen, nil)
-	g.hud.loveBar.Draw(screen, nil)
-	if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
-		g.hud.msgBox.Draw(screen, nil)
-		g.hud.msgText.Draw(screen, nil)
-	}
-
-	for _, spot := range __debugSpots {
-		o := &ebiten.DrawImageOptions{}
-		o.GeoM.Concat(*camMat)
-		o.GeoM.Translate(spot.pos.X, spot.pos.Y)
-		spot.spr.Draw(screen, &o.GeoM)
-	}
-
-	if debugDraw {
-		GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen, nil)
-	}
-
-	//Draw total gameplay timer
-	g.hud.timerBox.Draw(screen, nil)
-	tSeconds := int(g.elapsedTime) % 60
-	tMinutes := int(g.elapsedTime / 60.0)
-	pSeconds := g.mission.parTime % 60
-	pMinutes := g.mission.parTime / 60
-	GenerateText(fmt.Sprintf("%02d:%02d/%02d:%02d", tMinutes, tSeconds, pMinutes, pSeconds), image.Rect(8.0, 24.0, 96.0, 32.0)).Draw(screen, nil)
-
 	if g.fade != FM_NO_FADE {
 		op := &ebiten.DrawImageOptions{}
 		var stage float64
@@ -445,27 +387,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op.GeoM.Scale(stage, stage)
 		screen.Clear()
 		screen.DrawImage(g.renderTarget, op)
-	} else if g.pause {
-		g.pauseScreen.Draw(screen)
+	} else {
+		g.hud.Draw(screen)
 	}
-}
-
-func (g *Game) DisplayMessage(msg string, time float64) {
-	g.hud.msgTimer = time
-	pr := g.hud.msgBox.dest
-	g.hud.msgText = GenerateText(msg, image.Rect(pr.Min.X+8, pr.Min.Y+8, pr.Max.X-8, pr.Max.Y-8))
-	g.hud.msgText.fillPos = 0
 }
 
 func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
 	if g.missionNumber == 0 {
 		switch kind {
 		case SIGNAL_PLAYER_MOVED:
-			g.DisplayMessage("HOLDING CLICK OR    SPACE WILL SHOOT", 5.0)
+			g.hud.DisplayMessage("HOLDING CLICK OR    SPACE WILL SHOOT", 5.0)
 		case SIGNAL_PLAYER_SHOT:
-			g.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION", 5.0)
+			g.hud.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION", 5.0)
 		case SIGNAL_GAME_START:
-			g.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS", 4.0)
+			g.hud.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS", 4.0)
 		}
 	}
 	switch kind {
@@ -475,10 +410,10 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 		AddStarBurst(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 		audio.PlaySound("ascend")
 		if g.missionNumber == 0 {
-			g.DisplayMessage("  EXCELLENT. NOW...     GO GET THE CAT!", 4.0)
+			g.hud.DisplayMessage("  EXCELLENT. NOW...     GO GET THE CAT!", 4.0)
 		}
 	case SIGNAL_CAT_RULE:
-		g.DisplayMessage("YOU MUST ASCEND TO  SLAY THE CAT", 4.0)
+		g.hud.DisplayMessage("YOU MUST ASCEND TO  SLAY THE CAT", 4.0)
 	case SIGNAL_CAT_DIE:
 		g.fade = FM_FADE_OUT
 		audio.PlaySound("outro_chime")
