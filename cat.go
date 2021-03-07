@@ -62,6 +62,13 @@ func AddCat(game *Game, x, y float64) (*Cat, *Object) {
 }
 
 func (cat *Cat) Update(game *Game, obj *Object) {
+	//Another fail-safe. Apparently if there are too many cats on screen at once they will occasionally be stuck in NaNspace
+	if cat.walkDistance == math.NaN() {
+		obj.removeMe = true
+		spawn := game.level.FindOffscreenSpawnPoint(game)
+		AddCat(game, spawn.centerX, spawn.centerY)
+	}
+
 	if !cat.dead {
 		cat.Wander(game, obj, 64.0, math.Pi)
 

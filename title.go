@@ -46,7 +46,7 @@ func (ts *TitleScreen) Update(deltaTime float64) {
 		if strings.Contains(cheatText, "tdyeehaw") {
 			cheatText = ""
 			ts.missionSelect = true
-			ts.enterText = GenerateText("PRESS MISSION NUMBER", ts.enterText.rect)
+			ts.enterText = GenerateText("PRESS MISSION NUMBER", ts.enterText.dest)
 			ts.enterText.fillPos = len(ts.enterText.text)
 		}
 
@@ -94,9 +94,9 @@ func (ts *TitleScreen) Update(deltaTime float64) {
 func (ts *TitleScreen) Draw(screen *ebiten.Image) {
 	ts.title.DrawAllSprites(screen, nil)
 	ts.logo.DrawAllSprites(screen, nil)
-	ts.link.Draw(screen)
+	ts.link.Draw(screen, nil)
 	ts.feles.DrawAllSprites(screen, nil)
-	ts.enterText.Draw(screen)
+	ts.enterText.Draw(screen, nil)
 }
 
 func (ts *TitleScreen) GenerateTitle() *Object {

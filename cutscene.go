@@ -162,7 +162,7 @@ type CutsceneState struct {
 	feles        *Object
 	felesBody    BodyType
 	cutscene     *Cutscene
-	dialogBox    UIBox
+	dialogBox    *UIBox
 	dialog       []*Text
 	dialogIndex  int
 	nextMission  int
@@ -252,12 +252,12 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 
 func (ct *CutsceneState) Draw(screen *ebiten.Image) {
 	ct.dialogBox.Draw(screen, nil)
-	ct.instructText.Draw(screen)
+	ct.instructText.Draw(screen, nil)
 	ct.feles.DrawAllSprites(screen, nil)
 	if ct.skipTimer > 0.0 {
-		ct.skipText.Draw(screen)
+		ct.skipText.Draw(screen, nil)
 	}
-	ct.dialog[ct.dialogIndex].Draw(screen)
+	ct.dialog[ct.dialogIndex].Draw(screen, nil)
 	ct.renderTarget.DrawImage(screen, nil)
 	if ct.transition != FM_NO_FADE {
 		op := &ebiten.DrawRectShaderOptions{}

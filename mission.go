@@ -58,8 +58,8 @@ func init() {
 			maxKnights: 15, maxBlarghs: 15, maxGopniks: 7, maxBarrels: 10,
 			catHealth: 8,
 			mapWidth:  48, mapHeight: 48,
-			bgColor1: color.RGBA{50, 60, 57, 255},
-			bgColor2: color.RGBA{89, 86, 82, 255},
+			bgColor1: color.RGBA{160, 0, 160, 255},
+			bgColor2: color.RGBA{160, 15, 160, 255},
 			parTime:  (3 * 60) + 45,
 			music:    "hope_ingame",
 		},
@@ -70,7 +70,7 @@ func init() {
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{34, 32, 32, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
-			parTime:  (4 * 60) + 15,
+			parTime:  (4 * 60) + 15, //5:10
 			music:    "malform_ingame",
 		},
 		{ //5 (Melting)

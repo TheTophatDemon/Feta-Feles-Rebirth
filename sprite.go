@@ -3,11 +3,8 @@ package main
 import (
 	"image"
 	"math"
-	"strings"
-	"unicode/utf8"
 
 	"github.com/hajimehoshi/ebiten"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
@@ -117,96 +114,4 @@ func SpriteFromScaledImg(subImg *ebiten.Image, dest image.Rectangle, orient int)
 	matrix.Translate(float64(dest.Min.X), float64(dest.Min.Y))
 
 	return &Sprite{subImg, matrix}
-}
-
-type UIBox struct {
-	sprites []*Sprite
-	rect    image.Rectangle
-}
-
-func CreateUIBox(src, dest image.Rectangle) UIBox {
-	sprites := make([]*Sprite, 9)
-	bodyImg := GetGraphics().SubImage(image.Rect(src.Min.X+16, src.Min.Y, src.Min.X+24, src.Max.Y)).(*ebiten.Image)
-	sprites[0] = SpriteFromScaledImg(bodyImg, image.Rect(dest.Min.X+8, dest.Min.Y+8, dest.Max.X-8, dest.Max.Y-8), 0) //Middle
-	edgeImg := GetGraphics().SubImage(image.Rect(src.Min.X+8, src.Min.Y, src.Min.X+16, src.Max.Y)).(*ebiten.Image)
-	sprites[1] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Min.X+8, dest.Min.Y, dest.Max.X-8, dest.Min.Y+8), 0) //Top
-	sprites[2] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Max.X-8, dest.Min.Y+8, dest.Max.X, dest.Max.Y-8), 1) //Right
-	sprites[3] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Min.X+8, dest.Max.Y-8, dest.Max.X-8, dest.Max.Y), 2) //Bottom
-	sprites[4] = SpriteFromScaledImg(edgeImg, image.Rect(dest.Min.X, dest.Min.Y+8, dest.Min.X+8, dest.Max.Y-8), 3) //Left
-	cornerImg := GetGraphics().SubImage(image.Rect(src.Min.X, src.Min.Y, src.Min.X+8, src.Max.Y)).(*ebiten.Image)
-	sprites[5] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Min.X, dest.Min.Y, dest.Min.X+8, dest.Min.Y+8), 0) //Top left
-	sprites[6] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Max.X-8, dest.Min.Y, dest.Max.X, dest.Min.Y+8), 1) //Top right
-	sprites[7] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Max.X-8, dest.Max.Y-8, dest.Max.X, dest.Max.Y), 2) //Bottom right
-	sprites[8] = SpriteFromScaledImg(cornerImg, image.Rect(dest.Min.X, dest.Max.Y-8, dest.Min.X+8, dest.Max.Y), 3) //Bottom left
-	return UIBox{sprites, dest}
-}
-
-func (ui UIBox) Draw(target *ebiten.Image, pt *ebiten.GeoM) {
-	op := &ebiten.DrawImageOptions{}
-	for _, sp := range ui.sprites {
-		if sp != nil {
-			op.GeoM = *sp.matrix
-			if pt != nil {
-				op.GeoM.Concat(*pt)
-			}
-			target.DrawImage(sp.subImg, op)
-		}
-	}
-}
-
-type Text struct {
-	UIBox
-	text      string
-	fillPos   int //The character before which to stop rendering. Used for 'typing in' effect
-	fillTimer float64
-	fillSpeed float64
-	fillSound string
-}
-
-func GenerateText(text string, dest image.Rectangle) *Text {
-	text = strings.ToUpper(text)
-	sprites := make([]*Sprite, len(text))
-	lineLen := dest.Dx() / 8
-	for i := 0; i < len(text); i++ {
-		r, _ := utf8.DecodeRuneInString(text[i:])
-		if r > ' ' && r <= 'Z' {
-			charDestX := (i%lineLen)*8 + dest.Min.X
-			charDestY := (i/lineLen)*8 + dest.Min.Y
-			charSrcX := (int(r-' ')%12)*8 + 64
-			charSrcY := (int(r-' ') / 12) * 8
-			sprites[i] = NewSprite(image.Rect(charSrcX, charSrcY, charSrcX+8, charSrcY+8), vmath.NewVec(float64(charDestX), float64(charDestY)), false, false, 0)
-		}
-	}
-	return &Text{
-		UIBox:     UIBox{sprites, dest},
-		text:      text,
-		fillPos:   len(text),
-		fillTimer: 0.0,
-		fillSpeed: 0.04,
-		fillSound: "voice",
-	}
-}
-
-func (text *Text) Update(deltaTime float64) {
-	text.fillTimer += deltaTime
-	if text.fillTimer > text.fillSpeed {
-		text.fillTimer = 0.0
-		if text.fillPos < len(text.text) {
-			if text.text[text.fillPos] > 'A' && text.text[text.fillPos] < 'z' {
-				audio.PlaySound(text.fillSound)
-			}
-			text.fillPos++
-		}
-	}
-}
-
-func (text *Text) Draw(target *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	for i := 0; i < text.fillPos; i++ {
-		sp := text.sprites[i]
-		if sp != nil {
-			op.GeoM = *sp.matrix
-			target.DrawImage(sp.subImg, op)
-		}
-	}
 }

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/inpututil"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
@@ -39,16 +40,18 @@ type Game struct {
 	strobeSpeed            float64
 	bgColor                color.RGBA
 	elapsedTime            float64
+	pause                  bool
+	pauseScreen            *PauseScreen
 }
 
 type GameHUD struct {
-	loveBarBorder UIBox
+	loveBarBorder *UIBox
 	loveBar       *Sprite
 	msgText       *Text
-	msgBox        UIBox
+	msgBox        *UIBox
 	msgTimer      float64
-	mapBorder     UIBox
-	timerBox      UIBox
+	mapBorder     *UIBox
+	timerBox      *UIBox
 }
 
 type FadeMode int
@@ -91,6 +94,7 @@ func NewGame(mission int) *Game {
 		strobeTimer:   0.0,
 		strobeForward: true,
 		bgColor:       missions[mission].bgColor1,
+		pauseScreen:   NewPauseScreen(),
 	}
 	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
 	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight, mission <= 1)
@@ -146,188 +150,200 @@ var debugDraw bool
 
 func (g *Game) Update(deltaTime float64) {
 	g.deltaTime = deltaTime
-	g.elapsedTime += deltaTime
-	__totalGameTime += deltaTime
 	if g.fade == FM_NO_FADE {
+		if !g.pause {
+			g.elapsedTime += deltaTime
+			__totalGameTime += deltaTime
 
-		cheatText += strings.ToLower(string(ebiten.InputChars()))
-
-		//Cheat codes
-		if strings.Contains(cheatText, "tdnepotis") {
-			g.love = g.mission.loveQuota - 1
-			cheatText = ""
-		}
-		if strings.Contains(cheatText, "tdnyaah") {
-			cheatText = ""
-			AddCat(g, g.playerObj.pos.X, g.playerObj.pos.Y)
-		}
-		if strings.Contains(cheatText, "tdnyaaaah") {
-			cheatText = ""
-			for i := 0; i < 32; i++ {
+			cheatText += strings.ToLower(string(ebiten.InputChars()))
+			//Cheat codes
+			if strings.Contains(cheatText, "tdnepotis") {
+				g.love = g.mission.loveQuota - 1
+				cheatText = ""
+			}
+			if strings.Contains(cheatText, "tdnyaah") {
+				cheatText = ""
 				AddCat(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 			}
-		}
-		if strings.Contains(cheatText, "tdsanic") {
-			cheatText = ""
-			ply := g.playerObj.components[0].(*Player)
-			if ply.maxSpeed <= 120.0 {
-				ply.maxSpeed = 400.0
-			} else {
-				ply.maxSpeed = 120.0
-			}
-		}
-		if strings.Contains(cheatText, "tdnovymir") {
-			cheatText = ""
-			ChangeAppState(NewGame(g.missionNumber))
-			return
-		}
-		if strings.Contains(cheatText, "tdcruoris") {
-			cheatText = ""
-			debugDraw = !debugDraw
-		}
-		if strings.Contains(cheatText, "tdasplode") {
-			cheatText = ""
-			AddExplosion(g, g.playerObj.pos.X, g.playerObj.pos.Y)
-		}
-		if strings.Contains(cheatText, "tdascend") {
-			cheatText = ""
-			g.love = g.mission.loveQuota
-			ply := g.playerObj.components[0].(*Player)
-			ply.ascended = true
-			Emit_Signal(SIGNAL_PLAYER_ASCEND, g.playerObj, nil)
-		}
-		if strings.Contains(cheatText, "tdgottam") {
-			cheatText = ""
-			ChangeAppState(NewGame(g.missionNumber + 1))
-			return
-		}
-		if strings.Contains(cheatText, "tdspicy") {
-			cheatText = ""
-			AddWorm(g, g.playerObj.pos.X, g.playerObj.pos.Y)
-		}
-
-		//Prevent the game from going AWOL when the window is moved
-		if g.deltaTime > 0.25 {
-			return
-		}
-
-		//Respawn monsters/barrels offscreen to maintain gameplay intensity
-		g.respawnTimer += g.deltaTime
-		if g.respawnTimer > 4.0 {
-			g.respawnTimer = 0.0
-
-			const (
-				S_KNIGHT = iota
-				S_BLARGH
-				S_GOPNIK
-				S_BARREL
-				S_WORM
-			)
-
-			pool := make([]int, 0, 4)
-			if knightCtr.count < g.mission.maxKnights {
-				pool = append(pool, S_KNIGHT)
-			}
-			if blarghCtr.count < g.mission.maxBlarghs {
-				pool = append(pool, S_BLARGH)
-			}
-			if gopnikCtr.count < g.mission.maxGopniks {
-				pool = append(pool, S_GOPNIK)
-			}
-			if barrelCtr.count < g.mission.maxBarrels {
-				pool = append(pool, S_BARREL)
-			}
-			if wormCtr.count < g.mission.maxWorms {
-				pool = append(pool, S_WORM)
-			}
-
-			if len(pool) > 0 {
-				spawn := g.level.FindOffscreenSpawnPoint(g)
-				c := pool[rand.Intn(len(pool))]
-				switch c {
-				case S_KNIGHT:
-					AddKnight(g, spawn.centerX, spawn.centerY)
-				case S_BLARGH:
-					AddBlargh(g, spawn.centerX, spawn.centerY)
-				case S_GOPNIK:
-					AddGopnik(g, spawn.centerX, spawn.centerY)
-				case S_BARREL:
-					AddBarrel(g, spawn.centerX, spawn.centerY)
-				case S_WORM:
-					AddWorm(g, spawn.centerX, spawn.centerY)
+			if strings.Contains(cheatText, "tdnyaaaah") {
+				cheatText = ""
+				for i := 0; i < 32; i++ {
+					AddCat(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 				}
 			}
-		}
-
-		//Update objects
-		toRemove := make([]*list.Element, 0, 4)
-		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
-			obj := objE.Value.(*Object)
-			//Update components
-			for _, c := range obj.components {
-				if c != nil {
-					c.Update(g, obj)
+			if strings.Contains(cheatText, "tdsanic") {
+				cheatText = ""
+				ply := g.playerObj.components[0].(*Player)
+				if ply.maxSpeed <= 120.0 {
+					ply.maxSpeed = 400.0
+				} else {
+					ply.maxSpeed = 120.0
 				}
 			}
-			//Objects are removed later so that they doesn't interfere with collision events
-			if obj.removeMe {
-				toRemove = append(toRemove, objE)
+			if strings.Contains(cheatText, "tdnovymir") {
+				cheatText = ""
+				ChangeAppState(NewGame(g.missionNumber))
+				return
 			}
-		}
-		//Resolve inter-object collisions
-		for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
-			obj := objE.Value.(*Object)
-			if obj.colType != CT_NONE {
-				//O(n^2)...Bleh!
-				for obj2E := g.objects.Front(); obj2E != nil; obj2E = obj2E.Next() {
-					obj2 := obj2E.Value.(*Object)
-					if obj2.colType != CT_NONE && obj2 != obj {
-						if obj.Intersects(obj2) {
-							for _, c := range obj.components {
-								col, ok := c.(Collidable)
-								if ok {
-									//An equivalent event will be sent for the other object when it is evaluated in the outer loop
-									col.OnCollision(g, obj, obj2)
+			if strings.Contains(cheatText, "tdcruoris") {
+				cheatText = ""
+				debugDraw = !debugDraw
+			}
+			if strings.Contains(cheatText, "tdasplode") {
+				cheatText = ""
+				AddExplosion(g, g.playerObj.pos.X, g.playerObj.pos.Y)
+			}
+			if strings.Contains(cheatText, "tdascend") {
+				cheatText = ""
+				g.love = g.mission.loveQuota
+				ply := g.playerObj.components[0].(*Player)
+				ply.ascended = true
+				Emit_Signal(SIGNAL_PLAYER_ASCEND, g.playerObj, nil)
+			}
+			if strings.Contains(cheatText, "tdgottam") {
+				cheatText = ""
+				ChangeAppState(NewGame(g.missionNumber + 1))
+				return
+			}
+			if strings.Contains(cheatText, "tdspicy") {
+				cheatText = ""
+				AddWorm(g, g.playerObj.pos.X, g.playerObj.pos.Y)
+			}
+
+			//Prevent the game from going AWOL when the window is moved
+			if g.deltaTime > 0.25 {
+				return
+			}
+
+			//Respawn monsters/barrels offscreen to maintain gameplay intensity
+			g.respawnTimer += g.deltaTime
+			if g.respawnTimer > 4.0 {
+				g.respawnTimer = 0.0
+
+				const (
+					S_KNIGHT = iota
+					S_BLARGH
+					S_GOPNIK
+					S_BARREL
+					S_WORM
+				)
+
+				pool := make([]int, 0, 4)
+				if knightCtr.count < g.mission.maxKnights {
+					pool = append(pool, S_KNIGHT)
+				}
+				if blarghCtr.count < g.mission.maxBlarghs {
+					pool = append(pool, S_BLARGH)
+				}
+				if gopnikCtr.count < g.mission.maxGopniks {
+					pool = append(pool, S_GOPNIK)
+				}
+				if barrelCtr.count < g.mission.maxBarrels {
+					pool = append(pool, S_BARREL)
+				}
+				if wormCtr.count < g.mission.maxWorms {
+					pool = append(pool, S_WORM)
+				}
+
+				if len(pool) > 0 {
+					spawn := g.level.FindOffscreenSpawnPoint(g)
+					c := pool[rand.Intn(len(pool))]
+					switch c {
+					case S_KNIGHT:
+						AddKnight(g, spawn.centerX, spawn.centerY)
+					case S_BLARGH:
+						AddBlargh(g, spawn.centerX, spawn.centerY)
+					case S_GOPNIK:
+						AddGopnik(g, spawn.centerX, spawn.centerY)
+					case S_BARREL:
+						AddBarrel(g, spawn.centerX, spawn.centerY)
+					case S_WORM:
+						AddWorm(g, spawn.centerX, spawn.centerY)
+					}
+				}
+			}
+
+			//Update objects
+			toRemove := make([]*list.Element, 0, 4)
+			for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
+				obj := objE.Value.(*Object)
+				//Update components
+				for _, c := range obj.components {
+					if c != nil {
+						c.Update(g, obj)
+					}
+				}
+				//Objects are removed later so that they doesn't interfere with collision events
+				if obj.removeMe {
+					toRemove = append(toRemove, objE)
+				}
+			}
+			//Resolve inter-object collisions
+			for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
+				obj := objE.Value.(*Object)
+				if obj.colType != CT_NONE {
+					//O(n^2)...Bleh!
+					for obj2E := g.objects.Front(); obj2E != nil; obj2E = obj2E.Next() {
+						obj2 := obj2E.Value.(*Object)
+						if obj2.colType != CT_NONE && obj2 != obj {
+							if obj.Intersects(obj2) {
+								for _, c := range obj.components {
+									col, ok := c.(Collidable)
+									if ok {
+										//An equivalent event will be sent for the other object when it is evaluated in the outer loop
+										col.OnCollision(g, obj, obj2)
+									}
 								}
 							}
 						}
 					}
 				}
 			}
-		}
-		//Remove objects flagged for removal
-		for _, objE := range toRemove {
-			g.objects.Remove(objE)
-		}
-
-		//Strobe background color by incrementing the timer in a "ping pong" motion.
-		if g.strobeForward {
-			g.strobeTimer += g.deltaTime
-			if g.strobeTimer > g.strobeSpeed {
-				g.strobeTimer = g.strobeSpeed
-				g.strobeForward = false
+			//Remove objects flagged for removal
+			for _, objE := range toRemove {
+				g.objects.Remove(objE)
 			}
+
+			//Strobe background color by incrementing the timer in a "ping pong" motion.
+			if g.strobeForward {
+				g.strobeTimer += g.deltaTime
+				if g.strobeTimer > g.strobeSpeed {
+					g.strobeTimer = g.strobeSpeed
+					g.strobeForward = false
+				}
+			} else {
+				g.strobeTimer -= g.deltaTime
+				if g.strobeTimer < 0.0 {
+					g.strobeTimer = 0.0
+					g.strobeForward = true
+				}
+			}
+
+			{
+				//Linearly interpolate between the two background colors using the timer variable
+				r1, g1, b1 := float64(g.mission.bgColor1.R), float64(g.mission.bgColor1.G), float64(g.mission.bgColor1.B)
+				r2, g2, b2 := float64(g.mission.bgColor2.R), float64(g.mission.bgColor2.G), float64(g.mission.bgColor2.B)
+				t := (g.strobeTimer / g.strobeSpeed)
+				g.bgColor = color.RGBA{
+					uint8(r1 + (r2-r1)*t),
+					uint8(g1 + (g2-g1)*t),
+					uint8(b1 + (b2-b1)*t),
+					255,
+				}
+			}
+
+			//Animate UI
+			if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
+				g.hud.msgText.Update(g.deltaTime)
+				g.hud.msgTimer -= g.deltaTime
+			}
+
 		} else {
-			g.strobeTimer -= g.deltaTime
-			if g.strobeTimer < 0.0 {
-				g.strobeTimer = 0.0
-				g.strobeForward = true
-			}
+			g.pauseScreen.Update(deltaTime)
 		}
-
-		{
-			//Linearly interpolate between the two background colors using the timer variable
-			r1, g1, b1 := float64(g.mission.bgColor1.R), float64(g.mission.bgColor1.G), float64(g.mission.bgColor1.B)
-			r2, g2, b2 := float64(g.mission.bgColor2.R), float64(g.mission.bgColor2.G), float64(g.mission.bgColor2.B)
-			t := (g.strobeTimer / g.strobeSpeed)
-			g.bgColor = color.RGBA{
-				uint8(r1 + (r2-r1)*t),
-				uint8(g1 + (g2-g1)*t),
-				uint8(b1 + (b2-b1)*t),
-				255,
-			}
+		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && !ebiten.IsKeyPressed(ebiten.KeyAlt) {
+			g.pause = !g.pause
 		}
-
 	} else { //Handle level transition FX
 		g.fadeTimer += g.deltaTime
 		if g.fadeTimer > 0.25 {
@@ -353,14 +369,8 @@ func (g *Game) Update(deltaTime float64) {
 	//Center camera on player
 	g.CenterCameraOn(g.playerObj)
 
-	//Animate UI
-	if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
-		g.hud.msgText.Update(g.deltaTime)
-		g.hud.msgTimer -= g.deltaTime
-	}
-
 	//Update UI with love amount
-	lbbRect := g.hud.loveBarBorder.rect
+	lbbRect := g.hud.loveBarBorder.dest
 	barRect := image.Rect(lbbRect.Min.X+3, lbbRect.Min.Y+3, lbbRect.Max.X-3, lbbRect.Max.Y-3)
 	barRect.Max.X = barRect.Min.X + int(float64(barRect.Dx())*float64(g.love)/float64(g.mission.loveQuota))
 	g.hud.loveBar = SpriteFromScaledImg(g.hud.loveBar.subImg, barRect, 0)
@@ -399,7 +409,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.hud.loveBar.Draw(screen, nil)
 	if g.hud.msgText != nil && g.hud.msgTimer > 0.0 {
 		g.hud.msgBox.Draw(screen, nil)
-		g.hud.msgText.Draw(screen)
+		g.hud.msgText.Draw(screen, nil)
 	}
 
 	for _, spot := range __debugSpots {
@@ -410,7 +420,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 
 	if debugDraw {
-		GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen)
+		GenerateText(fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS()), image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64)).Draw(screen, nil)
 	}
 
 	//Draw total gameplay timer
@@ -419,7 +429,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	tMinutes := int(g.elapsedTime / 60.0)
 	pSeconds := g.mission.parTime % 60
 	pMinutes := g.mission.parTime / 60
-	GenerateText(fmt.Sprintf("%02d:%02d/%02d:%02d", tMinutes, tSeconds, pMinutes, pSeconds), image.Rect(8.0, 24.0, 96.0, 32.0)).Draw(screen)
+	GenerateText(fmt.Sprintf("%02d:%02d/%02d:%02d", tMinutes, tSeconds, pMinutes, pSeconds), image.Rect(8.0, 24.0, 96.0, 32.0)).Draw(screen, nil)
 
 	if g.fade != FM_NO_FADE {
 		op := &ebiten.DrawImageOptions{}
@@ -435,12 +445,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op.GeoM.Scale(stage, stage)
 		screen.Clear()
 		screen.DrawImage(g.renderTarget, op)
+	} else if g.pause {
+		g.pauseScreen.Draw(screen)
 	}
 }
 
 func (g *Game) DisplayMessage(msg string, time float64) {
 	g.hud.msgTimer = time
-	pr := g.hud.msgBox.rect
+	pr := g.hud.msgBox.dest
 	g.hud.msgText = GenerateText(msg, image.Rect(pr.Min.X+8, pr.Min.Y+8, pr.Max.X-8, pr.Max.Y-8))
 	g.hud.msgText.fillPos = 0
 }
