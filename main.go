@@ -2,16 +2,11 @@ package main
 
 /*
 TODO:
--Pause screen
-	-Controls list
 -Endings
--Re-implement screen wrap with invincibility frames & tutorial message
+-Re-implement screen wrap with invincibility frames
 -Ingame music
-	-Song "monster"
-	-Song "rescue"
--Tutorial adjustments?
-	-Message about not losing ascention
-	-Timing messages differently
+	-Good/bad ending song
+-Fix object jitter?
 */
 
 //Average playthrough ~25 mins

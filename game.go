@@ -396,11 +396,11 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	if g.missionNumber == 0 {
 		switch kind {
 		case SIGNAL_PLAYER_MOVED:
-			g.hud.DisplayMessage("HOLDING CLICK OR    SPACE WILL SHOOT", 5.0)
+			g.hud.DisplayMessage("HOLDING CLICK/SPACE WILL SHOOT. ENTER   WILL PAUSE.", 5.0)
 		case SIGNAL_PLAYER_SHOT:
-			g.hud.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION", 5.0)
+			g.hud.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION. FILL THE BAR!", 5.0)
 		case SIGNAL_GAME_START:
-			g.hud.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS", 4.0)
+			g.hud.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS.", 4.0)
 		}
 	}
 	switch kind {

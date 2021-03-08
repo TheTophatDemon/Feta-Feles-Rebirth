@@ -15,7 +15,9 @@ type GameHUD struct {
 	msgTimer  float64
 	timerText *UIText
 	fpsText   *UIText
+	menu      *UINode
 	pause     PauseScreen
+	control   ControlsScreen
 }
 
 type PauseScreen struct {
@@ -26,18 +28,25 @@ type PauseScreen struct {
 	sfxButt      *UIBox
 }
 
+type ControlsScreen struct {
+	container *UIBox
+	backButt  *UIBox
+}
+
 func CreateGameHUD() *GameHUD {
 	hud := &GameHUD{}
 	hud.root = EmptyUINode()
 
+	//==============================
 	//IN GAME
+	//==============================
 
 	loveBorder := CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16), true)
 	hud.root.AddChild(&loveBorder.UINode)
 	hud.loveBar = CreateUIBox(image.Rect(104, 40, 112, 48), image.Rect(4, 4, loveBorder.Width()-4, loveBorder.Height()-4), false)
 	loveBorder.AddChild(&hud.loveBar.UINode)
 
-	msgBorder := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-16), true)
+	msgBorder := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-8), true)
 	msgBorder.visible = false
 	hud.root.AddChild(&msgBorder.UINode)
 	hud.msgText = GenerateText("HEEBY DEEBY", image.Rect(8, 8, msgBorder.Width()-8, msgBorder.Height()-8))
@@ -51,10 +60,17 @@ func CreateGameHUD() *GameHUD {
 	hud.fpsText = GenerateText("FPS: 00", image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64))
 	hud.root.AddChild(&hud.fpsText.UINode)
 
-	//PAUSE SCREEN
+	//Add background panel for menus
+	hud.menu = EmptyUINode()
+	hud.menu.visible = false
+	hud.root.AddChild(hud.menu)
 
-	hud.pause.container = CreateUIBox(image.Rect(136, 40, 160, 48), image.Rect(80, 48, 240, 176), true) //Background panel
-	hud.pause.container.visible = false
+	//=====================================
+	//PAUSE SCREEN
+	//=====================================
+
+	hud.pause.container = CreateUIBox(image.Rect(136, 40, 160, 48), image.Rect(80, 48, 240, 176), true)
+	hud.pause.container.visible = true //This is overwritten by the menu's visibility, but important for keeping track of menu state
 
 	titleBox := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(0, 0, 64, 16), true) //Header
 	titleBox.AddChild(&GenerateText("PAUSE", image.Rect(8, 4, 2048, 2048)).UINode)
@@ -78,7 +94,7 @@ func CreateGameHUD() *GameHUD {
 	muteContainer.ArrangeChildren(image.Rect(0, 0, 0, 0), false)
 
 	hud.pause.controlsButt = CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(0, 0, 108, 16), true) //Controls button
-	hud.pause.controlsButt.AddChild(&GenerateText("CONTROLS", image.Rect(4, 4, 2048, 2048)).UINode)
+	hud.pause.controlsButt.AddChild(&GenerateText("HELP", image.Rect(4, 4, 2048, 2048)).UINode)
 	hud.pause.container.AddChild(&hud.pause.controlsButt.UINode)
 
 	hud.pause.restartButt = CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(0, 0, 108, 16), true) //Restart button
@@ -87,28 +103,72 @@ func CreateGameHUD() *GameHUD {
 
 	hud.pause.container.ArrangeChildren(image.Rect(4, 4, 4, 8), true)
 
-	hud.root.AddChild(&hud.pause.container.UINode)
+	hud.menu.AddChild(&hud.pause.container.UINode)
+
+	//================================
+	//CONTROLS SCREEN
+	//===============================
+
+	hud.control.container = CreateUIBox(image.Rect(136, 40, 160, 48), image.Rect(16, 40, SCR_WIDTH-16, SCR_HEIGHT-8), true)
+	hud.control.container.visible = false
+
+	titleBox = CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(0, 0, 80, 16), true) //Header
+	titleBox.AddChild(&GenerateText("TIPS", image.Rect(8, 4, 2048, 2048)).UINode)
+	hud.control.container.AddChild(&titleBox.UINode)
+
+	lineRect := image.Rect(0, 0, SCR_WIDTH-32-16, 20)
+	controlsText := []*UIText{
+		GenerateText("SPACE KEY WILL FIX SHOOTING       DIRECTION", lineRect),
+		GenerateText("CAT IS ONLY HURT BY ASCENDED      BULLETS", lineRect),
+		GenerateText("LISTEN FOR ITS MEWS", lineRect),
+		GenerateText("TOUCH BOUNDARIES TO WARP", lineRect),
+		GenerateText("BOUNCY BULLETS EXPLODE RUNES", lineRect),
+		GenerateText("EVERY MISSION HAS A PAR TIME", lineRect),
+		GenerateText("BEAT THE PAR TIMES FOR EVERY      MISSION IF YOU DARE", lineRect),
+	}
+	for _, t := range controlsText {
+		hud.control.container.AddChild(&t.UINode)
+	}
+
+	hud.control.backButt = CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(0, 0, 108, 16), true) //Back button
+	hud.control.backButt.AddChild(&GenerateText("RETURN", image.Rect(4, 4, 2048, 2048)).UINode)
+	hud.control.container.AddChild(&hud.control.backButt.UINode)
+
+	hud.control.container.ArrangeChildren(image.Rect(4, 4, 4, 8), true)
+
+	hud.menu.AddChild(&hud.control.container.UINode)
 
 	return hud
 }
 
 func (hud *GameHUD) Update(game *Game) {
 	if game.pause {
-		hud.pause.container.visible = true
-		//Respond to pause screen buttons
-		if hud.pause.restartButt.Clicked() {
-			ChangeAppState(NewGame(0))
-		} else if hud.pause.sfxButt.Clicked() {
-			audio.MuteSfx = !audio.MuteSfx
-			check := hud.pause.sfxButt.children.Front().Value.(*UINode)
-			check.visible = audio.MuteSfx
-		} else if hud.pause.musicButt.Clicked() {
-			audio.MuteMusic = !audio.MuteMusic
-			check := hud.pause.musicButt.children.Front().Value.(*UINode)
-			check.visible = audio.MuteMusic
+		hud.menu.visible = true
+		if hud.pause.container.visible {
+			//Respond to pause screen buttons
+			if hud.pause.restartButt.Clicked() {
+				ChangeAppState(NewGame(0))
+			} else if hud.pause.sfxButt.Clicked() {
+				audio.MuteSfx = !audio.MuteSfx
+				check := hud.pause.sfxButt.children.Front().Value.(*UINode)
+				check.visible = audio.MuteSfx
+			} else if hud.pause.musicButt.Clicked() {
+				audio.MuteMusic = !audio.MuteMusic
+				check := hud.pause.musicButt.children.Front().Value.(*UINode)
+				check.visible = audio.MuteMusic
+			} else if hud.pause.controlsButt.Clicked() {
+				hud.pause.container.visible = false
+				hud.control.container.visible = true
+			}
+		} else if hud.control.container.visible {
+			//Respond to controls screen buttons
+			if hud.control.backButt.Clicked() {
+				hud.control.container.visible = false
+				hud.pause.container.visible = true
+			}
 		}
 	} else {
-		hud.pause.container.visible = false
+		hud.menu.visible = false
 
 		//Update UI with love amount
 		barRect := image.Rect(3, 3, hud.loveBar.parent.Width()-3, hud.loveBar.parent.Height()-3) //This is the maximum size
