@@ -2,15 +2,16 @@ package main
 
 /*
 TODO:
+-Enemy count overflow bug
+	-After pressing "restart game button" on later map, 3 knights will spawn on first mission but no more because knightCtr will be 40.
 -Pause screen
-	-Make pause screen singleton & unlink
-	-Mute music/sfx
 	-Controls list
 -Endings
+-Re-implement screen wrap with invincibility frames & tutorial message
 -Ingame music
 	-Song "monster"
 	-Song "rescue"
--Tutorial adjustments
+-Tutorial adjustments?
 	-Message about not losing ascention
 	-Timing messages differently
 */

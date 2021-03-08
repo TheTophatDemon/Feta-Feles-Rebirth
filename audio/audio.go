@@ -13,6 +13,9 @@ import (
 	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
 )
 
+var MuteSfx bool
+var MuteMusic bool
+
 var audioContext *audio.Context
 var sfxPlayers map[string]*ring.Ring //Contains ring buffers of audio players for each sound effect that is loaded
 var sfxFiles map[string]string
@@ -94,31 +97,39 @@ func switchSongTo(name string) {
 }
 
 func Update(deltaTime float64) {
-	//Handle song transition
-	if musFade != FADE_NONE {
-		musFadeTimer += deltaTime
+	if MuteMusic {
 		if musPlayer != nil {
-			if musFade == FADE_IN {
-				musPlayer.SetVolume(math.Min(MUS_VOL_SCALE, musFadeTimer*MUS_VOL_SCALE))
-			} else if musFade == FADE_OUT {
-				musPlayer.SetVolume(math.Max(0.0, MUS_VOL_SCALE*(FADE_TIME-musFadeTimer)))
-			}
+			musPlayer.SetVolume(0.0)
 		}
-		if musFadeTimer > FADE_TIME {
-			musFadeTimer = 0.0
-			if musFade == FADE_OUT {
-				currSong = nextSong
-				switchSongTo(currSong)
-			} else if musFade == FADE_IN && musPlayer != nil {
-				musPlayer.SetVolume(MUS_VOL_SCALE)
-				musFade = FADE_NONE
+	} else {
+		//Handle song transition
+		if musFade != FADE_NONE {
+			musFadeTimer += deltaTime
+			if musPlayer != nil {
+				if musFade == FADE_IN {
+					musPlayer.SetVolume(math.Min(MUS_VOL_SCALE, musFadeTimer*MUS_VOL_SCALE))
+				} else if musFade == FADE_OUT {
+					musPlayer.SetVolume(math.Max(0.0, MUS_VOL_SCALE*(FADE_TIME-musFadeTimer)))
+				}
 			}
+			if musFadeTimer > FADE_TIME {
+				musFadeTimer = 0.0
+				if musFade == FADE_OUT {
+					currSong = nextSong
+					switchSongTo(currSong)
+				} else if musFade == FADE_IN && musPlayer != nil {
+					musPlayer.SetVolume(MUS_VOL_SCALE)
+					musFade = FADE_NONE
+				}
+			}
+		} else if musPlayer != nil {
+			musPlayer.SetVolume(MUS_VOL_SCALE)
 		}
-	}
-	//Perform looping
-	if musPlayer != nil && !musPlayer.IsPlaying() {
-		musPlayer.Rewind()
-		musPlayer.Play()
+		//Perform looping
+		if musPlayer != nil && !musPlayer.IsPlaying() {
+			musPlayer.Rewind()
+			musPlayer.Play()
+		}
 	}
 }
 
@@ -129,6 +140,9 @@ func PlaySound(name string) {
 }
 
 func PlaySoundVolume(name string, volume float64) {
+	if MuteSfx {
+		return
+	}
 	buffer, loaded := sfxPlayers[name]
 	//Load the sound in if it hasn't been already
 	if !loaded {

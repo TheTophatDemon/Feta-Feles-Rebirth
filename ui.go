@@ -144,30 +144,40 @@ func CreateUIBox(src, dest image.Rectangle, border bool) *UIBox {
 	return box
 }
 
-//Arranges the box's children centered into vertically arranged sections for each child
-func (box *UIBox) ArrangeChildren(padding image.Rectangle) {
+//Arranges the box's children centered into vertically or horizontally arranged sections for each child
+func (box *UIBox) ArrangeChildren(padding image.Rectangle, vertical bool) {
 	if box.children.Len() <= 0 {
 		return
 	}
 	domainWidth := box.Width() - padding.Size().X
 	domainHeight := box.Height() - padding.Size().Y
-	sectionHeight := domainHeight / box.children.Len()
-	sectionY := 0
+	var sectionSize int
+	if vertical {
+		sectionSize = domainHeight / box.children.Len()
+	} else {
+		sectionSize = domainWidth / box.children.Len()
+	}
+	sectionOfs := 0
 	for elem := box.children.Front(); elem != nil; elem = elem.Next() {
 		child := elem.Value.(*UINode)
 		childW := child.dest.Size().X
 		childH := child.dest.Size().Y
 
-		xofs := (domainWidth - childW) / 2
-		childX := padding.Min.X + xofs
-		childY := padding.Min.Y + sectionY
+		var childX, childY int
+		if vertical {
+			childX = (domainWidth - childW) / 2
+			childY = padding.Min.Y + sectionOfs + (sectionSize / 2) - (childH / 2)
+		} else {
+			childX = padding.Min.X + sectionOfs + (sectionSize / 2) - (childW / 2)
+			childY = (domainHeight - childH) / 2
+		}
 		child.dest = image.Rect(childX, childY, childX+childW, childY+childH)
 
 		if child.render != nil {
 			child.render.Regen()
 		}
 
-		sectionY += sectionHeight
+		sectionOfs += sectionSize
 	}
 }
 

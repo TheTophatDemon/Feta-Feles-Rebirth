@@ -5,6 +5,7 @@ import (
 	"image"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
 )
 
 type GameHUD struct {
@@ -21,11 +22,15 @@ type PauseScreen struct {
 	container    *UIBox
 	controlsButt *UIBox
 	restartButt  *UIBox
+	musicButt    *UIBox
+	sfxButt      *UIBox
 }
 
 func CreateGameHUD() *GameHUD {
 	hud := &GameHUD{}
 	hud.root = EmptyUINode()
+
+	//IN GAME
 
 	loveBorder := CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16), true)
 	hud.root.AddChild(&loveBorder.UINode)
@@ -46,12 +51,31 @@ func CreateGameHUD() *GameHUD {
 	hud.fpsText = GenerateText("FPS: 00", image.Rect(SCR_WIDTH-80, 0, SCR_WIDTH, 64))
 	hud.root.AddChild(&hud.fpsText.UINode)
 
+	//PAUSE SCREEN
+
 	hud.pause.container = CreateUIBox(image.Rect(136, 40, 160, 48), image.Rect(80, 48, 240, 176), true) //Background panel
 	hud.pause.container.visible = false
 
 	titleBox := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(0, 0, 64, 16), true) //Header
 	titleBox.AddChild(&GenerateText("PAUSE", image.Rect(8, 4, 2048, 2048)).UINode)
 	hud.pause.container.AddChild(&titleBox.UINode)
+
+	muteContainer := CreateUIBox(image.Rect(152, 40, 160, 48), image.Rect(0, 0, 128, 16), false)
+	hud.pause.container.AddChild(&muteContainer.UINode)
+
+	hud.pause.sfxButt = CreateUIBox(image.Rect(128, 160, 144, 176), image.Rect(0, 0, 16, 16), false)
+	muteContainer.AddChild(&hud.pause.sfxButt.UINode)
+	cross := CreateUIBox(image.Rect(160, 160, 176, 176), image.Rect(0, 0, 16, 16), false)
+	cross.visible = audio.MuteSfx
+	hud.pause.sfxButt.AddChild(&cross.UINode)
+
+	hud.pause.musicButt = CreateUIBox(image.Rect(144, 160, 160, 176), image.Rect(0, 0, 16, 16), false)
+	muteContainer.AddChild(&hud.pause.musicButt.UINode)
+	cross = CreateUIBox(image.Rect(160, 160, 176, 176), image.Rect(0, 0, 16, 16), false)
+	cross.visible = audio.MuteMusic
+	hud.pause.musicButt.AddChild(&cross.UINode)
+
+	muteContainer.ArrangeChildren(image.Rect(0, 0, 0, 0), false)
 
 	hud.pause.controlsButt = CreateUIBox(image.Rect(88, 40, 112, 48), image.Rect(0, 0, 108, 16), true) //Controls button
 	hud.pause.controlsButt.AddChild(&GenerateText("CONTROLS", image.Rect(4, 4, 2048, 2048)).UINode)
@@ -61,7 +85,7 @@ func CreateGameHUD() *GameHUD {
 	hud.pause.restartButt.AddChild(&GenerateText("RESTART GAME", image.Rect(4, 4, 2048, 2048)).UINode)
 	hud.pause.container.AddChild(&hud.pause.restartButt.UINode)
 
-	hud.pause.container.ArrangeChildren(image.Rect(4, 16, 4, 16))
+	hud.pause.container.ArrangeChildren(image.Rect(4, 4, 4, 8), true)
 
 	hud.root.AddChild(&hud.pause.container.UINode)
 
@@ -74,6 +98,14 @@ func (hud *GameHUD) Update(game *Game) {
 		//Respond to pause screen buttons
 		if hud.pause.restartButt.Clicked() {
 			ChangeAppState(NewGame(0))
+		} else if hud.pause.sfxButt.Clicked() {
+			audio.MuteSfx = !audio.MuteSfx
+			check := hud.pause.sfxButt.children.Front().Value.(*UINode)
+			check.visible = audio.MuteSfx
+		} else if hud.pause.musicButt.Clicked() {
+			audio.MuteMusic = !audio.MuteMusic
+			check := hud.pause.musicButt.children.Front().Value.(*UINode)
+			check.visible = audio.MuteMusic
 		}
 	} else {
 		hud.pause.container.visible = false
