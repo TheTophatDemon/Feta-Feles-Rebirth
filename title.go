@@ -55,6 +55,22 @@ func (ts *TitleScreen) Update(deltaTime float64) {
 			ts.enterText.Regen()
 			ts.enterText.visible = true
 		}
+		//Good ending cheat
+		if strings.Contains(cheatText, "tdbutter") {
+			cheatText = ""
+			for i := range missions {
+				missions[i].goodEndFlag = true
+			}
+			ChangeAppState(NewCutsceneState(7))
+		}
+		//Bad ending cheat
+		if strings.Contains(cheatText, "tdblyat") {
+			cheatText = ""
+			for i := range missions {
+				missions[i].goodEndFlag = false
+			}
+			ChangeAppState(NewCutsceneState(7))
+		}
 
 		ts.flinchTimer += deltaTime
 		if ts.flinchTimer > 0.25 {

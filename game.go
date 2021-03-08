@@ -417,9 +417,7 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	case SIGNAL_CAT_DIE:
 		g.fade = FM_FADE_OUT
 		audio.PlaySound("outro_chime")
-		if g.elapsedTime < float64(g.mission.parTime) {
-			g.mission.goodEndFlag = true
-		}
+		g.mission.goodEndFlag = g.elapsedTime < float64(g.mission.parTime)
 	}
 }
 

@@ -2,7 +2,9 @@ package main
 
 /*
 TODO:
--Endings
+-Adjust par times
+-Make text more readable?
+-Add title screen adjustment after ending
 -Re-implement screen wrap with invincibility frames
 -Ingame music
 	-Good/bad ending song

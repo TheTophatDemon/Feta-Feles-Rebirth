@@ -137,19 +137,19 @@ func init() {
 		},
 		{
 			bodyType: BODY_NONE,
-			faces:    []FaceType{FACE_NONE, FACE_EMPTY_SAD, FACE_EMPTY_TALK, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY, FACE_EMPTY_TALK, FACE_EMPTY_TALK, FACE_EMPTY_SAD, FACE_MELTED, FACE_NONE},
+			faces:    []FaceType{FACE_NONE, FACE_EMPTY_SAD, FACE_EMPTY_TALK, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY_SAD, FACE_EMPTY, FACE_EMPTY_TALK, FACE_EMPTY_TALK, FACE_EMPTY_SAD, FACE_MELTED, FACE_NONE, FACE_NONE},
 			dialog: []string{
 				"HAHAHAHAHAHA! YOU-",
 				"WAIT. WHAT?",
 				"I'M ALIVE! BUT WAIT...",
-				"THE DEMON. WHERE IS IT!? WHAT A MISTAKE I'VE MADE!!",
+				"THE DEMON. WHERE IS IT!?  WHAT A MISTAKE I'VE MADE!!",
 				"...",
-				"I CAN'T REMAIN MUCH LONGER. THE ENERGY HAS WITHERED AWAY MY BODY.",
-				"YOU'VE BEEN SUCH GREAT HELP, BUT I NEED ONE LAST THING FROM YOU.",
-				"TAKE WHAT REMAINS OF ME AND PUT IT SOMEWHERE SAFE.",
-				"WHOEVER COMES AFTER US WILL NEED WHAT REMAINS OF MY POWER.",
-				"THE DEMON, I'M AFRAID, WILL HAVE TO BE...D-DEALT WITH LATER.",
-				"I H-HOPE THEY...WILL FORGIVE ME...",
+				"I CAN'T REMAIN MUCH LONGER  THE ENERGY HAS WITHERED AWAY MY BODY.",
+				"YOU'VE BEEN SUCH GREAT    HELP, BUT I NEED ONE LAST THING FROM YOU.",
+				"TAKE WHAT REMAINS OF ME   AND PUT IT SOMEWHERE SAFE.",
+				"WHOEVER LIVES AFTER US    WILL NEED WHAT REMAINS OF MY POWER.",
+				"THE DEMON, I'M AFRAID,    WILL HAVE TO BE...D-DEALT WITH LATER.",
+				"I H-HOPE THEY WILL FORGIVE ME...",
 				"GOODBYE, FRIEND.",
 			},
 			music: "rescue",
@@ -175,12 +175,21 @@ type CutsceneState struct {
 
 func NewCutsceneState(sceneNum int) *CutsceneState {
 	state := new(CutsceneState)
-	state.cutscene = &cutscenes[sceneNum]
-	bodies := [8]BodyType{
-		BODY_NONE, BODY_CAT, BODY_HUMAN, BODY_ANGEL2, BODY_CORRUPTED, BODY_MELTED, BODY_HORROR,
+
+	//Change ending if player beat all par times
+	if sceneNum >= len(missions) {
+		for _, m := range missions {
+			if !m.goodEndFlag {
+				goto skip
+			}
+		}
+		sceneNum++
+	skip:
 	}
-	state.feles = MakeFeles(state.cutscene.faces[0], bodies[sceneNum], vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-24.0))
-	state.felesBody = bodies[sceneNum]
+
+	state.cutscene = &cutscenes[sceneNum]
+	state.feles = MakeFeles(state.cutscene.faces[0], state.cutscene.bodyType, vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H-24.0))
+	state.felesBody = state.cutscene.bodyType
 
 	state.uiRoot = EmptyUINode()
 
@@ -230,6 +239,8 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 					ct.dialogIndex--
 					ct.transition = FM_FADE_OUT
 					audio.PlayMusic("")
+					ct.dialog[ct.dialogIndex].visible = false
+					ct.dialog[ct.dialogIndex].parent.visible = false
 				} else {
 					faceIdx := int(math.Min(float64(ct.dialogIndex), float64(len(ct.cutscene.faces)-1)))
 					ct.feles = MakeFeles(ct.cutscene.faces[faceIdx], ct.felesBody, ct.feles.pos)
@@ -258,7 +269,11 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 		if ct.transTimer > CUTSCENE_FADE_SPEED {
 			ct.transTimer = 0.0
 			if ct.transition == FM_FADE_OUT {
-				ChangeAppState(NewGame(ct.nextMission))
+				if ct.nextMission >= 0 && ct.nextMission < len(missions) {
+					ChangeAppState(NewGame(ct.nextMission))
+				} else {
+					ChangeAppState(new(TitleScreen))
+				}
 			} else {
 				ct.transition = FM_NO_FADE
 			}
@@ -271,6 +286,7 @@ func (ct *CutsceneState) Draw(screen *ebiten.Image) {
 
 	ct.uiRoot.Draw(screen, nil)
 
+	ct.renderTarget.Clear()
 	ct.renderTarget.DrawImage(screen, nil)
 	if ct.transition != FM_NO_FADE {
 		op := &ebiten.DrawRectShaderOptions{}
