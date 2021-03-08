@@ -358,7 +358,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(g.bgColor)
 
 	camMat := &ebiten.GeoM{}
-	camMat.Translate(-g.camPos.X+SCR_WIDTH_H, -g.camPos.Y+SCR_HEIGHT_H)
+	camMat.Translate(math.Floor(-g.camPos.X+SCR_WIDTH_H), math.Floor(-g.camPos.Y+SCR_HEIGHT_H))
 
 	g.level.Draw(g, screen, camMat)
 	for objE := g.objects.Front(); objE != nil; objE = objE.Next() {
@@ -366,7 +366,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		if !obj.hidden && g.SquareOnScreen(obj.pos.X, obj.pos.Y, obj.radius) {
 			objM := &ebiten.DrawImageOptions{}
 			objM.GeoM.Concat(*camMat)
-			objM.GeoM.Translate(obj.pos.X, obj.pos.Y)
+			objM.GeoM.Translate(math.Floor(obj.pos.X), math.Floor(obj.pos.Y))
 			for _, spr := range obj.sprites {
 				spr.Draw(screen, &objM.GeoM)
 			}

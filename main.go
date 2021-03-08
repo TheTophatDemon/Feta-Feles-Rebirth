@@ -6,7 +6,6 @@ TODO:
 -Re-implement screen wrap with invincibility frames
 -Ingame music
 	-Good/bad ending song
--Fix object jitter?
 */
 
 //Average playthrough ~25 mins
