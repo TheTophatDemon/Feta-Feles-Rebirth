@@ -25,10 +25,10 @@ func init() {
 	sprKnightDie = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(32, 32, 48, 48), image.Rect(48, 32, 64, 48))
 }
 
-var knightCtr ObjCtr
+var knightCtr *ObjCtr
 
 func init() {
-	knightCtr = *NewObjCtr()
+	knightCtr = NewObjCtr()
 }
 
 func AddKnight(game *Game, x, y float64) *Knight {

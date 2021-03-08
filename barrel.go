@@ -18,10 +18,10 @@ func init() {
 	sprBarrelDamaged = NewSprite(image.Rect(0, 144, 16, 160), vmath.NewVec(-8.0, -8.0), false, false, 0)
 }
 
-var barrelCtr ObjCtr
+var barrelCtr *ObjCtr
 
 func init() {
-	barrelCtr = *NewObjCtr()
+	barrelCtr = NewObjCtr()
 }
 
 func AddBarrel(game *Game, x, y float64) *Object {

@@ -2,8 +2,6 @@ package main
 
 /*
 TODO:
--Enemy count overflow bug
-	-After pressing "restart game button" on later map, 3 knights will spawn on first mission but no more because knightCtr will be 40.
 -Pause screen
 	-Controls list
 -Endings

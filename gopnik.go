@@ -24,10 +24,10 @@ func init() {
 	sprGopnikDie = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(32, 64, 48, 80), image.Rect(48, 64, 64, 80))
 }
 
-var gopnikCtr ObjCtr
+var gopnikCtr *ObjCtr
 
 func init() {
-	gopnikCtr = *NewObjCtr()
+	gopnikCtr = NewObjCtr()
 }
 
 func AddGopnik(game *Game, x, y float64) *Object {

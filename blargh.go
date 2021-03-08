@@ -25,10 +25,10 @@ func init() {
 	sprBlarghDie = NewSprites(vmath.NewVec(-8.0, -8.0), image.Rect(32, 48, 48, 64), image.Rect(48, 48, 64, 64))
 }
 
-var blarghCtr ObjCtr
+var blarghCtr *ObjCtr
 
 func init() {
-	blarghCtr = *NewObjCtr()
+	blarghCtr = NewObjCtr()
 }
 
 func AddBlargh(game *Game, x, y float64) *Object {

@@ -33,10 +33,10 @@ func init() {
 	sprWormTail = NewSprite(image.Rect(64, 80, 80, 96), vmath.NewVec(-8.0, -8.0), false, false, 0)
 }
 
-var wormCtr ObjCtr
+var wormCtr *ObjCtr
 
 func init() {
-	wormCtr = *NewObjCtr()
+	wormCtr = NewObjCtr()
 }
 
 const WORM_NSEGS = 6    //Number of body segments
