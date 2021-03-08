@@ -50,8 +50,10 @@ func (ts *TitleScreen) Update(deltaTime float64) {
 		if strings.Contains(cheatText, "tdyeehaw") {
 			cheatText = ""
 			ts.missionSelect = true
-			ts.enterText = GenerateText("PRESS MISSION NUMBER", ts.enterText.dest)
+			ts.enterText.text = "PRESS MISSION NUMBER"
 			ts.enterText.fillPos = len(ts.enterText.text)
+			ts.enterText.Regen()
+			ts.enterText.visible = true
 		}
 
 		ts.flinchTimer += deltaTime
