@@ -117,7 +117,6 @@ func NewGame(mission int) *Game {
 	Listen_Signal(SIGNAL_CAT_RULE, game)
 	Listen_Signal(SIGNAL_CAT_DIE, game)
 	Listen_Signal(SIGNAL_GAME_START, game)
-	Listen_Signal(SIGNAL_PLAYER_WARP, game)
 
 	return game
 }

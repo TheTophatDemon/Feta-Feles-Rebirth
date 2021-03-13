@@ -10,6 +10,7 @@ import (
 
 const (
 	PL_SHOOT_FREQ = 0.2
+	PL_WARP_COOLDOWN = 4.0
 )
 
 type Player struct {
@@ -19,7 +20,7 @@ type Player struct {
 	hurtTimer        float64
 	lastShootDir     *vmath.Vec2f
 	moveAmt, shotAmt int
-	warpX, warpY     float64 //Indicates if the player is warping across the map, and from what direction
+	warpCooldown float64
 }
 
 var plSpriteNormal *Sprite
@@ -41,7 +42,7 @@ func AddPlayer(game *Game, x, y float64) *Object {
 		ascended:     false,
 		lastShootDir: vmath.ZeroVec(),
 	}
-
+	player.Actor.ignoreBounds = true
 	obj := &Object{
 		pos: vmath.NewVec(x, y), radius: 6.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
@@ -56,146 +57,131 @@ func AddPlayer(game *Game, x, y float64) *Object {
 }
 
 func (player *Player) Update(game *Game, obj *Object) {
-	if player.warpX == 0.0 && player.warpY == 0.0 {
-		//Attack
-		if player.shootTimer <= 0.0 {
-			//Set direction
-			var dir *vmath.Vec2f
-			if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) { //Shoot in direction of mouse click
-				cx, cy := ebiten.CursorPosition()
-				rPos := obj.pos.Clone().Sub(game.camPos).Add(vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H))
-				dir = (vmath.NewVec(float64(cx), float64(cy))).Sub(rPos)
-				player.lastShootDir = dir
-			} else if ebiten.IsKeyPressed(ebiten.KeySpace) { //Or shoot in direction of last movement
-				if player.lastShootDir == nil {
-					player.lastShootDir = player.facing.Clone()
-				}
-				dir = player.lastShootDir
-			} else {
-				player.lastShootDir = nil
+	//Attack
+	if player.shootTimer <= 0.0 {
+		//Set direction
+		var dir *vmath.Vec2f
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) { //Shoot in direction of mouse click
+			cx, cy := ebiten.CursorPosition()
+			rPos := obj.pos.Clone().Sub(game.camPos).Add(vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H))
+			dir = (vmath.NewVec(float64(cx), float64(cy))).Sub(rPos)
+			player.lastShootDir = dir
+		} else if ebiten.IsKeyPressed(ebiten.KeySpace) { //Or shoot in direction of last movement
+			if player.lastShootDir == nil {
+				player.lastShootDir = player.facing.Clone()
 			}
-			//Add shot
-			if dir != nil {
-				if player.ascended {
-					AddBouncyShot(game, obj.pos, dir, 240.0, false, 2)
-					player.shootTimer = PL_SHOOT_FREQ / 2.0
-				} else {
-					AddShot(game, obj.pos, dir, 240.0, false)
-					player.shootTimer = PL_SHOOT_FREQ
-				}
-				audio.PlaySound("player_shot")
-				player.shotAmt++
-				if player.shotAmt == 8 {
-					Emit_Signal(SIGNAL_PLAYER_SHOT, obj, nil)
-				}
-			}
+			dir = player.lastShootDir
 		} else {
-			player.shootTimer -= game.deltaTime
+			player.lastShootDir = nil
 		}
-
-		if player.hurtTimer > 0.0 {
-			player.hurtTimer -= game.deltaTime
-			if int(player.hurtTimer/0.125)%2 == 0 {
-				obj.hidden = false
-			} else {
-				obj.hidden = true
-			}
-			if player.hurtTimer <= 0.0 {
-				player.hurt = false
-				obj.hidden = false
-			}
-		}
-
-		//Set sprite
-		if player.hurt {
-			obj.sprites[0] = plSpriteHurt
-		} else {
+		//Add shot
+		if dir != nil {
 			if player.ascended {
-				obj.sprites[0] = plSpriteAscended
+				AddBouncyShot(game, obj.pos, dir, 240.0, false, 2)
+				player.shootTimer = PL_SHOOT_FREQ / 2.0
 			} else {
-				if player.shootTimer > 0.0 {
-					obj.sprites[0] = plSpriteShoot
-				} else {
-					obj.sprites[0] = plSpriteNormal
-				}
+				AddShot(game, obj.pos, dir, 240.0, false)
+				player.shootTimer = PL_SHOOT_FREQ
 			}
-		}
-
-		//Movement
-		var dx, dy float64
-		if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyW) {
-			dy = -1.0
-		} else if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
-			dy = 1.0
-		}
-
-		if ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) {
-			dx = 1.0
-		} else if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
-			dx = -1.0
-		}
-
-		if dx != 0.0 || dy != 0.0 {
-			player.moveAmt++
-			if player.moveAmt == 100 {
-				Emit_Signal(SIGNAL_PLAYER_MOVED, obj, nil)
-			}
-		}
-
-		player.Actor.Move(dx, dy)
-		player.Actor.Update(game, obj)
-		//Activate screen wrap
-		if player.hurtTimer <= 0.0 { //This indicates that the player hasn't just warped
-			newPos := vmath.NewVec(0.0, 0.0)
-			switch {
-			case obj.pos.X-obj.radius <= 1:
-				player.warpX = -1.0
-				newPos.X = game.level.pixelWidth - obj.radius
-				newPos.Y = obj.pos.Y
-			case obj.pos.X+obj.radius >= game.level.pixelWidth-1:
-				player.warpX = 1.0
-				newPos.X = obj.radius
-				newPos.Y = obj.pos.Y
-			case obj.pos.Y-obj.radius <= 1:
-				player.warpY = -1.0
-				newPos.X = obj.pos.X
-				newPos.Y = game.level.pixelHeight - obj.radius
-			case obj.pos.Y+obj.radius >= game.level.pixelHeight-1:
-				player.warpY = 1.0
-				newPos.X = obj.pos.X
-				newPos.Y = obj.radius
-			}
-			if player.warpX != 0.0 || player.warpY != 0.0 {
-				//Cancel if there's a solid on the other side of the map
-				if hit, _, _ := game.level.SphereIntersects(newPos, obj.radius); hit {
-					player.warpX, player.warpY = 0.0, 0.0
-				} else {
-					Emit_Signal(SIGNAL_PLAYER_WARP, obj, map[string]interface{}{})
-				}
+			audio.PlaySound("player_shot")
+			player.shotAmt++
+			if player.shotAmt == 8 {
+				Emit_Signal(SIGNAL_PLAYER_SHOT, obj, nil)
 			}
 		}
 	} else {
-		//Implement screen wrapping effect
-		//Move in the original movement direction until the "border" has been cleared, then set position to the other side.
-		player.hurtTimer = 1.0 //Activate invincibility in case there's an enemy on the other side of the warp
-		if player.warpX < 0.0 && obj.pos.X < -obj.radius {
-			obj.pos.X += game.level.pixelWidth
-			player.warpX, player.warpY = 0.0, 0.0
+		player.shootTimer -= game.deltaTime
+	}
+
+	if player.hurtTimer > 0.0 {
+		player.hurtTimer -= game.deltaTime
+		if int(player.hurtTimer/0.125)%2 == 0 {
+			obj.hidden = false
+		} else {
+			obj.hidden = true
 		}
-		if player.warpX > 0.0 && obj.pos.X > game.level.pixelWidth+obj.radius {
-			obj.pos.X -= game.level.pixelWidth
-			player.warpX, player.warpY = 0.0, 0.0
+		if player.hurtTimer <= 0.0 {
+			player.hurt = false
+			obj.hidden = false
 		}
-		if player.warpY < 0.0 && obj.pos.Y < -obj.radius {
-			obj.pos.Y += game.level.pixelHeight
-			player.warpX, player.warpY = 0.0, 0.0
+	}
+
+	//Set sprite
+	if player.hurt {
+		obj.sprites[0] = plSpriteHurt
+	} else {
+		if player.ascended {
+			obj.sprites[0] = plSpriteAscended
+		} else {
+			if player.shootTimer > 0.0 {
+				obj.sprites[0] = plSpriteShoot
+			} else {
+				obj.sprites[0] = plSpriteNormal
+			}
 		}
-		if player.warpY > 0.0 && obj.pos.Y > game.level.pixelHeight+obj.radius {
-			obj.pos.Y -= game.level.pixelHeight
-			player.warpX, player.warpY = 0.0, 0.0
+	}
+
+	//Movement
+	var dx, dy float64
+	if ebiten.IsKeyPressed(ebiten.KeyUp) || ebiten.IsKeyPressed(ebiten.KeyW) {
+		dy = -1.0
+	} else if ebiten.IsKeyPressed(ebiten.KeyDown) || ebiten.IsKeyPressed(ebiten.KeyS) {
+		dy = 1.0
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyRight) || ebiten.IsKeyPressed(ebiten.KeyD) {
+		dx = 1.0
+	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) || ebiten.IsKeyPressed(ebiten.KeyA) {
+		dx = -1.0
+	}
+
+	if dx != 0.0 || dy != 0.0 {
+		player.moveAmt++
+		if player.moveAmt == 100 {
+			Emit_Signal(SIGNAL_PLAYER_MOVED, obj, nil)
 		}
-		obj.pos.X += player.maxSpeed / 4.0 * game.deltaTime * player.warpX
-		obj.pos.Y += player.maxSpeed / 4.0 * game.deltaTime * player.warpY
+	}
+
+	player.Actor.Move(dx, dy)
+	player.Actor.Update(game, obj)
+	//Handle boundaries & screen wrapping
+	player.warpCooldown -= game.deltaTime
+	switch {
+	case obj.pos.X < 0.0:
+		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(game.level.pixelWidth-obj.radius, obj.pos.Y), obj.radius); 
+			hit == false && player.warpCooldown <= 0.0 {
+			obj.pos.X = game.level.pixelWidth - obj.radius
+			player.warpCooldown = PL_WARP_COOLDOWN
+		} else {
+			obj.pos.X = 0.0
+		}
+	case obj.pos.X > game.level.pixelWidth:
+		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.radius, obj.pos.Y), obj.radius); 
+			hit == false && player.warpCooldown <= 0.0 {
+			obj.pos.X = obj.radius
+			player.warpCooldown = PL_WARP_COOLDOWN
+		} else {
+			obj.pos.X = game.level.pixelWidth
+		}
+	case obj.pos.Y < 0:
+		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, game.level.pixelHeight-obj.radius), obj.radius); 
+			hit == false && player.warpCooldown <= 0.0 {
+			obj.pos.Y = game.level.pixelHeight - obj.radius
+			player.warpCooldown = PL_WARP_COOLDOWN
+		} else {
+			obj.pos.Y = 0.0
+		}
+	case obj.pos.Y > game.level.pixelHeight:
+		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, obj.radius), obj.radius); 
+			hit == false && player.warpCooldown <= 0.0 {
+			obj.pos.Y = obj.radius
+			player.warpCooldown = PL_WARP_COOLDOWN
+		} else {
+			obj.pos.Y = game.level.pixelHeight
+		}
+	}
+	if player.warpCooldown == PL_WARP_COOLDOWN {
+		player.hurtTimer = 1.0 //Add invincibility frames after warping in case there's an unseen enemy
 	}
 }
 
