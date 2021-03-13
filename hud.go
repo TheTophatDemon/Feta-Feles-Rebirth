@@ -170,6 +170,10 @@ func (hud *GameHUD) Update(game *Game) {
 	} else {
 		hud.menu.visible = false
 
+		//Hide love bar if player is under it
+		hud.loveBar.parent.visible = (game.playerObj.pos.X > 164 || game.playerObj.pos.Y > 64)
+		hud.timerText.parent.visible = hud.loveBar.parent.visible
+
 		//Update UI with love amount
 		barRect := image.Rect(3, 3, hud.loveBar.parent.Width()-3, hud.loveBar.parent.Height()-3) //This is the maximum size
 		quotaPercent := float64(game.love) / float64(game.mission.loveQuota)

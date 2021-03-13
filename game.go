@@ -384,6 +384,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+	if g.fade == FM_NO_FADE {
+		g.hud.Draw(screen)
+	}
 
 	if g.fade != FM_NO_FADE {
 		op := &ebiten.DrawImageOptions{}
@@ -399,8 +402,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		op.GeoM.Scale(stage, stage)
 		screen.Clear()
 		screen.DrawImage(g.renderTarget, op)
-	} else {
-		g.hud.Draw(screen)
 	}
 }
 
