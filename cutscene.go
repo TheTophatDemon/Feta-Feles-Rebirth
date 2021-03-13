@@ -272,7 +272,10 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 				if ct.nextMission >= 0 && ct.nextMission < len(missions) {
 					ChangeAppState(NewGame(ct.nextMission))
 				} else {
-					ChangeAppState(new(TitleScreen))
+					ts := new(TitleScreen)
+					ts.badEnd = (ct.nextMission == len(missions))
+					ts.goodEnd = (ct.nextMission == len(missions)+1)
+					ChangeAppState(ts)
 				}
 			} else {
 				ct.transition = FM_NO_FADE
