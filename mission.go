@@ -50,7 +50,7 @@ func init() {
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{48, 96, 130, 255},
 			bgColor2: color.RGBA{48, 96, 130, 255},
-			parTime:  (2 * 60) + 15,
+			parTime:  (2 * 60) + 30,
 			music:    "hope_ingame",
 		},
 		{ //3 (Angel)
@@ -70,17 +70,17 @@ func init() {
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{34, 32, 32, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
-			parTime:  (4 * 60) + 15, //5:10
+			parTime:  (4 * 60), //5:10
 			music:    "malform_ingame",
 		},
-		{ //5 (Melting)
+		{ //5 (Melting) 
 			loveQuota:  150,
 			maxKnights: 25, maxBlarghs: 25, maxGopniks: 20, maxBarrels: 20, maxWorms: 5,
 			catHealth: 10,
 			mapWidth:  72, mapHeight: 72,
 			bgColor1: color.RGBA{0, 0, 0, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
-			parTime:  (5 * 60),
+			parTime:  (4 * 60) + 15,
 			music:    "malform_ingame",
 		},
 		{ //6 (Monster)
