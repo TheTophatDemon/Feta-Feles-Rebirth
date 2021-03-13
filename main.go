@@ -3,9 +3,12 @@ package main
 /*
 TODO:
 -Adjust par times
+-Ending title screen effects
+	-Standard galactic alphabet for good ending
+	-Feles disappears for bad ending
 -Make text more readable?
--Add title screen adjustment after ending
--Re-implement screen wrap with invincibility frames
+-Power down sound effect
+-Menu sound effect
 -Ingame music
 	-Good/bad ending song
 */

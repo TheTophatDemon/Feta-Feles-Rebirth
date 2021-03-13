@@ -14,6 +14,7 @@ type Actor struct {
 	maxSpeed     float64
 	acceleration float64 //Rate of acceleration in units per seconds squared
 	friction     float64 //Rate of deceleration in units per seconds squared
+	ignoreBounds bool    //True if actor is to not collide with level boundaries (to allow warping)
 }
 
 func NewActor(maxSpeed, acceleration, friction float64) *Actor {
@@ -24,6 +25,7 @@ func NewActor(maxSpeed, acceleration, friction float64) *Actor {
 		maxSpeed,
 		acceleration,
 		friction,
+		false,
 	}
 }
 
@@ -55,7 +57,7 @@ func (actor *Actor) ApplyMovement(game *Game, obj *Object, vel *vmath.Vec2f) {
 
 	for j := int(gridMin.Y); j < int(gridMax.Y); j++ {
 		for i := int(gridMin.X); i < int(gridMax.X); i++ {
-			t := game.level.GetTile(i, j, false)
+			t := game.level.GetTile(i, j, true)
 			if t != nil && t.IsSolid() {
 				dest := obj.pos.Clone().Add(vel)
 				proj := game.level.ProjectPosOntoTile(dest, t)
@@ -70,17 +72,19 @@ func (actor *Actor) ApplyMovement(game *Game, obj *Object, vel *vmath.Vec2f) {
 	}
 
 	//Collide against level boundaries
-	if obj.pos.X+vel.X-obj.radius < 0 && vel.X < 0.0 {
-		vel.X = 0.0
-	}
-	if obj.pos.X+vel.X+obj.radius > game.level.pixelWidth && vel.X > 0.0 {
-		vel.X = 0.0
-	}
-	if obj.pos.Y+vel.Y-obj.radius < 0 && vel.Y < 0 {
-		vel.Y = 0.0
-	}
-	if obj.pos.Y+vel.Y+obj.radius > game.level.pixelHeight && vel.Y > 0.0 {
-		vel.Y = 0.0
+	if !actor.ignoreBounds {
+		if obj.pos.X+vel.X-obj.radius < 0 && vel.X < 0.0 {
+			vel.X = 0.0
+		}
+		if obj.pos.X+vel.X+obj.radius > game.level.pixelWidth && vel.X > 0.0 {
+			vel.X = 0.0
+		}
+		if obj.pos.Y+vel.Y-obj.radius < 0 && vel.Y < 0 {
+			vel.Y = 0.0
+		}
+		if obj.pos.Y+vel.Y+obj.radius > game.level.pixelHeight && vel.Y > 0.0 {
+			vel.Y = 0.0
+		}
 	}
 
 	obj.pos.Add(vel)

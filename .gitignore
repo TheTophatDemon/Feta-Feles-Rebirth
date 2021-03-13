@@ -1,3 +1,4 @@
 *.exe
 __debug_bin
 web_serve/*.wasm
+*.ase

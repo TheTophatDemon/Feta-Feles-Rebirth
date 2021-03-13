@@ -8,6 +8,7 @@ const (
 	SIGNAL_PLAYER_MOVED  Signal = iota //Fires once after the player has moved around a bit. For the tutorial mission.
 	SIGNAL_PLAYER_SHOT                 //Fires once after the player has shot a few times. For the tutorial mission.
 	SIGNAL_PLAYER_ASCEND               //Fires to indicate when the player ascends
+	SIGNAL_PLAYER_WARP                 //Fires when the player touches the map boundaries
 	SIGNAL_CAT_RULE                    //Fires when the player tries to shoot the cat without being ascended
 	SIGNAL_CAT_DIE                     //Fires when the cat is killed
 	SIGNAL_GAME_START                  //Fires at the start of the game after the intro transition

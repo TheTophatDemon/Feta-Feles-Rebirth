@@ -82,7 +82,8 @@ func NewGame(mission int) *Game {
 	//Spawn entities
 	playerSpawn := game.level.FindCenterSpawnPoint(game)
 	game.playerObj = AddPlayer(game, playerSpawn.centerX, playerSpawn.centerY)
-	game.CenterCameraOn(game.playerObj) //Neccessary for FindOffscreenSpawnPoint
+
+	game.CenterCameraOn(game.playerObj, true)
 
 	for i := 0; i < missions[mission].maxKnights; i++ {
 		spawn := game.level.FindOffscreenSpawnPoint(game)
@@ -116,6 +117,7 @@ func NewGame(mission int) *Game {
 	Listen_Signal(SIGNAL_CAT_RULE, game)
 	Listen_Signal(SIGNAL_CAT_DIE, game)
 	Listen_Signal(SIGNAL_GAME_START, game)
+	Listen_Signal(SIGNAL_PLAYER_WARP, game)
 
 	return game
 }
@@ -340,15 +342,25 @@ func (g *Game) Update(deltaTime float64) {
 		}
 	}
 
-	//Center camera on player
-	g.CenterCameraOn(g.playerObj)
+	g.CenterCameraOn(g.playerObj, false)
 }
 
-func (g *Game) CenterCameraOn(obj *Object) {
+const CAM_TRACK_SPEED = 2.0
+
+func (g *Game) CenterCameraOn(obj *Object, instant bool) {
 	topLeft := vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)
 	bottomRight := vmath.NewVec(g.level.pixelWidth-SCR_WIDTH_H, g.level.pixelHeight-SCR_HEIGHT_H)
-	g.camPos = vmath.VecMax(topLeft, vmath.VecMin(bottomRight, obj.pos))
+	targetPos := vmath.VecMax(topLeft, vmath.VecMin(bottomRight, obj.pos))
 	hscr := vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)
+
+	camMove := targetPos.Clone().Sub(g.camPos)
+	//Scroll slowly when moving across large distances
+	if camMove.Length() < 16.0 || instant {
+		g.camPos.X = targetPos.X
+		g.camPos.Y = targetPos.Y
+	} else {
+		g.camPos.Add(camMove.Clone().Normalize().Scale(g.deltaTime * math.Max(g.level.pixelHeight, g.level.pixelWidth) * CAM_TRACK_SPEED))
+	}
 	g.camMin = g.camPos.Clone().Sub(hscr)
 	g.camMax = g.camPos.Clone().Add(hscr)
 }
