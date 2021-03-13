@@ -3,9 +3,6 @@ package main
 /*
 TODO:
 -Adjust par times
--Make text more readable?
--Power down sound effect
--Menu sound effect
 -Ingame music
 	-Good/bad ending song
 */

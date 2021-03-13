@@ -318,6 +318,7 @@ func (g *Game) Update(deltaTime float64) {
 		}
 		g.hud.Update(g)
 		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+			audio.PlaySound("menu")
 			g.pause = !g.pause
 		}
 	} else { //Handle level transition FX

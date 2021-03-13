@@ -55,6 +55,9 @@ func init() {
 		"evil_voice":  assets.WAV_EVIL_VOICE,
 		"ascend":      assets.WAV_ASCEND,
 		"roar":        assets.WAV_ROAR,
+		"descend":     assets.WAV_DESCEND,
+		"menu":        assets.WAV_MENU,
+		"button":      assets.WAV_BUTTON,
 	}
 	musFiles = map[string]string{
 		"mystery":        assets.OGG_MYSTERY,

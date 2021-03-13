@@ -147,22 +147,27 @@ func (hud *GameHUD) Update(game *Game) {
 		if hud.pause.container.visible {
 			//Respond to pause screen buttons
 			if hud.pause.restartButt.Clicked() {
+				audio.PlaySound("button")
 				ChangeAppState(NewGame(0))
 			} else if hud.pause.sfxButt.Clicked() {
+				audio.PlaySound("button")
 				audio.MuteSfx = !audio.MuteSfx
 				check := hud.pause.sfxButt.children.Front().Value.(*UINode)
 				check.visible = audio.MuteSfx
 			} else if hud.pause.musicButt.Clicked() {
+				audio.PlaySound("button")
 				audio.MuteMusic = !audio.MuteMusic
 				check := hud.pause.musicButt.children.Front().Value.(*UINode)
 				check.visible = audio.MuteMusic
 			} else if hud.pause.controlsButt.Clicked() {
+				audio.PlaySound("button")
 				hud.pause.container.visible = false
 				hud.control.container.visible = true
 			}
 		} else if hud.control.container.visible {
 			//Respond to controls screen buttons
 			if hud.control.backButt.Clicked() {
+				audio.PlaySound("button")
 				hud.control.container.visible = false
 				hud.pause.container.visible = true
 			}
