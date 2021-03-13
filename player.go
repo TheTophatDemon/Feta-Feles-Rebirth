@@ -223,7 +223,7 @@ func (player *Player) OnCollision(game *Game, obj, other *Object) {
 					lost = game.DecLoveCounter(10)
 				}
 			}
-			if lost {
+			if lost && player.ascended {
 				player.ascended = false
 				audio.PlaySound("descend")
 			} else {
