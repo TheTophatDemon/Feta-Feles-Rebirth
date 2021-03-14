@@ -40,7 +40,7 @@ func init() {
 			mapWidth:  32, mapHeight: 32,
 			bgColor1: color.RGBA{91, 110, 225, 255},
 			bgColor2: color.RGBA{48, 96, 130, 255},
-			parTime:  60 + 45,
+			parTime:  60 + 30,
 			music:    "mystery_ingame",
 		},
 		{ //2 (Human)
@@ -50,7 +50,7 @@ func init() {
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{48, 96, 130, 255},
 			bgColor2: color.RGBA{48, 96, 130, 255},
-			parTime:  (2 * 60) + 30,
+			parTime:  (3 * 60),
 			music:    "hope_ingame",
 		},
 		{ //3 (Angel)
@@ -70,7 +70,7 @@ func init() {
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{34, 32, 32, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
-			parTime:  (4 * 60),
+			parTime:  (4 * 60) + 15,
 			music:    "malform_ingame",
 		},
 		{ //5 (Melting) 
