@@ -3,7 +3,6 @@ package main
 /*
 TODO:
 -Adjust par times
--Good ending song, but sadder
 */
 
 //Average playthrough ~25 mins
