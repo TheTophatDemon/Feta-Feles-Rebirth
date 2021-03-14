@@ -1,12 +1,5 @@
 package main
 
-/*
-TODO:
--Adjust par times
-*/
-
-//Average playthrough ~25 mins
-
 import (
 	"image"
 	_ "image/color"
@@ -99,7 +92,8 @@ func GetGraphics() *ebiten.Image {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
+	seed := time.Now().UnixNano() % 1615698000000000000
+	rand.Seed(seed)
 
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowResizable(true)
