@@ -66,6 +66,8 @@ func init() {
 		"hope_ingame":    assets.OGG_HOPE_INGAME,
 		"malform":        assets.OGG_MALFORM,
 		"malform_ingame": assets.OGG_MALFORM_INGAME,
+		"him": assets.OGG_HIM,
+		"rescue": assets.OGG_RESCUE,
 	}
 }
 

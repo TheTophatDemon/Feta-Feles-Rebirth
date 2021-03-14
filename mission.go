@@ -70,7 +70,7 @@ func init() {
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{34, 32, 32, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
-			parTime:  (4 * 60), //5:10
+			parTime:  (4 * 60),
 			music:    "malform_ingame",
 		},
 		{ //5 (Melting) 

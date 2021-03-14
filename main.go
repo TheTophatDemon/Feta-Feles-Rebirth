@@ -3,8 +3,7 @@ package main
 /*
 TODO:
 -Adjust par times
--Ingame music
-	-Good/bad ending song
+-Good ending song, but sadder
 */
 
 //Average playthrough ~25 mins

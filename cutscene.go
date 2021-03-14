@@ -116,7 +116,7 @@ func init() {
 				"....H.....E....L.....P.....",
 				"...HE'S...C...COMING...!!",
 			},
-			music: "monster",
+			music: "",
 			voice: "voice",
 		},
 		{
@@ -132,7 +132,7 @@ func init() {
 				"NOW IT IS TIME FOR ME TO  BRING AN END TO EVERYTHING",
 				"IT IS YOUR FATE TO BE     DESTROYED. EMBRACE IT!    BASK IN THE GLORY.",
 			},
-			music: "monster",
+			music: "him",
 			voice: "evil_voice",
 		},
 		{
@@ -171,6 +171,7 @@ type CutsceneState struct {
 	transTimer   float64
 	renderTarget *ebiten.Image
 	uiRoot       *UINode
+	elapsedTime float64
 }
 
 func NewCutsceneState(sceneNum int) *CutsceneState {
@@ -228,6 +229,7 @@ func NewCutsceneState(sceneNum int) *CutsceneState {
 const CUTSCENE_FADE_SPEED = 1.0
 
 func (ct *CutsceneState) Update(deltaTime float64) {
+	ct.elapsedTime += deltaTime
 	if ct.transition == FM_NO_FADE {
 		//Dialog advancements
 		dlg := ct.dialog[ct.dialogIndex]
@@ -285,9 +287,14 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 }
 
 func (ct *CutsceneState) Draw(screen *ebiten.Image) {
+	if ct.nextMission == len(missions) {
+		ct.DrawEvilBackground(screen, math.Sin(ct.elapsedTime) * 80.0, math.Cos(ct.elapsedTime) * 80.0, (math.Cos(ct.elapsedTime + math.Pi / 6.0) * 0.4) + 1.25)
+		ct.DrawEvilBackground(screen, math.Sin(ct.elapsedTime) * 64.0, math.Cos(ct.elapsedTime) * 64.0, (math.Sin(ct.elapsedTime + math.Pi / 3.0) * 0.25) + 1.5)
+	}
 	ct.feles.DrawAllSprites(screen, nil)
-
+	
 	ct.uiRoot.Draw(screen, nil)
+
 
 	ct.renderTarget.Clear()
 	ct.renderTarget.DrawImage(screen, nil)
@@ -307,6 +314,32 @@ func (ct *CutsceneState) Draw(screen *ebiten.Image) {
 		op.Images[1] = noiseImg
 		screen.DrawRectShader(SCR_WIDTH, SCR_HEIGHT, whiteFadeShader, op)
 	}
+}
+
+func (ct *CutsceneState) DrawEvilBackground(screen *ebiten.Image, x, y, scale float64) {
+	op := &ebiten.DrawImageOptions{}
+	imgSize := float64(GetGraphics().Bounds().Dx())
+	op.ColorM.ChangeHSV(math.Pi / 4.0, 0.1, 0.05)
+	op.GeoM.Translate(-SCR_WIDTH_H, -SCR_HEIGHT_H)
+	op.GeoM.Scale(scale, scale)
+	op.GeoM.Translate(x + SCR_WIDTH_H, y + SCR_HEIGHT_H)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(imgSize, 0.0)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(0.0, imgSize)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(-imgSize, 0.0)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(-imgSize, 0.0)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(0.0, -imgSize)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(0.0, -imgSize)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(imgSize, 0.0)
+	screen.DrawImage(GetGraphics(), op)
+	op.GeoM.Translate(imgSize, 0.0)
+	screen.DrawImage(GetGraphics(), op)
 }
 
 func (ct *CutsceneState) Enter() {}
