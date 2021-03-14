@@ -57,7 +57,7 @@ func AddPlayer(game *Game, x, y float64) *Object {
 		Actor:        NewActor(120.0, 500_000.0, 50_000.0),
 		hurt:         false,
 		ascended:     false,
-		lastShootDir: vmath.ZeroVec(),
+		lastShootDir: vmath.NewVec(1.0, 0.0),
 	}
 	player.Actor.ignoreBounds = true
 	obj := &Object{
