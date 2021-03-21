@@ -220,11 +220,7 @@ func (player *Player) OnCollision(game *Game, obj, other *Object) {
 			if other.colType == CT_EXPLOSION {
 				lost = game.DecLoveCounter(20)
 			} else {
-				if player.ascended {
-					lost = game.DecLoveCounter(20)
-				} else {
-					lost = game.DecLoveCounter(10)
-				}
+				lost = game.DecLoveCounter(10)
 			}
 			if lost && player.ascended {
 				player.ascended = false
