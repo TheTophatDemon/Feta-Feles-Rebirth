@@ -15,6 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+TODO: 
+EXE icon
+Compatibility issue?
+Runs very slowly on website
+Playtesting
+Sparkles on warpable spots
+Nerf level pars / Love quotas...?
+
+Linux port
+Credits?
+*/
+
+/*
+Note!
+To make compatible with latest ebiten, make these changes:
+Change App::Update to App::Update(image)
+Change all new image methods to account for returned error, and add an extra argument ebiten.FilterNearest
+Update the parse method to return an embedded struct that implements Close() method
+*/
+
 package main
 
 import (

@@ -27,7 +27,7 @@ import (
 
 const (
 	PL_SHOOT_FREQ = 0.2
-	PL_WARP_COOLDOWN = 4.0
+	PL_WARP_THRESHOLD = 1.0
 )
 
 type Player struct {
@@ -59,7 +59,7 @@ func AddPlayer(game *Game, x, y float64) *Object {
 		ascended:     false,
 		lastShootDir: vmath.NewVec(1.0, 0.0),
 	}
-	player.Actor.ignoreBounds = true
+	//player.Actor.ignoreBounds = true
 	obj := &Object{
 		pos: vmath.NewVec(x, y), radius: 6.0, colType: CT_PLAYER,
 		sprites: []*Sprite{
@@ -159,47 +159,47 @@ func (player *Player) Update(game *Game, obj *Object) {
 		}
 	}
 
+	//Handle boundaries & screen wrapping
+	leftWarp := (obj.pos.X <= obj.radius + 4 && dx < 0)
+	rightWarp := (obj.pos.X >= game.level.pixelWidth - obj.radius - 4 && dx > 0)
+	upWarp := (obj.pos.Y <= obj.radius + 4 && dy < 0)
+	downWarp := (obj.pos.Y >= game.level.pixelHeight - obj.radius - 4 && dy > 0)
+	if leftWarp || rightWarp || upWarp || downWarp {
+		player.warpCooldown += game.deltaTime
+		if player.warpCooldown > PL_WARP_THRESHOLD {
+			//Warp after pushing against boundary for some time
+			switch {
+			case leftWarp:
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(game.level.pixelWidth-obj.radius - 1, obj.pos.Y), obj.radius); hit == false {
+					obj.pos.X = game.level.pixelWidth - obj.radius
+					player.warpCooldown = 0.0
+				}
+			case rightWarp:
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.radius + 1, obj.pos.Y), obj.radius); hit == false {
+					obj.pos.X = obj.radius
+					player.warpCooldown = 0.0
+				}
+			case upWarp:
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, game.level.pixelHeight-obj.radius-1), obj.radius); hit == false {
+					obj.pos.Y = game.level.pixelHeight - obj.radius
+					player.warpCooldown = 0.0
+				}
+			case downWarp:
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, obj.radius+1), obj.radius); hit == false {
+					obj.pos.Y = obj.radius
+					player.warpCooldown = 0.0
+				}
+			}
+			if player.warpCooldown == 0.0 {
+				player.hurtTimer = 1.0 //Add invincibility frames after warping in case there's an unseen enemy
+			}
+		}
+	} else {
+		player.warpCooldown = 0.0
+	}
+
 	player.Actor.Move(dx, dy)
 	player.Actor.Update(game, obj)
-	//Handle boundaries & screen wrapping
-	player.warpCooldown -= game.deltaTime
-	switch {
-	case obj.pos.X < 0.0:
-		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(game.level.pixelWidth-obj.radius, obj.pos.Y), obj.radius); 
-			hit == false && player.warpCooldown <= 0.0 {
-			obj.pos.X = game.level.pixelWidth - obj.radius
-			player.warpCooldown = PL_WARP_COOLDOWN
-		} else {
-			obj.pos.X = 0.0
-		}
-	case obj.pos.X > game.level.pixelWidth:
-		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.radius, obj.pos.Y), obj.radius); 
-			hit == false && player.warpCooldown <= 0.0 {
-			obj.pos.X = obj.radius
-			player.warpCooldown = PL_WARP_COOLDOWN
-		} else {
-			obj.pos.X = game.level.pixelWidth
-		}
-	case obj.pos.Y < 0:
-		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, game.level.pixelHeight-obj.radius), obj.radius); 
-			hit == false && player.warpCooldown <= 0.0 {
-			obj.pos.Y = game.level.pixelHeight - obj.radius
-			player.warpCooldown = PL_WARP_COOLDOWN
-		} else {
-			obj.pos.Y = 0.0
-		}
-	case obj.pos.Y > game.level.pixelHeight:
-		if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, obj.radius), obj.radius); 
-			hit == false && player.warpCooldown <= 0.0 {
-			obj.pos.Y = obj.radius
-			player.warpCooldown = PL_WARP_COOLDOWN
-		} else {
-			obj.pos.Y = game.level.pixelHeight
-		}
-	}
-	if player.warpCooldown == PL_WARP_COOLDOWN {
-		player.hurtTimer = 1.0 //Add invincibility frames after warping in case there's an unseen enemy
-	}
 }
 
 func (player *Player) OnCollision(game *Game, obj, other *Object) {

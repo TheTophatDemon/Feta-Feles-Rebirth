@@ -440,7 +440,7 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 		AddStarBurst(g, g.playerObj.pos.X, g.playerObj.pos.Y)
 		audio.PlaySound("ascend")
 		if g.missionNumber == 0 {
-			g.hud.DisplayMessage("  EXCELLENT. NOW...     GO GET THE CAT!", 4.0)
+			g.hud.DisplayMessage("  EXCELLENT. NOW...     GO KILL THE CAT!", 4.0)
 		}
 	case SIGNAL_CAT_RULE:
 		g.hud.DisplayMessage("YOU MUST ASCEND TO  SLAY THE CAT", 4.0)
