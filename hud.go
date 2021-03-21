@@ -138,7 +138,7 @@ func CreateGameHUD() *GameHUD {
 		GenerateText("SPACE KEY WILL FIX SHOOTING       DIRECTION", lineRect),
 		GenerateText("CAT IS ONLY HURT BY ASCENDED      BULLETS", lineRect),
 		GenerateText("LISTEN FOR ITS MEWS", lineRect),
-		GenerateText("TOUCH BOUNDARIES TO WARP", lineRect),
+		GenerateText("PUSH BOUNDARIES TO WARP", lineRect),
 		GenerateText("BOUNCY BULLETS EXPLODE RUNES", lineRect),
 		GenerateText("EVERY MISSION HAS A PAR TIME", lineRect),
 		GenerateText("BEAT THE PAR TIMES FOR EVERY      MISSION IF YOU DARE", lineRect),
