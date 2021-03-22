@@ -1,17 +1,31 @@
 <!DOCTYPE html>
+<style>
+p {
+	color: white;
+	position: absolute;
+	left: 25%;
+	width: 50%;
+	height: 50%;
+	top: 25%;
+	text-align: center;
+	font-size: 32px;
+	margin: auto;
+	z-index: -100;
+}
+</style>
 <body>
+<p id="loading_text">LOADING...</p>
 <script src="wasm_exec.js"></script>
 <script>
-if (!WebAssembly.instantiateStreaming) {
-  WebAssembly.instantiateStreaming = async (resp, importObject) => {
-    const source = await (await resp).arrayBuffer();
-    return await WebAssembly.instantiate(source, importObject);
-  };
+async function loadGame() {
+	const go = new Go();
+	const response = await fetch("FetaFelesRebirth.wasm");
+	const buffer = await response.arrayBuffer();
+	const obj = await WebAssembly.instantiate(buffer, go.importObject);
+	document.getElementById("loading_text").style.visibility = "hidden";
+	go.run(obj.instance);
 }
+loadGame();
 
-const go = new Go();
-WebAssembly.instantiateStreaming(fetch("fetafelesrebirth.wasm"), go.importObject).then(result => {
-  go.run(result.instance);
-});
 </script>
 </body>

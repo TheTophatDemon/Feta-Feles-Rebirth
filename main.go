@@ -17,10 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
 TODO:
-Compatibility issue?
-Runs very slowly on website
-Credits
-
 Linux port
 */
 
