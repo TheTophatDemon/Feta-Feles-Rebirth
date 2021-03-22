@@ -289,6 +289,30 @@ func GenerateLevel(w, h int, simple bool) *Level {
 
 	level.FindSpaces()
 	level.ConnectCaves()
+
+	//Make sure the edges of the map are identical so that the player can know where to warp
+
+	//Left & right
+	for y := 0; y < h; y++ {
+		lefty := level.GetTile(0, y, false)
+		righty := level.GetTile(w - 1, y, false)
+		if lefty.IsSolid() {
+			righty.SetType(TT_BLOCK)
+		} else if righty.IsSolid() {
+			lefty.SetType(TT_BLOCK)
+		}
+	}
+	//Top & bottom
+	for x := 0; x < w; x++ {
+		toppy := level.GetTile(x, 0, false)
+		botty := level.GetTile(x, h - 1, false)
+		if toppy.IsSolid() {
+			botty.SetType(TT_BLOCK)
+		} else if botty.IsSolid() {
+			toppy.SetType(TT_BLOCK)
+		}
+	}
+
 	level.SmoothEdges()
 
 	return level

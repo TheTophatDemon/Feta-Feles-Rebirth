@@ -20,8 +20,6 @@ TODO:
 EXE icon
 Compatibility issue?
 Runs very slowly on website
-Playtesting
-Sparkles on warpable spots
 Nerf level pars / Love quotas...?
 
 Linux port
