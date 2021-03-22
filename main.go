@@ -17,13 +17,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
 TODO:
-EXE icon
 Compatibility issue?
 Runs very slowly on website
-Nerf level pars / Love quotas...?
+Credits
 
 Linux port
-Credits?
 */
 
 package main
