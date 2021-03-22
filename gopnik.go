@@ -48,6 +48,11 @@ func init() {
 }
 
 func AddGopnik(game *Game, x, y float64) *Object {
+	//Despawn if it is in too tight a space
+	if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(x, y), 15.0); hit == true {
+		return nil
+	}
+
 	gopnik := &Gopnik{
 		Mob: Mob{
 			Actor:  NewActor(50.0, 10_000.0, 100_000.0),
@@ -81,7 +86,7 @@ func (gp *Gopnik) Update(game *Game, obj *Object) {
 
 	if gp.hunting {
 		gp.shootTimer += game.deltaTime
-		if gp.shootTimer > 1.0 {
+		if gp.shootTimer > 2.0 {
 			gp.shootTimer = 0.0
 			for a := 0.0; a < math.Pi*2.0; a += math.Pi / 2.0 {
 				AddShot(game, obj.pos.Clone(), vmath.VecFromAngle(gp.shootAngle+a, 1.0), 40.0, true)

@@ -17,6 +17,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /*
 TODO:
+Optimize level drawing?
+Pick license for assets...
 Linux port
 */
 

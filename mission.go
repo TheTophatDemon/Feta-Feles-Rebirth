@@ -52,7 +52,7 @@ func init() {
 		},
 		{ //1 (Cat)
 			loveQuota:  50,
-			maxKnights: 3, maxBlarghs: 3, maxBarrels: 3,
+			maxKnights: 3, maxBlarghs: 3, maxBarrels: 6,
 			catHealth: 3,
 			mapWidth:  32, mapHeight: 32,
 			bgColor1: color.RGBA{91, 110, 225, 255},
@@ -62,7 +62,7 @@ func init() {
 		},
 		{ //2 (Human)
 			loveQuota:  75,
-			maxKnights: 15, maxBlarghs: 10, maxGopniks: 2, maxBarrels: 5,
+			maxKnights: 15, maxBlarghs: 10, maxGopniks: 2, maxBarrels: 7,
 			catHealth: 6,
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{48, 96, 130, 255},
