@@ -55,7 +55,11 @@ var musFade FadeType = FADE_NONE
 var musFadeTimer float64 = 0.0
 
 func init() {
-	audioContext = audio.NewContext(44100)
+	var err error
+	audioContext, err = audio.NewContext(44100)
+	if err != nil {
+		panic(err)
+	}
 	sfxPlayers = make(map[string]*ring.Ring)
 	sfxFiles = map[string]string{
 		"enemy_die":   assets.WAV_ENEMY_DIE,
@@ -83,8 +87,8 @@ func init() {
 		"hope_ingame":    assets.OGG_HOPE_INGAME,
 		"malform":        assets.OGG_MALFORM,
 		"malform_ingame": assets.OGG_MALFORM_INGAME,
-		"him": assets.OGG_HIM,
-		"rescue": assets.OGG_RESCUE,
+		"him":            assets.OGG_HIM,
+		"rescue":         assets.OGG_RESCUE,
 	}
 }
 
@@ -182,7 +186,10 @@ func PlaySoundVolume(name string, volume float64) {
 		//Initialize audio players in the ring buffer
 		buffer = ring.New(PLAYERS_PER_SOUND)
 		for i := 0; i < PLAYERS_PER_SOUND; i++ {
-			player := audio.NewPlayerFromBytes(audioContext, bytes)
+			player, err := audio.NewPlayerFromBytes(audioContext, bytes)
+			if err != nil {
+				log.Fatal(err)
+			}
 			player.SetVolume(volume)
 			buffer.Value = player
 			buffer = buffer.Next()

@@ -86,13 +86,13 @@ func NewGame(mission int) *Game {
 		mission:       &missions[mission],
 		missionNumber: mission,
 		fade:          FM_FADE_IN,
-		renderTarget:  ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT),
 		strobeSpeed:   6.0,
 		strobeTimer:   0.0,
 		strobeForward: true,
 		bgColor:       missions[mission].bgColor1,
 		hud:           *CreateGameHUD(),
 	}
+	game.renderTarget, _ = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
 	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
 	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight, mission <= 1)
 

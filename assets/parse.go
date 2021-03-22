@@ -24,10 +24,20 @@ import (
 	"io/ioutil"
 )
 
+//Hack! Stream must implement Close() in order to work with .ogg library.
+type CompressedStringStream struct {
+	*bytes.Reader
+}
+
+func (css CompressedStringStream) Close() error {
+	//Калинка калинка калинка моя
+	return nil
+}
+
 //Assets are embedded in string constants
 //They are encoded by ./embed_assets.py, which performs gzip compression on each file.
 //The bytes in the string are each offset by 186 so that they can be displayed in the file as valid unicode characters.
-func ReadCompressedString(input string) io.ReadSeeker {
+func ReadCompressedString(input string) io.ReadSeekCloser {
 	zipBytes := make([]byte, len(input))
 	i := 0
 	for _, r := range input {
@@ -39,5 +49,5 @@ func ReadCompressedString(input string) io.ReadSeeker {
 	zipReader, _ := gzip.NewReader(bytes.NewReader(zipBytes))
 	defer zipReader.Close()
 	rawBytes, _ := ioutil.ReadAll(zipReader)
-	return bytes.NewReader(rawBytes)
+	return CompressedStringStream{Reader: bytes.NewReader(rawBytes)}
 }

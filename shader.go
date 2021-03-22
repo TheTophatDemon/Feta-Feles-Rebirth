@@ -27,7 +27,7 @@ var whiteFadeShader *ebiten.Shader
 var noiseImg *ebiten.Image
 
 func init() {
-	noiseImg = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
+	noiseImg, _ = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
 	noisePixels := make([]byte, SCR_WIDTH*SCR_HEIGHT*4)
 	for i := 0; i < SCR_HEIGHT*SCR_WIDTH; i++ {
 		noisePixels[i*4+0] = byte(rand.Intn(255))

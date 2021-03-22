@@ -16,7 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 /*
-TODO: 
+TODO:
 EXE icon
 Compatibility issue?
 Runs very slowly on website
@@ -24,14 +24,6 @@ Nerf level pars / Love quotas...?
 
 Linux port
 Credits?
-*/
-
-/*
-Note!
-To make compatible with latest ebiten, make these changes:
-Change App::Update to App::Update(image)
-Change all new image methods to account for returned error, and add an extra argument ebiten.FilterNearest
-Update the parse method to return an embedded struct that implements Close() method
 */
 
 package main
@@ -81,7 +73,7 @@ func init() {
 
 const FRAMERATE = 1.0 / 60.0
 
-func (a *App) Update() error {
+func (a *App) Update(screen *ebiten.Image) error {
 	now := time.Now()
 	deltaTime := now.Sub(__lastTime).Seconds()
 	__lastTime = now
@@ -122,7 +114,10 @@ func GetGraphics() *ebiten.Image {
 		if err != nil {
 			log.Fatal(err)
 		}
-		__graphics = ebiten.NewImageFromImage(img)
+		__graphics, err = ebiten.NewImageFromImage(img, ebiten.FilterNearest)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return __graphics
 }

@@ -19,6 +19,7 @@ package main
 
 import (
 	"image"
+	"log"
 	"math"
 
 	"github.com/hajimehoshi/ebiten"
@@ -188,7 +189,7 @@ type CutsceneState struct {
 	transTimer   float64
 	renderTarget *ebiten.Image
 	uiRoot       *UINode
-	elapsedTime float64
+	elapsedTime  float64
 }
 
 func NewCutsceneState(sceneNum int) *CutsceneState {
@@ -236,7 +237,11 @@ func NewCutsceneState(sceneNum int) *CutsceneState {
 	state.nextMission = sceneNum
 	state.transition = FM_FADE_IN
 	state.transTimer = 0.0
-	state.renderTarget = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
+	var err error
+	state.renderTarget, err = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	audio.PlayMusic(state.cutscene.music)
 
@@ -305,13 +310,12 @@ func (ct *CutsceneState) Update(deltaTime float64) {
 
 func (ct *CutsceneState) Draw(screen *ebiten.Image) {
 	if ct.nextMission == len(missions) {
-		ct.DrawEvilBackground(screen, math.Sin(ct.elapsedTime) * 80.0, math.Cos(ct.elapsedTime) * 80.0, (math.Cos(ct.elapsedTime + math.Pi / 6.0) * 0.4) + 1.25)
-		ct.DrawEvilBackground(screen, math.Sin(ct.elapsedTime) * 64.0, math.Cos(ct.elapsedTime) * 64.0, (math.Sin(ct.elapsedTime + math.Pi / 3.0) * 0.25) + 1.5)
+		ct.DrawEvilBackground(screen, math.Sin(ct.elapsedTime)*80.0, math.Cos(ct.elapsedTime)*80.0, (math.Cos(ct.elapsedTime+math.Pi/6.0)*0.4)+1.25)
+		ct.DrawEvilBackground(screen, math.Sin(ct.elapsedTime)*64.0, math.Cos(ct.elapsedTime)*64.0, (math.Sin(ct.elapsedTime+math.Pi/3.0)*0.25)+1.5)
 	}
 	ct.feles.DrawAllSprites(screen, nil)
-	
-	ct.uiRoot.Draw(screen, nil)
 
+	ct.uiRoot.Draw(screen, nil)
 
 	ct.renderTarget.Clear()
 	ct.renderTarget.DrawImage(screen, nil)
@@ -336,10 +340,10 @@ func (ct *CutsceneState) Draw(screen *ebiten.Image) {
 func (ct *CutsceneState) DrawEvilBackground(screen *ebiten.Image, x, y, scale float64) {
 	op := &ebiten.DrawImageOptions{}
 	imgSize := float64(GetGraphics().Bounds().Dx())
-	op.ColorM.ChangeHSV(math.Pi / 4.0, 0.1, 0.05)
+	op.ColorM.ChangeHSV(math.Pi/4.0, 0.1, 0.05)
 	op.GeoM.Translate(-SCR_WIDTH_H, -SCR_HEIGHT_H)
 	op.GeoM.Scale(scale, scale)
-	op.GeoM.Translate(x + SCR_WIDTH_H, y + SCR_HEIGHT_H)
+	op.GeoM.Translate(x+SCR_WIDTH_H, y+SCR_HEIGHT_H)
 	screen.DrawImage(GetGraphics(), op)
 	op.GeoM.Translate(imgSize, 0.0)
 	screen.DrawImage(GetGraphics(), op)

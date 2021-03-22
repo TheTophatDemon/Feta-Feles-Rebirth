@@ -202,7 +202,7 @@ var spaceColors [255]color.RGBA
 var spaceCenterImg *ebiten.Image
 
 func init() {
-	spaceImg = ebiten.NewImage(8, 8)
+	spaceImg, _ = ebiten.NewImage(8, 8, ebiten.FilterNearest)
 	spaceImg.Fill(color.RGBA{255, 255, 255, 255})
 	for i := 0; i < 255; i++ {
 		spaceColors[i] = color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), 255}
