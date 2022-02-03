@@ -49,7 +49,7 @@ func init() {
 
 func AddGopnik(game *Game, x, y float64) *Object {
 	//Despawn if it is in too tight a space
-	if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(x, y), 15.0); hit == true {
+	if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(x, y), 15.0); hit {
 		return nil
 	}
 

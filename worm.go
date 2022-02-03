@@ -186,7 +186,7 @@ func (worm *Worm) Update(game *Game, obj *Object) {
 			var i int
 			for i = WORM_NSEGS - 1; i >= 0; i-- {
 				//Find furthest segment not yet being destroyed
-				if worm.segs[i] != nil && worm.segs[i].removeMe == false {
+				if worm.segs[i] != nil && !worm.segs[i].removeMe {
 					break
 				}
 			}

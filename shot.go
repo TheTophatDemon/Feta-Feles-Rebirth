@@ -28,7 +28,6 @@ type Shot struct {
 	life    float64      //Time in seconds until it disappears
 	enemy   bool         //Will this shot hurt the player?
 	bounces int          //Number of times shot can hit the wall before dying
-	bouncy  bool
 	anim    *Anim
 }
 

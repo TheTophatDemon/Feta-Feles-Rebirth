@@ -364,22 +364,26 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 
 //If t is nil, then position is projected onto level boundaries
 func (level *Level) ProjectPosOntoTile(pos *vmath.Vec2f, t *Tile) *vmath.Vec2f {
-	tileMin := vmath.NewVec(t.left, t.top)
-	tileMax := vmath.NewVec(t.right, t.bottom)
+	if t != nil {
+		tileMin := vmath.NewVec(t.left, t.top)
+		tileMax := vmath.NewVec(t.right, t.bottom)
 
-	//Project onto a box by clamping the destination to the box boundaries
-	proj := vmath.VecMax(tileMin, vmath.VecMin(tileMax, pos))
-	if t != nil && t.IsSlope() {
-		//Project onto a diagonal plane using the dot product if positing is coming from the right direction
-		cDiff := pos.Clone().Sub(vmath.NewVec(t.centerX, t.centerY))
-		planeDist := vmath.VecDot(t.GetSlopeNormal(), cDiff)
-		if planeDist > 0.0 {
-			proj = pos.Clone().Sub(t.GetSlopeNormal().Scale(planeDist))
-			proj = vmath.VecMax(tileMin, vmath.VecMin(tileMax, proj))
+		//Project onto a box by clamping the destination to the box boundaries
+		proj := vmath.VecMax(tileMin, vmath.VecMin(tileMax, pos))
+		if t.IsSlope() {
+			//Project onto a diagonal plane using the dot product if positing is coming from the right direction
+			cDiff := pos.Clone().Sub(vmath.NewVec(t.centerX, t.centerY))
+			planeDist := vmath.VecDot(t.GetSlopeNormal(), cDiff)
+			if planeDist > 0.0 {
+				proj = pos.Clone().Sub(t.GetSlopeNormal().Scale(planeDist))
+				proj = vmath.VecMax(tileMin, vmath.VecMin(tileMax, proj))
+			}
 		}
-	}
 
-	return proj
+		return proj
+	} else {
+		return &vmath.Vec2f{X: 0.0, Y: 0.0}
+	}
 }
 
 func (level *Level) GetGridAreaOverCapsule(start, dest *vmath.Vec2f, radius float64, clamp bool) (gridMin, gridMax *vmath.Vec2f) {

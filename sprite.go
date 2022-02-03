@@ -61,7 +61,7 @@ func NewSpriteFromSubImg(subImg *ebiten.Image, ofs *vmath.Vec2f, flipH, flipV bo
 func CloneSprite(org *Sprite) *Sprite {
 	return &Sprite{
 		org.subImg,
-		&(*org.matrix),
+		org.matrix,
 	}
 }
 
