@@ -241,3 +241,7 @@ func (hud *GameHUD) DisplayMessage(msg string, time float64) {
 	hud.msgText.Regen()
 	hud.msgText.fillPos = 0
 }
+
+func (hud *GameHUD) IsDisplayingMessage() bool {
+	return hud.msgTimer > 0.0
+}

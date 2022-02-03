@@ -36,7 +36,6 @@ type Player struct {
 	shootTimer       float64
 	hurtTimer        float64
 	lastShootDir     *vmath.Vec2f
-	moveAmt, shotAmt int
 	warpCooldown float64
 }
 
@@ -101,10 +100,7 @@ func (player *Player) Update(game *Game, obj *Object) {
 				player.shootTimer = PL_SHOOT_FREQ
 			}
 			audio.PlaySound("player_shot")
-			player.shotAmt++
-			if player.shotAmt == 8 {
-				Emit_Signal(SIGNAL_PLAYER_SHOT, obj, nil)
-			}
+			Emit_Signal(SIGNAL_PLAYER_SHOT, obj, nil)
 		}
 	} else {
 		player.shootTimer -= game.deltaTime
@@ -153,10 +149,7 @@ func (player *Player) Update(game *Game, obj *Object) {
 	}
 
 	if dx != 0.0 || dy != 0.0 {
-		player.moveAmt++
-		if player.moveAmt == 100 {
-			Emit_Signal(SIGNAL_PLAYER_MOVED, obj, nil)
-		}
+		Emit_Signal(SIGNAL_PLAYER_MOVED, obj, nil)
 	}
 
 	//Handle boundaries & screen wrapping
@@ -170,22 +163,22 @@ func (player *Player) Update(game *Game, obj *Object) {
 			//Warp after pushing against boundary for some time
 			switch {
 			case leftWarp:
-				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(game.level.pixelWidth-obj.radius - 1, obj.pos.Y), obj.radius); hit == false {
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(game.level.pixelWidth-obj.radius - 1, obj.pos.Y), obj.radius); !hit {
 					obj.pos.X = game.level.pixelWidth - obj.radius
 					player.warpCooldown = 0.0
 				}
 			case rightWarp:
-				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.radius + 1, obj.pos.Y), obj.radius); hit == false {
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.radius + 1, obj.pos.Y), obj.radius); !hit {
 					obj.pos.X = obj.radius
 					player.warpCooldown = 0.0
 				}
 			case upWarp:
-				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, game.level.pixelHeight-obj.radius-1), obj.radius); hit == false {
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, game.level.pixelHeight-obj.radius-1), obj.radius); !hit {
 					obj.pos.Y = game.level.pixelHeight - obj.radius
 					player.warpCooldown = 0.0
 				}
 			case downWarp:
-				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, obj.radius+1), obj.radius); hit == false {
+				if hit, _, _ := game.level.SphereIntersects(vmath.NewVec(obj.pos.X, obj.radius+1), obj.radius); !hit {
 					obj.pos.Y = obj.radius
 					player.warpCooldown = 0.0
 				}

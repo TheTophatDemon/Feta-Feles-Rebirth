@@ -22,14 +22,23 @@ import "container/list"
 type Signal int
 
 const (
-	SIGNAL_PLAYER_MOVED  Signal = iota //Fires once after the player has moved around a bit. For the tutorial mission.
-	SIGNAL_PLAYER_SHOT                 //Fires once after the player has shot a few times. For the tutorial mission.
+	SIGNAL_PLAYER_MOVED  Signal = iota //Fires continuously as long as the player is moving. For the tutorial mission.
+	SIGNAL_PLAYER_SHOT                 //Fires every time the player shoots. For the tutorial mission.
+	SIGNAL_PLAYER_EDGE				   //Fires when the camera reaches the edge of the map. For the tutorial mission.
 	SIGNAL_PLAYER_ASCEND               //Fires to indicate when the player ascends
 	SIGNAL_CAT_RULE                    //Fires when the player tries to shoot the cat without being ascended
 	SIGNAL_CAT_DIE                     //Fires when the cat is killed
 	SIGNAL_GAME_START                  //Fires at the start of the game after the intro transition
 	SIGNAL_GAME_INIT                   //Fires before the game level is generated
 )
+
+//Represents the number of times a signal has been emitted
+var __signal_counts map[Signal]int
+
+//Returns the number of times the given signal has been emitted
+func Get_Signal_Count(sig Signal) int {
+	return __signal_counts[sig]
+}
 
 type Observer interface {
 	HandleSignal(kind Signal, src interface{}, params map[string]interface{})
@@ -65,6 +74,16 @@ func Listen_Signal(kind Signal, obs Observer) {
 }
 
 func Emit_Signal(kind Signal, src interface{}, params map[string]interface{}) {
+	//Update signal count
+	if __signal_counts == nil {
+		__signal_counts = make(map[Signal]int)
+	}
+	_, ok := __signal_counts[kind]
+	if !ok {
+		__signal_counts[kind] = 1
+	} else {
+		__signal_counts[kind] += 1
+	}
 	//Exit when no observers
 	lst, ok := observers()[kind]
 	if !ok {

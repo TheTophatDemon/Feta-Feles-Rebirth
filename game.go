@@ -39,7 +39,6 @@ type Game struct {
 	deltaTime              float64
 	lastTime               time.Time
 	camPos, camMin, camMax *vmath.Vec2f
-	winTimer               float64
 	hud                    GameHUD
 	mission                *Mission
 	missionNumber          int
@@ -56,6 +55,7 @@ type Game struct {
 	bgColor                color.RGBA
 	elapsedTime            float64
 	pause                  bool
+	tutorialStep           int
 }
 
 type FadeMode int
@@ -91,6 +91,7 @@ func NewGame(mission int) *Game {
 		strobeForward: true,
 		bgColor:       missions[mission].bgColor1,
 		hud:           *CreateGameHUD(),
+		tutorialStep:  0,
 	}
 	game.renderTarget, _ = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
 	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
@@ -130,6 +131,7 @@ func NewGame(mission int) *Game {
 		Listen_Signal(SIGNAL_PLAYER_MOVED, game)
 		Listen_Signal(SIGNAL_PLAYER_SHOT, game)
 	}
+	Listen_Signal(SIGNAL_PLAYER_EDGE, game)
 	Listen_Signal(SIGNAL_PLAYER_ASCEND, game)
 	Listen_Signal(SIGNAL_CAT_RULE, game)
 	Listen_Signal(SIGNAL_CAT_DIE, game)
@@ -370,6 +372,11 @@ func (g *Game) CenterCameraOn(obj *Object, instant bool) {
 	targetPos := vmath.VecMax(topLeft, vmath.VecMin(bottomRight, obj.pos))
 	hscr := vmath.NewVec(SCR_WIDTH_H, SCR_HEIGHT_H)
 
+	if targetPos.X <= topLeft.X || targetPos.Y <= topLeft.Y || targetPos.X >= bottomRight.X || targetPos.Y >= bottomRight.Y {
+		//When bumping into the edge of the screen, notify the player that they can warp if this has not been done already.
+		Emit_Signal(SIGNAL_PLAYER_EDGE, g.playerObj, nil)
+	}
+
 	camMove := targetPos.Clone().Sub(g.camPos)
 	//Scroll slowly when moving across large distances
 	if camMove.Length() < 16.0 || instant {
@@ -422,15 +429,40 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
+//Number of signal emmissions before the tutorial messages are displayed
+const (
+	MOVE_SIGNAL_THRESHOLD = 100
+	SHOOT_SIGNAL_THRESHOLD = 8
+)
+
 func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
-	if g.missionNumber == 0 {
-		switch kind {
-		case SIGNAL_PLAYER_MOVED:
-			g.hud.DisplayMessage("HOLDING CLICK/SPACE WILL SHOOT. ENTER   WILL PAUSE.", 5.0)
-		case SIGNAL_PLAYER_SHOT:
-			g.hud.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION. FILL THE BAR!", 5.0)
-		case SIGNAL_GAME_START:
-			g.hud.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS.", 4.0)
+	if !g.hud.IsDisplayingMessage() {
+		if g.missionNumber == 0 {
+			switch kind {
+			case SIGNAL_PLAYER_MOVED:
+				if g.tutorialStep == 0 && Get_Signal_Count(SIGNAL_PLAYER_MOVED) >= MOVE_SIGNAL_THRESHOLD {
+					g.hud.DisplayMessage("HOLDING CLICK/SPACE WILL SHOOT. ENTER   WILL PAUSE.", 5.0)
+					g.tutorialStep += 1
+				}
+			case SIGNAL_PLAYER_SHOT:
+				if g.tutorialStep == 1 && Get_Signal_Count(SIGNAL_PLAYER_SHOT) >= SHOOT_SIGNAL_THRESHOLD {
+					g.hud.DisplayMessage("THE MONSTERS PRODUCE FUEL FOR ASCENTION. FILL THE BAR!", 5.0)
+					g.tutorialStep += 1
+				}
+			case SIGNAL_GAME_START:
+				g.hud.DisplayMessage("MOVE WITH WASD KEYS OR ARROWS.", 4.0)
+			case SIGNAL_PLAYER_EDGE:
+				if g.tutorialStep == 2 && Get_Signal_Count(SIGNAL_PLAYER_EDGE) > 100 {
+					g.hud.DisplayMessage("PRESS INTO THE      BOUNDARY TO GET TO  THE OTHER SIDE.", 5.0)
+					g.tutorialStep += 1
+				}
+			}
+		} else {
+			//We also display the edge dialog on future missions in case it is missed
+			if kind == SIGNAL_PLAYER_EDGE && g.tutorialStep == 0 && Get_Signal_Count(SIGNAL_PLAYER_EDGE) <= 100 {
+				g.hud.DisplayMessage("PRESS INTO THE      BOUNDARY TO GET TO  THE OTHER SIDE.", 5.0)
+				g.tutorialStep += 1
+			}
 		}
 	}
 	switch kind {
