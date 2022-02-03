@@ -20,6 +20,7 @@ package main
 import (
 	"container/list"
 	"image"
+	"image/color"
 	"strings"
 	"unicode/utf8"
 
@@ -219,6 +220,7 @@ type UIText struct {
 	fillTimer float64
 	fillSpeed float64
 	fillSound string
+	color color.RGBA
 }
 
 func (text *UIText) Regen() {
@@ -244,6 +246,7 @@ func GenerateText(text string, dest image.Rectangle) *UIText {
 		fillTimer: 0.0,
 		fillSpeed: 0.04,
 		fillSound: "voice",
+		color: color.RGBA{R: 255, G: 255, B: 255, A: 255},
 	}
 	uiText.UINode = NewUINode(dest, uiText)
 	uiText.Regen()
@@ -264,7 +267,10 @@ func (text *UIText) Update(deltaTime float64) {
 }
 
 func (text *UIText) Draw(target *ebiten.Image, globalTransform *ebiten.GeoM) {
-	op := &ebiten.DrawImageOptions{}
+	op := &ebiten.DrawImageOptions{
+		ColorM: ebiten.ColorM{},
+	}
+	op.ColorM.Scale(float64(text.color.R) / 255.0, float64(text.color.G) / 255.0, float64(text.color.B) / 255.0, 1.0)
 	for i := 0; i < text.fillPos; i++ {
 		sp := text.sprites[i]
 		if sp != nil {

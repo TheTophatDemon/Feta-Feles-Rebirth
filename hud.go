@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"image"
+	// "image/color"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
@@ -64,9 +65,11 @@ func CreateGameHUD() *GameHUD {
 	loveBorder.AddChild(&hud.loveBar.UINode)
 
 	msgBorder := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-8), true)
+	// msgBorder := CreateUIBox(image.Rect(64, 0, 64, 0), image.Rect(SCR_WIDTH_H-88, SCR_HEIGHT-48, SCR_WIDTH_H+88, SCR_HEIGHT-8), false)
 	msgBorder.visible = false
 	hud.root.AddChild(&msgBorder.UINode)
 	hud.msgText = GenerateText("HEEBY DEEBY", image.Rect(8, 8, msgBorder.Width()-8, msgBorder.Height()-8))
+	// hud.msgText.color = color.RGBA{R: 0, G: 0, B: 255, A: 255}
 	msgBorder.AddChild(&hud.msgText.UINode)
 
 	timerBorder := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(4.0, 20.0, 100.0, 36.0), true)
