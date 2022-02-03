@@ -29,6 +29,7 @@ type Mission struct {
 	maxWorms            int
 	maxBarrels          int
 	catHealth           int
+	knightSpeed			float64
 	mapWidth, mapHeight int
 	bgColor1, bgColor2  color.RGBA
 	music               string
@@ -44,6 +45,7 @@ func init() {
 			loveQuota:  25,
 			maxKnights: 3,
 			catHealth:  3,
+			knightSpeed: 150.0,
 			mapWidth:   32, mapHeight: 32,
 			bgColor1: color.RGBA{91, 110, 225, 255},
 			bgColor2: color.RGBA{21, 52, 225, 255},
@@ -54,6 +56,7 @@ func init() {
 			loveQuota:  50,
 			maxKnights: 3, maxBlarghs: 3, maxBarrels: 6,
 			catHealth: 3,
+			knightSpeed: 150.0,
 			mapWidth:  32, mapHeight: 32,
 			bgColor1: color.RGBA{91, 110, 225, 255},
 			bgColor2: color.RGBA{48, 96, 130, 255},
@@ -64,6 +67,7 @@ func init() {
 			loveQuota:  75,
 			maxKnights: 15, maxBlarghs: 10, maxGopniks: 2, maxBarrels: 7,
 			catHealth: 6,
+			knightSpeed: 175.0,
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{48, 96, 130, 255},
 			bgColor2: color.RGBA{48, 96, 130, 255},
@@ -74,6 +78,7 @@ func init() {
 			loveQuota:  75,
 			maxKnights: 15, maxBlarghs: 15, maxGopniks: 7, maxBarrels: 10,
 			catHealth: 8,
+			knightSpeed: 175.0,
 			mapWidth:  48, mapHeight: 48,
 			bgColor1: color.RGBA{160, 0, 160, 255},
 			bgColor2: color.RGBA{160, 15, 160, 255},
@@ -84,6 +89,7 @@ func init() {
 			loveQuota:  85,
 			maxKnights: 20, maxBlarghs: 20, maxGopniks: 16, maxBarrels: 15, maxWorms: 1,
 			catHealth: 8,
+			knightSpeed: 175.0,
 			mapWidth:  64, mapHeight: 64,
 			bgColor1: color.RGBA{34, 32, 32, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
@@ -94,6 +100,7 @@ func init() {
 			loveQuota:  100,
 			maxKnights: 25, maxBlarghs: 25, maxGopniks: 20, maxBarrels: 20, maxWorms: 5,
 			catHealth: 10,
+			knightSpeed: 175.0,
 			mapWidth:  72, mapHeight: 72,
 			bgColor1: color.RGBA{0, 0, 0, 255},
 			bgColor2: color.RGBA{0, 0, 0, 255},
@@ -104,6 +111,7 @@ func init() {
 			loveQuota:  100,
 			maxKnights: 30, maxBlarghs: 30, maxGopniks: 25, maxBarrels: 30, maxWorms: 10,
 			catHealth: 10,
+			knightSpeed: 175.0,
 			mapWidth:  48, mapHeight: 72,
 			bgColor1: color.RGBA{0, 0, 0, 255},
 			bgColor2: color.RGBA{186, 32, 32, 255},

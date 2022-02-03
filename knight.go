@@ -51,7 +51,7 @@ func init() {
 func AddKnight(game *Game, x, y float64) *Knight {
 	knight := &Knight{
 		Mob: Mob{
-			Actor:             NewActor(200.0, 200_000.0, 25_000.0),
+			Actor:             NewActor(game.mission.knightSpeed, 200_000.0, 25_000.0),
 			health:            3,
 			currAnim:          nil,
 			lastSeenPlayerPos: vmath.ZeroVec(),
@@ -79,14 +79,16 @@ func (kn *Knight) Update(game *Game, obj *Object) {
 
 	kn.Mob.Update(game, obj)
 
-	kn.chargeTimer += game.deltaTime
-	if kn.chargeTimer > 2.0 {
-		kn.chargeTimer = 0.0
-		if kn.hunting {
+	if kn.hunting {
+		kn.chargeTimer += game.deltaTime
+		if kn.chargeTimer > 2.0 {
+			kn.chargeTimer = 0.0
 			diff := kn.lastSeenPlayerPos.Clone().Sub(obj.pos)
 			kn.Move(diff.X, diff.Y)
+		} else if kn.chargeTimer > 0.25 {
+			kn.Move(0.0, 0.0)
 		}
-	} else if kn.chargeTimer > 0.25 {
+	} else {
 		kn.Move(0.0, 0.0)
 	}
 
