@@ -39,7 +39,7 @@ type Game struct {
 	deltaTime              float64
 	lastTime               time.Time
 	camPos, camMin, camMax *vmath.Vec2f
-	hud                    GameHUD
+	hud                    *GameHUD
 	mission                *Mission
 	missionNumber          int
 	playerObj              *Object
@@ -90,7 +90,7 @@ func NewGame(mission int) *Game {
 		strobeTimer:   0.0,
 		strobeForward: true,
 		bgColor:       missions[mission].bgColor1,
-		hud:           *CreateGameHUD(),
+		hud:           CreateGameHUD(),
 		tutorialStep:  0,
 	}
 	game.renderTarget, _ = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
@@ -499,6 +499,7 @@ func (g *Game) AddObject(newObj *Object) *Object {
 //Adds to the love counter. Returns true if the operations causes the quota to be met.
 func (g *Game) IncLoveCounter(amt int) bool {
 	if g.love == g.mission.loveQuota {
+		Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
 		return true
 	}
 	if amt < 0 {
@@ -508,14 +509,17 @@ func (g *Game) IncLoveCounter(amt int) bool {
 	g.love += amt
 	if g.love >= g.mission.loveQuota {
 		g.love = g.mission.loveQuota
+		Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
 		return true
 	}
+	Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
 	return false
 }
 
 //Subtracts from the love counter. Returns true if the operation causes to counter to hit zero.
 func (g *Game) DecLoveCounter(amt int) bool {
 	if g.love == 0 {
+		Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
 		return true
 	}
 	if amt < 0 {
@@ -525,8 +529,10 @@ func (g *Game) DecLoveCounter(amt int) bool {
 	g.love -= amt
 	if g.love <= 0 {
 		g.love = 0
+		Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
 		return true
 	}
+	Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
 	return false
 }
 

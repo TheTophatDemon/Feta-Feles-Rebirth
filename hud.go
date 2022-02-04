@@ -36,6 +36,7 @@ type GameHUD struct {
 	menu      *UINode
 	pause     PauseScreen
 	control   ControlsScreen
+	loveShowTimer float64
 }
 
 type PauseScreen struct {
@@ -60,6 +61,7 @@ func CreateGameHUD() *GameHUD {
 	//==============================
 
 	loveBorder := CreateUIBox(image.Rect(64, 40, 88, 48), image.Rect(4, 4, 4+160, 4+16), true)
+	loveBorder.visible = false
 	hud.root.AddChild(&loveBorder.UINode)
 	hud.loveBar = CreateUIBox(image.Rect(104, 40, 112, 48), image.Rect(4, 4, loveBorder.Width()-4, loveBorder.Height()-4), false)
 	loveBorder.AddChild(&hud.loveBar.UINode)
@@ -72,7 +74,7 @@ func CreateGameHUD() *GameHUD {
 	// hud.msgText.color = color.RGBA{R: 0, G: 0, B: 255, A: 255}
 	msgBorder.AddChild(&hud.msgText.UINode)
 
-	timerBorder := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(4.0, 20.0, 100.0, 36.0), true)
+	timerBorder := CreateUIBox(image.Rect(112, 40, 136, 48), image.Rect(SCR_WIDTH-100, 4, SCR_WIDTH-4, 20), true)
 	hud.root.AddChild(&timerBorder.UINode)
 	hud.timerText = GenerateText("00:00/00:00", image.Rect(4, 4, 2048, 2048))
 	timerBorder.AddChild(&hud.timerText.UINode)
@@ -158,6 +160,8 @@ func CreateGameHUD() *GameHUD {
 
 	hud.menu.AddChild(&hud.control.container.UINode)
 
+	Listen_Signal(SIGNAL_LOVE_CHANGE, hud)
+
 	return hud
 }
 
@@ -196,8 +200,15 @@ func (hud *GameHUD) Update(game *Game) {
 		hud.menu.visible = false
 
 		//Hide love bar if player is under it
-		hud.loveBar.parent.visible = (game.playerObj.pos.X > 164 || game.playerObj.pos.Y > 64)
-		hud.timerText.parent.visible = hud.loveBar.parent.visible
+		// hud.loveBar.parent.visible = (game.playerObj.pos.X > 164 || game.playerObj.pos.Y > 64)
+		// hud.timerText.parent.visible = hud.loveBar.parent.visible
+		if hud.loveShowTimer > 0.0 {
+			hud.loveShowTimer -= game.deltaTime
+			hud.loveBar.parent.visible = true
+		} else {
+			hud.loveShowTimer = 0.0
+			hud.loveBar.parent.visible = false
+		}
 
 		//Update UI with love amount
 		barRect := image.Rect(3, 3, hud.loveBar.parent.Width()-3, hud.loveBar.parent.Height()-3) //This is the maximum size
@@ -231,6 +242,14 @@ func (hud *GameHUD) Update(game *Game) {
 		hud.fpsText.Regen()
 	} else {
 		hud.fpsText.visible = false
+	}
+}
+
+const LOVE_SHOW_LAG = 2.0 //Time in seconds that the love bar lingers after showing up
+
+func (hud *GameHUD) HandleSignal(kind Signal, src interface{}, params map[string]interface{}) {
+	if kind == SIGNAL_LOVE_CHANGE {
+		hud.loveShowTimer = LOVE_SHOW_LAG
 	}
 }
 

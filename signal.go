@@ -30,6 +30,7 @@ const (
 	SIGNAL_CAT_DIE                     //Fires when the cat is killed
 	SIGNAL_GAME_START                  //Fires at the start of the game after the intro transition
 	SIGNAL_GAME_INIT                   //Fires before the game level is generated
+	SIGNAL_LOVE_CHANGE				   //Fires when the love meter is increased or decreased
 )
 
 //Represents the number of times a signal has been emitted
