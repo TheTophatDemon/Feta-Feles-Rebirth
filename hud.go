@@ -238,7 +238,7 @@ func (hud *GameHUD) Update(game *Game) {
 	//FPS counter
 	if debugDraw {
 		hud.fpsText.visible = true
-		hud.fpsText.text = fmt.Sprintf("FPS: %.2f", ebiten.CurrentTPS())
+		hud.fpsText.text = fmt.Sprintf("FPS: %.2f", ebiten.CurrentFPS())
 		hud.fpsText.Regen()
 	} else {
 		hud.fpsText.visible = false

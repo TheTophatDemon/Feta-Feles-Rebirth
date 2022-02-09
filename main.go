@@ -27,6 +27,8 @@ import (
 
 	"time"
 
+	//"github.com/pkg/profile"
+
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
 	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
@@ -112,6 +114,8 @@ func GetGraphics() *ebiten.Image {
 }
 
 func main() {
+	//defer profile.Start(profile.ProfilePath(".")).Stop()
+
 	seed := time.Now().UnixNano() % 1615698000000000000
 	rand.Seed(seed)
 

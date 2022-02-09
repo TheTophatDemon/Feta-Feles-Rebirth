@@ -321,16 +321,6 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 			}
 			if t.spr != nil {
 				mat := *pt
-				if i < 0 {
-					mat.Translate(-level.pixelWidth, 0.0)
-				} else if i >= level.cols {
-					mat.Translate(level.pixelWidth, 0.0)
-				}
-				if j < 0 {
-					mat.Translate(0.0, -level.pixelHeight)
-				} else if j >= level.rows {
-					mat.Translate(0.0, level.pixelHeight)
-				}
 				t.spr.Draw(screen, &mat)
 				//Draw outlines for square tiles
 				if t.outline != OUTLINE_NONE {

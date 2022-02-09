@@ -3,3 +3,6 @@ __debug_bin
 web_serve/*.wasm
 *.ase
 *.zip
+*.tar.gz
+*.pprof
+*.sum
