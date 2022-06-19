@@ -4,6 +4,7 @@
 import gzip
 import os
 import io
+import base64
 
 #Read in all the file data and compress
 data = {}
@@ -22,8 +23,5 @@ with open("assets.go", "w", encoding='utf-8') as fout:
   fout.write("package assets\n")
   for key in data:
     fout.write("const " + key + '="')
-    for byte in data[key]:
-      #Each byte is offset so that it may be printed as a single valid unicode character
-      byte += 186
-      fout.write(chr(byte))
+    fout.write(base64.b64encode(data[key]).decode("utf-8")) #Binary content is base64 encoded
     fout.write('"\n')
