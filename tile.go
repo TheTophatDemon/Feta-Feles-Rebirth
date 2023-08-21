@@ -22,7 +22,7 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 const (

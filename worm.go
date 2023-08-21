@@ -22,8 +22,8 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 var sprWormHead *Sprite //First is left facing, second is right facing

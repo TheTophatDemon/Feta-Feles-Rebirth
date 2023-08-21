@@ -29,10 +29,10 @@ import (
 
 	//"github.com/pkg/profile"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/inpututil"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/thetophatdemon/feta-feles-rebirth/assets"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
 )
 
 const (
@@ -64,7 +64,7 @@ func init() {
 
 const FRAMERATE = 1.0 / 60.0
 
-func (a *App) Update(screen *ebiten.Image) error {
+func (a *App) Update() error {
 	now := time.Now()
 	deltaTime := now.Sub(__lastTime).Seconds()
 	__lastTime = now
@@ -80,7 +80,7 @@ func (a *App) Update(screen *ebiten.Image) error {
 	return nil
 }
 
-//Draw ...
+// Draw ...
 func (a *App) Draw(screen *ebiten.Image) {
 	__appState.Draw(screen)
 }
@@ -98,17 +98,14 @@ func ChangeAppState(newState AppState) {
 
 var __graphics *ebiten.Image
 
-//Returns the graphics page and loads it if it isn't there
+// Returns the graphics page and loads it if it isn't there
 func GetGraphics() *ebiten.Image {
 	if __graphics == nil {
 		img, _, err := image.Decode(assets.ReadCompressedString(assets.PNG_GRAPHICS))
 		if err != nil {
 			log.Fatal(err)
 		}
-		__graphics, err = ebiten.NewImageFromImage(img, ebiten.FilterNearest)
-		if err != nil {
-			log.Fatal(err)
-		}
+		__graphics = ebiten.NewImageFromImage(img)
 	}
 	return __graphics
 }

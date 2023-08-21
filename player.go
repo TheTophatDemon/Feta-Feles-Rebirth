@@ -20,9 +20,9 @@ package main
 import (
 	"image"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 const (

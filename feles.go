@@ -20,7 +20,7 @@ package main
 import (
 	"image"
 
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type FaceType int

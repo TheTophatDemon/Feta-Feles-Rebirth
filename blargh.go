@@ -21,8 +21,8 @@ import (
 	"image"
 	"math/rand"
 
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type Blargh struct {

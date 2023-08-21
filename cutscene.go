@@ -19,13 +19,12 @@ package main
 
 import (
 	"image"
-	"log"
 	"math"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/inpututil"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type Cutscene struct {
@@ -237,11 +236,8 @@ func NewCutsceneState(sceneNum int) *CutsceneState {
 	state.nextMission = sceneNum
 	state.transition = FM_FADE_IN
 	state.transTimer = 0.0
-	var err error
-	state.renderTarget, err = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	state.renderTarget = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
 
 	audio.PlayMusic(state.cutscene.music)
 

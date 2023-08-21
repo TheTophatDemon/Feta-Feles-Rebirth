@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package main
 
 import (
-	"github.com/hajimehoshi/ebiten"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type ColType int32

@@ -21,8 +21,8 @@ import (
 	"image"
 	"math"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type Sprite struct {

@@ -7,3 +7,4 @@ web_serve/*.wasm
 *.pprof
 *.sum
 *.dll
+.vscode

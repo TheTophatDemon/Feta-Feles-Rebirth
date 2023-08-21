@@ -20,14 +20,14 @@ package main
 import (
 	"math/rand"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 var whiteFadeShader *ebiten.Shader
 var noiseImg *ebiten.Image
 
 func init() {
-	noiseImg, _ = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
+	noiseImg = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
 	noisePixels := make([]byte, SCR_WIDTH*SCR_HEIGHT*4)
 	for i := 0; i < SCR_HEIGHT*SCR_WIDTH; i++ {
 		noisePixels[i*4+0] = byte(rand.Intn(255))
@@ -35,7 +35,7 @@ func init() {
 		noisePixels[i*4+2] = byte(rand.Intn(255))
 		noisePixels[i*4+3] = 255
 	}
-	noiseImg.ReplacePixels(noisePixels)
+	noiseImg.WritePixels(noisePixels)
 
 	var err error
 	whiteFadeShader, err = ebiten.NewShader([]byte(`

@@ -20,7 +20,7 @@ package main
 import (
 	"math"
 
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 //Component that allows somewhat physically based movement

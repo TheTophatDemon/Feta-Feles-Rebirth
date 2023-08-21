@@ -24,10 +24,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/inpututil"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type UINodeRenderer interface {

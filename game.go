@@ -27,10 +27,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/inpututil"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type Game struct {
@@ -93,7 +93,8 @@ func NewGame(mission int) *Game {
 		hud:           CreateGameHUD(),
 		tutorialStep:  0,
 	}
-	game.renderTarget, _ = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT, ebiten.FilterNearest)
+
+	game.renderTarget = ebiten.NewImage(SCR_WIDTH, SCR_HEIGHT)
 	Emit_Signal(SIGNAL_GAME_INIT, game, nil)
 	game.level = GenerateLevel(missions[mission].mapWidth, missions[mission].mapHeight, mission <= 1)
 
@@ -429,9 +430,9 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
-//Number of signal emmissions before the tutorial messages are displayed
+// Number of signal emmissions before the tutorial messages are displayed
 const (
-	MOVE_SIGNAL_THRESHOLD = 100
+	MOVE_SIGNAL_THRESHOLD  = 100
 	SHOOT_SIGNAL_THRESHOLD = 8
 )
 
@@ -483,7 +484,7 @@ func (g *Game) HandleSignal(kind Signal, src interface{}, params map[string]inte
 	}
 }
 
-//Adds the object to the game, sorted by its draw priority, and returns the object
+// Adds the object to the game, sorted by its draw priority, and returns the object
 func (g *Game) AddObject(newObj *Object) *Object {
 	for e := g.objects.Front(); e != nil; e = e.Next() {
 		obj := e.Value.(*Object)
@@ -496,7 +497,7 @@ func (g *Game) AddObject(newObj *Object) *Object {
 	return newObj
 }
 
-//Adds to the love counter. Returns true if the operations causes the quota to be met.
+// Adds to the love counter. Returns true if the operations causes the quota to be met.
 func (g *Game) IncLoveCounter(amt int) bool {
 	if g.love == g.mission.loveQuota {
 		Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})
@@ -516,7 +517,7 @@ func (g *Game) IncLoveCounter(amt int) bool {
 	return false
 }
 
-//Subtracts from the love counter. Returns true if the operation causes to counter to hit zero.
+// Subtracts from the love counter. Returns true if the operation causes to counter to hit zero.
 func (g *Game) DecLoveCounter(amt int) bool {
 	if g.love == 0 {
 		Emit_Signal(SIGNAL_LOVE_CHANGE, g, map[string]interface{}{"newValue": g.love})

@@ -24,9 +24,9 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 type Level struct {
@@ -89,7 +89,7 @@ func (level *Level) WrapPixelCoords(x, y float64) (float64, float64) {
 	return x, y
 }
 
-//Sets the tile at the coordinate to specified type. Returns true if coordinate is valid. If wrap is set, out of bounds coordinates will be offset to the other side of the level.
+// Sets the tile at the coordinate to specified type. Returns true if coordinate is valid. If wrap is set, out of bounds coordinates will be offset to the other side of the level.
 func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 	if wrap {
 		x, y = level.WrapGridCoords(x, y)
@@ -100,7 +100,7 @@ func (level *Level) SetTile(x, y int, newType TileType, wrap bool) bool {
 	return true
 }
 
-//Removes a solid tile and reshapes the surrounding terrain to make the deformation smooth
+// Removes a solid tile and reshapes the surrounding terrain to make the deformation smooth
 func (level *Level) DestroyTile(t *Tile) {
 	if t.IsSolid() {
 		level.recalcEdges = true
@@ -108,7 +108,7 @@ func (level *Level) DestroyTile(t *Tile) {
 	t.SetType(TT_EMPTY)
 }
 
-//Gets a reference to the tile at the coordinates. Returns nil if out of bounds unless wrap is enabled.
+// Gets a reference to the tile at the coordinates. Returns nil if out of bounds unless wrap is enabled.
 func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 	if wrap {
 		x, y = level.WrapGridCoords(x, y)
@@ -118,7 +118,7 @@ func (level *Level) GetTile(x, y int, wrap bool) *Tile {
 	return &level.tiles[y][x]
 }
 
-//Randomly chooses an empty tile.
+// Randomly chooses an empty tile.
 func (level *Level) FindSpawnPoint() *Tile {
 	emptyTiles := make([]*Tile, 0, 1024)
 	for _, sp := range level.spaces {
@@ -132,7 +132,7 @@ func (level *Level) FindSpawnPoint() *Tile {
 	return emptyTiles[rand.Intn(len(emptyTiles))]
 }
 
-//Randomly chooses an empty tile that is off screen
+// Randomly chooses an empty tile that is off screen
 func (level *Level) FindOffscreenSpawnPoint(game *Game) *Tile {
 	emptyTiles := make([]*Tile, 0, 1024)
 	for _, sp := range level.spaces {
@@ -157,7 +157,7 @@ func (level *Level) FindOffscreenSpawnPoint(game *Game) *Tile {
 	return emptyTiles[rand.Intn(len(emptyTiles))]
 }
 
-//Randomly chooses an empty tile that is somewhat near the center
+// Randomly chooses an empty tile that is somewhat near the center
 func (level *Level) FindCenterSpawnPoint(game *Game) *Tile {
 	emptyTiles := make([]*Tile, 0, 1024)
 	for _, sp := range level.spaces {
@@ -174,7 +174,7 @@ func (level *Level) FindCenterSpawnPoint(game *Game) *Tile {
 	return emptyTiles[rand.Intn(len(emptyTiles))]
 }
 
-//Like FindEmptySpace except for finding places inside of the walls
+// Like FindEmptySpace except for finding places inside of the walls
 func (level *Level) FindFullSpace(r int) *Tile {
 	for {
 		x, y := rand.Intn(level.cols), rand.Intn(level.rows)
@@ -190,7 +190,7 @@ func (level *Level) FindFullSpace(r int) *Tile {
 	}
 }
 
-//Struct represents a glob of contiguous empty space (Not taking into account screen wrapping)
+// Struct represents a glob of contiguous empty space (Not taking into account screen wrapping)
 type Space struct {
 	tiles            []*Tile
 	frontier         []*Tile //These tiles are on the border of the space\
@@ -202,7 +202,7 @@ var spaceColors [255]color.RGBA
 var spaceCenterImg *ebiten.Image
 
 func init() {
-	spaceImg, _ = ebiten.NewImage(8, 8, ebiten.FilterNearest)
+	spaceImg = ebiten.NewImage(8, 8)
 	spaceImg.Fill(color.RGBA{255, 255, 255, 255})
 	for i := 0; i < 255; i++ {
 		spaceColors[i] = color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), 255}
@@ -210,7 +210,7 @@ func init() {
 	spaceCenterImg = GetGraphics().SubImage(image.Rect(96, 96, 112, 112)).(*ebiten.Image)
 }
 
-//Draws a colored square for debugging
+// Draws a colored square for debugging
 func (space *Space) Draw(screen *ebiten.Image, pt *ebiten.GeoM, clr color.RGBA) {
 	for _, t := range space.tiles {
 		op := &ebiten.DrawImageOptions{}
@@ -276,7 +276,7 @@ func (level *Level) FindSpaces() {
 	}
 }
 
-//Recursively adds to the space's domain by checking neighbors and propagating to empty neighbors (within the level bounds)
+// Recursively adds to the space's domain by checking neighbors and propagating to empty neighbors (within the level bounds)
 func (level *Level) PropagateSpace(tile *Tile, space *Space) {
 	tile.space = space
 	space.tiles = append(space.tiles, tile)
@@ -352,7 +352,7 @@ func (level *Level) Draw(game *Game, screen *ebiten.Image, pt *ebiten.GeoM) {
 	}
 }
 
-//If t is nil, then position is projected onto level boundaries
+// If t is nil, then position is projected onto level boundaries
 func (level *Level) ProjectPosOntoTile(pos *vmath.Vec2f, t *Tile) *vmath.Vec2f {
 	if t != nil {
 		tileMin := vmath.NewVec(t.left, t.top)
@@ -405,7 +405,7 @@ func (level *Level) GetTilesWithinRadius(pos *vmath.Vec2f, radius float64) []*Ti
 	return result
 }
 
-//Determines if sphere intersects a solid tile. If so, the normal and the collided tile is returned
+// Determines if sphere intersects a solid tile. If so, the normal and the collided tile is returned
 func (level *Level) SphereIntersects(pos *vmath.Vec2f, radius float64) (bool, *vmath.Vec2f, *Tile) {
 	//Check against level borders
 	if pos.X-radius < 0 {

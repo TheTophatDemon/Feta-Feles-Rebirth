@@ -19,15 +19,15 @@ package audio
 
 import (
 	"container/ring"
-	"io/ioutil"
+	"io"
 	"log"
 	"math"
 
-	"github.com/hajimehoshi/ebiten/audio"
-	"github.com/hajimehoshi/ebiten/audio/vorbis"
-	"github.com/hajimehoshi/ebiten/audio/wav"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/assets"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/vmath"
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
+	"github.com/hajimehoshi/ebiten/v2/audio/wav"
+	"github.com/thetophatdemon/feta-feles-rebirth/assets"
+	"github.com/thetophatdemon/feta-feles-rebirth/vmath"
 )
 
 var MuteSfx bool
@@ -49,6 +49,10 @@ const (
 	FADE_OUT
 )
 
+const (
+	SAMPLE_RATE = 44100
+)
+
 const FADE_TIME float64 = 1.0
 
 var musFade FadeType = FADE_NONE
@@ -56,7 +60,7 @@ var musFadeTimer float64 = 0.0
 
 func init() {
 	var err error
-	audioContext, err = audio.NewContext(44100)
+	audioContext = audio.NewContext(SAMPLE_RATE)
 	if err != nil {
 		panic(err)
 	}
@@ -105,11 +109,11 @@ func PlayMusic(name string) {
 func switchSongTo(name string) {
 	musData, valid := musFiles[name]
 	if valid {
-		stream, err := vorbis.Decode(audioContext, assets.ReadCompressedString(musData))
+		stream, err := vorbis.DecodeWithSampleRate(SAMPLE_RATE, assets.ReadCompressedString(musData))
 		if err != nil {
 			log.Fatal("Cannot decode music file: ", name)
 		}
-		musPlayer, err = audio.NewPlayer(audioContext, stream)
+		musPlayer, err = audioContext.NewPlayer(stream)
 		if err != nil {
 			log.Fatal("Failed to create stream for song: ", name)
 		}
@@ -172,12 +176,12 @@ func PlaySoundVolume(name string, volume float64) {
 	buffer, loaded := sfxPlayers[name]
 	//Load the sound in if it hasn't been already
 	if !loaded {
-		stream, err := wav.Decode(audioContext, assets.ReadCompressedString(sfxFiles[name]))
+		stream, err := wav.DecodeWithSampleRate(SAMPLE_RATE, assets.ReadCompressedString(sfxFiles[name]))
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		bytes, err := ioutil.ReadAll(stream)
+		bytes, err := io.ReadAll(stream)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -186,10 +190,7 @@ func PlaySoundVolume(name string, volume float64) {
 		//Initialize audio players in the ring buffer
 		buffer = ring.New(PLAYERS_PER_SOUND)
 		for i := 0; i < PLAYERS_PER_SOUND; i++ {
-			player, err := audio.NewPlayerFromBytes(audioContext, bytes)
-			if err != nil {
-				log.Fatal(err)
-			}
+			player := audioContext.NewPlayerFromBytes(bytes)
 			player.SetVolume(volume)
 			buffer.Value = player
 			buffer = buffer.Next()
@@ -213,7 +214,7 @@ func PlaySoundVolume(name string, volume float64) {
 	}
 }
 
-//Plays a sound that gets quieter the farther it is from the camera
+// Plays a sound that gets quieter the farther it is from the camera
 func PlaySoundAttenuated(name string, factor float64, src *vmath.Vec2f, listenerMin, listenerMax *vmath.Vec2f) {
 	closestCamPoint := vmath.VecMin(listenerMax, vmath.VecMax(listenerMin, src.Clone()))
 	dist := closestCamPoint.Clone().Sub(src).Length()

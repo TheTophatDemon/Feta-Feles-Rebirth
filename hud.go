@@ -22,8 +22,8 @@ import (
 	"image"
 	// "image/color"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/thetophatdemon/Feta-Feles-Remastered/audio"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/thetophatdemon/feta-feles-rebirth/audio"
 )
 
 type GameHUD struct {
